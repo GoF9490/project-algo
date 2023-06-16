@@ -1,5 +1,6 @@
 package com.game.algo;
 
+import com.game.algo.algo.entity.GameManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -10,5 +11,4 @@ import java.util.Queue;
 
 @SpringBootTest
 class AlgoApplicationTests {
-
 }
