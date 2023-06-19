@@ -1,6 +1,11 @@
 package com.game.algo.algo.entity;
 
+import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameConstant;
+import lombok.AccessLevel;
 import lombok.Getter;
+
+import static com.game.algo.algo.data.GameConstant.*;
 
 /**
  * BlockCode
@@ -11,39 +16,44 @@ import lombok.Getter;
 //@Entity
 public class Block {
 
+    @Getter(value = AccessLevel.NONE)
     private Type type;
 
     private Status status = Status.CLOSE;
 
     private Integer num = 0;
 
-    private Block(Type type, Integer num) {
-        this.type = type;
+    private Block(BlockColor blockColor, Integer num) {
+        this.type = matchType(blockColor, num);
         this.num = num;
     }
 
-    public static Block createWhiteBlock(int num) {
-        return num == 12 ? new Block(Type.WHITE_JOKER, num) : new Block(Type.WHITE, num);
-    }
-
-    public static Block createBlackBlock(int num) {
-        return num == 12 ? new Block(Type.BLACK_JOKER, num) : new Block(Type.BLACK, num);
-    }
-
-    public Integer getNum() {
-        return num;
+    public static Block createBlock(BlockColor blockColor, int num) {
+        return new Block(blockColor, num);
     }
 
     public Integer getBlockCode(boolean isMaster) {
         if (!isMaster && isClose()) {
-            return 13 * blackIsMinus();
+            return CLOSED_BLOCK_NUMBER * blackIsMinus();
         }
 
         if (isJoker()) {
-            return 12 * blackIsMinus();
+            return JOKER_BLOCK_NUMBER * blackIsMinus();
         }
 
         return num * blackIsMinus();
+    }
+
+    public int getTypeNumber() {
+        return type.getOrder();
+    }
+
+    private Type matchType(BlockColor blockColor, Integer num) {
+        if (blockColor == BlockColor.WHITE) {
+            return num == JOKER_BLOCK_NUMBER ? Type.WHITE_JOKER : Type.WHITE;
+        } else {
+            return num == JOKER_BLOCK_NUMBER ? Type.BLACK_JOKER : Type.BLACK;
+        }
     }
 
     private int blackIsMinus() {
@@ -59,7 +69,7 @@ public class Block {
     }
 
     private boolean isJoker() {
-        return num == 12;
+        return num == JOKER_BLOCK_NUMBER;
     }
 
 
@@ -67,13 +77,13 @@ public class Block {
      * enum
      */
 
-    public enum Type {
+    private enum Type {
         WHITE_JOKER(1),
         BLACK_JOKER(2),
         WHITE(3),
         BLACK(4);
 
-        private int order;
+        private final int order;
 
         Type(int order) {
             this.order = order;
@@ -84,7 +94,7 @@ public class Block {
         }
     }
 
-    public enum Status {
+    private enum Status {
         CLOSE,
         OPEN;
     }

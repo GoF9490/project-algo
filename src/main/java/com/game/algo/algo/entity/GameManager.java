@@ -1,19 +1,19 @@
 package com.game.algo.algo.entity;
 
+import com.game.algo.algo.data.BlockColor;
 import lombok.Getter;
-import org.springframework.data.redis.core.RedisHash;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
 import javax.persistence.Id;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Getter
 //@Entity
 //@RedisHash(value = "game_manager")
+@NoArgsConstructor
 public class GameManager {
 
     @Id
@@ -27,9 +27,11 @@ public class GameManager {
 
     private Integer turn = 0;
 
-    private List<Block> whiteBlock;
+    private List<Block> whiteBlockList;
 
-    private List<Block> blackBlock;
+    private List<Block> blackBlockList;
+
+
 
 
     public void gameReset() {
@@ -39,24 +41,28 @@ public class GameManager {
         blockReset();
     }
 
+    public Block drawRandomBlock(BlockColor blockColor) {
+        double randomValue = Math.random();
+
+        if (blockColor == BlockColor.WHITE) {
+            return whiteBlockList.remove((int)(randomValue * whiteBlockList.size()));
+        } else {
+            return blackBlockList.remove((int)(randomValue * blackBlockList.size()));
+        }
+    }
+
     private void blockReset() {
-        this.whiteBlock = whiteBlockSet();
-        this.blackBlock = blackBlockSet();
+        this.whiteBlockList = blockSet(BlockColor.WHITE);
+        this.blackBlockList = blockSet(BlockColor.BLACK);
     }
 
-    private List<Block> whiteBlockSet() {
+    private List<Block> blockSet(BlockColor blockColor) {
         return IntStream.range(0, 13)
-                .mapToObj(Block::createWhiteBlock)
+                .mapToObj(num -> Block.createBlock(blockColor, num))
                 .collect(Collectors.toList());
     }
 
-    private List<Block> blackBlockSet() {
-        return IntStream.range(0, 13)
-                .mapToObj(Block::createBlackBlock)
-                .collect(Collectors.toList());
-    }
-
-    private enum Phase {
+    public enum Phase {
         WAIT, // 게임 시작 전
         READY, // 게임 세팅, 이후 진행순서 정함
         START, // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작

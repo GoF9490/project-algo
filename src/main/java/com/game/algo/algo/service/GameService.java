@@ -1,9 +1,9 @@
 package com.game.algo.algo.service;
 
-import org.springframework.stereotype.Service;
+import com.game.algo.algo.entity.GameManager;
+import com.game.algo.algo.entity.Player;
 
-@Service
-public class GameService {
+public interface GameService {
 
-    
+    void choiceBlock(GameManager gameManager, Player player, int white, int black);
 }
