@@ -7,7 +7,6 @@ import org.springframework.data.redis.core.RedisHash;
 
 import javax.persistence.Id;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -32,7 +31,7 @@ public class Player {
         this.name = name;
     }
 
-    public void reset() {
+    public void gameReset() {
         blockList = new ArrayList<>();
         whiteJokerRange = new JokerRange();
         blackJokerRange = new JokerRange();

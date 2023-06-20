@@ -48,6 +48,14 @@ public class Block {
         return type.getOrder();
     }
 
+    public boolean isBlack() {
+        return type == Type.BLACK || type == Type.BLACK_JOKER;
+    }
+
+    public boolean isWhite() {
+        return type == Type.WHITE || type == Type.WHITE_JOKER;
+    }
+
     private Type matchType(BlockColor blockColor, Integer num) {
         if (blockColor == BlockColor.WHITE) {
             return num == JOKER_BLOCK_NUMBER ? Type.WHITE_JOKER : Type.WHITE;
@@ -57,15 +65,11 @@ public class Block {
     }
 
     private int blackIsMinus() {
-        return isBlack() ? 1 : -1;
+        return isBlack() ? -1 : 1;
     }
 
     private boolean isClose() {
         return status == Status.CLOSE;
-    }
-
-    private boolean isBlack() {
-        return type == Type.BLACK || type == Type.BLACK_JOKER;
     }
 
     private boolean isJoker() {

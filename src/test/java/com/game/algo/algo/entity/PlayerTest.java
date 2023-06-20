@@ -1,7 +1,6 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +9,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class PlayerTest {
 
@@ -22,7 +20,7 @@ class PlayerTest {
         Player player = new Player(playerName);
 
         //when
-        player.reset();
+        player.gameReset();
 
         //then
         assertThat(player.getName()).isEqualTo(playerName);
@@ -38,7 +36,7 @@ class PlayerTest {
     public void addBlockTest() throws Exception {
         //given
         Player player = new Player("foo");
-        player.reset();
+        player.gameReset();
 
         Block block = Block.createBlock(BlockColor.BLACK, 1);
 
@@ -57,7 +55,7 @@ class PlayerTest {
     public void addAllBlockTest() throws Exception {
         //given
         Player player = new Player("foo");
-        player.reset();
+        player.gameReset();
 
         List<Block> blockList = IntStream.range(0, 3)
                 .mapToObj(i -> Block.createBlock(BlockColor.WHITE, i))
@@ -84,7 +82,7 @@ class PlayerTest {
     public void playerBlockSortTest() throws Exception {
         //given
         Player player = new Player("foo");
-        player.reset();
+        player.gameReset();
 
         List<Block> blockList = IntStream.range(0, 3)
                 .mapToObj(i -> Block.createBlock(BlockColor.WHITE, i))

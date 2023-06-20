@@ -1,11 +1,10 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.dto.ChoiceBlockInfo;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameManager;
 import com.game.algo.algo.entity.Player;
-import com.game.algo.algo.repository.GameManagerRepository;
-import com.game.algo.algo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +20,11 @@ public class GameServiceImpl implements GameService {
 //    private final GameManagerRepository gameManagerRepository;
 //    private final PlayerRepository playerRepository;
 
-    public void choiceBlock(GameManager gameManager, Player player, int white, int black) {
+    public void choiceBlock(GameManager gameManager, Player player, ChoiceBlockInfo choiceBlock) {
         List<Block> receivedBlock = new ArrayList<>();
 
-        receivedBlock.addAll(getRandomBlock(gameManager, BlockColor.WHITE, white));
-        receivedBlock.addAll(getRandomBlock(gameManager, BlockColor.BLACK, black));
+        receivedBlock.addAll(getRandomBlock(gameManager, BlockColor.WHITE, choiceBlock.getWhite()));
+        receivedBlock.addAll(getRandomBlock(gameManager, BlockColor.BLACK, choiceBlock.getBlack()));
 
         player.addAllBlock(receivedBlock);
     }
