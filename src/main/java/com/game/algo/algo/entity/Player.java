@@ -41,16 +41,21 @@ public class Player {
     public void sortBlock() {
         blockList =  blockList.stream()
                 .sorted((a, b) -> {
-                    if (a.getTypeNumber() == b.getTypeNumber()) {
-                        return a.getNum() - b.getNum();
+                    if (a.getNum() == b.getNum()) {
+                        return a.getTypeNumber() - b.getTypeNumber();
                     }
-                    return a.getTypeNumber() - b.getTypeNumber();
+                    return a.getNum() - b.getNum();
                 })
                 .collect(Collectors.toList());
     }
 
+    public void addBlock(Block block) {
+        blockList.add(block);
+        sortBlock();
+    }
+
     public void addAllBlock(List<Block> blockList) {
-        blockList.addAll(blockList);
+        this.blockList.addAll(blockList);
         sortBlock();
     }
 }
