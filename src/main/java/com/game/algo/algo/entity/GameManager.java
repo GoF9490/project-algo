@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Id;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -39,6 +40,18 @@ public class GameManager {
         playerOrder = new ArrayList<>();
         turn = 0;
         blockReset();
+    }
+
+    public void joinPlayer(Player player) {
+        List<Player> playerListEdit = new ArrayList<>(playerList);
+        playerListEdit.add(player);
+        playerList = playerListEdit;
+    }
+
+    public void playerOrderReset() {
+        playerOrder = playerList.stream()
+                .sorted(Comparator.comparing(player -> Math.random()))
+                .collect(Collectors.toList());
     }
 
     public Block drawRandomBlock(BlockColor blockColor) {

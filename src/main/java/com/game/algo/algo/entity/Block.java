@@ -1,7 +1,6 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.GameConstant;
 import lombok.AccessLevel;
 import lombok.Getter;
 
@@ -37,11 +36,15 @@ public class Block {
             return CLOSED_BLOCK_NUMBER * blackIsMinus();
         }
 
-        if (isJoker()) {
+        if (isJokerNumber()) {
             return JOKER_BLOCK_NUMBER * blackIsMinus();
         }
 
         return num * blackIsMinus();
+    }
+
+    public void setNum(int num) {
+        this.num = num;
     }
 
     public int getTypeNumber() {
@@ -54,6 +57,14 @@ public class Block {
 
     public boolean isWhite() {
         return type == Type.WHITE || type == Type.WHITE_JOKER;
+    }
+
+    public boolean isJoker() {
+        return type == Type.WHITE_JOKER || type == Type.BLACK_JOKER;
+    }
+
+    public boolean isJoker(BlockColor blockColor) {
+        return blockColor == BlockColor.WHITE ? type == Type.WHITE_JOKER : type == Type.BLACK_JOKER;
     }
 
     private Type matchType(BlockColor blockColor, Integer num) {
@@ -72,7 +83,7 @@ public class Block {
         return status == Status.CLOSE;
     }
 
-    private boolean isJoker() {
+    private boolean isJokerNumber() {
         return num == JOKER_BLOCK_NUMBER;
     }
 

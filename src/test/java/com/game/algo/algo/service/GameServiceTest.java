@@ -7,15 +7,18 @@ import com.game.algo.algo.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.*;
 
+@SpringBootTest
 class GameServiceTest {
 
-    private GameService gameService = new GameServiceImpl();
+    @Autowired private GameService gameService;
 
     @RepeatedTest(5)
     @DisplayName("ChoiceBlockInfo 의 데이터를 토대로 GameManager 의 블록을 Player 에게 전달합니다.")
@@ -24,7 +27,7 @@ class GameServiceTest {
         GameManager gameManager = new GameManager();
         gameManager.gameReset();
 
-        Player player = new Player("player1");
+        Player player = Player.create("player1", null);
         player.gameReset();
 
         ChoiceBlockInfo choiceBlockInfo = new ChoiceBlockInfo(2, 3);
