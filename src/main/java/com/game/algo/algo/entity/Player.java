@@ -10,6 +10,7 @@ import org.springframework.web.socket.WebSocketSession;
 
 import javax.persistence.Id;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -43,13 +44,14 @@ public class Player {
 //        this.name = name;
 //    }
 
-    private Player(String name, WebSocketSession webSocketSession) {
-        this.name = name;
-        this.webSocketSession = webSocketSession;
-    }
-
     public static Player create(String name, WebSocketSession webSocketSession) {
         return new Player(name, webSocketSession);
+    }
+
+    public List<Integer> getBlockListCode(boolean isMaster) {
+        return blockList.stream()
+                .map(block -> block.getBlockCode(isMaster))
+                .collect(Collectors.toList());
     }
 
     public void gameReset() {
@@ -68,6 +70,10 @@ public class Player {
                     }
                 })
                 .collect(Collectors.toList());
+    }
+
+    public void addBlocks(Block... blocks) {
+        Arrays.stream(blocks).forEach(this::addBlock);
     }
 
     public void addBlock(Block block) {
@@ -94,6 +100,12 @@ public class Player {
         }
 
         blockList = new ArrayList<>(blockList);
+        sortBlock();
+    }
+
+    private Player(String name, WebSocketSession webSocketSession) {
+        this.name = name;
+        this.webSocketSession = webSocketSession;
     }
 
     private Block findJoker(int backNum, BlockColor jokerColor) {

@@ -36,7 +36,7 @@ public class Block {
             return CLOSED_BLOCK_NUMBER * blackIsMinus();
         }
 
-        if (isJokerNumber()) {
+        if (isJoker()) {
             return JOKER_BLOCK_NUMBER * blackIsMinus();
         }
 

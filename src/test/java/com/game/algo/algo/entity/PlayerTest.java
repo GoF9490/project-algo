@@ -137,22 +137,36 @@ class PlayerTest {
     @DisplayName("(흰색블럭) player 의 joker 를 업데이트 할 경우 올바르게 jokerRange 와 조커 블럭의 숫자가 바뀌고 JokerRelocation 이 false 가 되어야한다.")
     public void updateJoker() throws Exception {
         //given
-        Player player = Player.create("foo", null);
-        player.gameReset();
-
         int frontNum = 1;
         int backNum = 5;
 
-        player.addBlock(Block.createBlock(BlockColor.WHITE, JOKER_BLOCK_NUMBER));
+        Block frontBlock = Block.createBlock(BlockColor.WHITE, frontNum);
+        Block backBlock = Block.createBlock(BlockColor.WHITE, backNum);
+        Block jokerBlock = Block.createBlock(BlockColor.WHITE, JOKER_BLOCK_NUMBER);
+
+
+        Player player = Player.create("foo", null);
+        player.gameReset();
+
+        player.addBlocks(frontBlock, backBlock, jokerBlock);
 
         //when
         player.updateJoker(frontNum, backNum, BlockColor.WHITE);
 
         //then
+//        System.out.println(player.getBlockListCode(true).toString());
         assertThat(player.isNeedWhiteJokerRelocation()).isFalse();
         assertThat(player.getWhiteJokerRange().getFrontNum()).isEqualTo(frontNum);
         assertThat(player.getWhiteJokerRange().getBackNum()).isEqualTo(backNum);
-        assertThat(player.getBlockList().get(0).getNum()).isEqualTo(backNum);
+        assertThat(player.getBlockList().get(0).getNum()).isEqualTo(frontNum);
+        assertThat(player.getBlockList().get(0).isJoker()).isFalse();
+        assertThat(player.getBlockListCode(true).get(0)).isEqualTo(frontNum);
+        assertThat(player.getBlockList().get(1).getNum()).isEqualTo(backNum);
+        assertThat(player.getBlockList().get(1).isJoker()).isTrue();
+        assertThat(player.getBlockListCode(true).get(1)).isEqualTo(JOKER_BLOCK_NUMBER);
+        assertThat(player.getBlockList().get(2).getNum()).isEqualTo(backNum);
+        assertThat(player.getBlockList().get(2).isJoker()).isFalse();
+        assertThat(player.getBlockListCode(true).get(2)).isEqualTo(backNum);
     }
 
     @Test
