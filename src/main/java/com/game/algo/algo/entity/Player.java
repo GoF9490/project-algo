@@ -8,6 +8,9 @@ import lombok.Getter;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.web.socket.WebSocketSession;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,12 +20,16 @@ import java.util.stream.Collectors;
 
 @Getter
 @RedisHash(value = "player")
+//@Entity
 public class Player {
 
     @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name; // or Member 객체
+
+    private boolean ready = false;
 
     private WebSocketSession webSocketSession;
 
@@ -52,6 +59,10 @@ public class Player {
         return blockList.stream()
                 .map(block -> block.getBlockCode(isMaster))
                 .collect(Collectors.toList());
+    }
+
+    public void updateReady(boolean ready) {
+        this.ready =  ready;
     }
 
     public void gameReset() {

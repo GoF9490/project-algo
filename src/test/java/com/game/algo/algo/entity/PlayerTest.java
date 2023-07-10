@@ -158,12 +158,15 @@ class PlayerTest {
         assertThat(player.isNeedWhiteJokerRelocation()).isFalse();
         assertThat(player.getWhiteJokerRange().getFrontNum()).isEqualTo(frontNum);
         assertThat(player.getWhiteJokerRange().getBackNum()).isEqualTo(backNum);
+
         assertThat(player.getBlockList().get(0).getNum()).isEqualTo(frontNum);
         assertThat(player.getBlockList().get(0).isJoker()).isFalse();
         assertThat(player.getBlockListCode(true).get(0)).isEqualTo(frontNum);
+
         assertThat(player.getBlockList().get(1).getNum()).isEqualTo(backNum);
         assertThat(player.getBlockList().get(1).isJoker()).isTrue();
         assertThat(player.getBlockListCode(true).get(1)).isEqualTo(JOKER_BLOCK_NUMBER);
+
         assertThat(player.getBlockList().get(2).getNum()).isEqualTo(backNum);
         assertThat(player.getBlockList().get(2).isJoker()).isFalse();
         assertThat(player.getBlockListCode(true).get(2)).isEqualTo(backNum);

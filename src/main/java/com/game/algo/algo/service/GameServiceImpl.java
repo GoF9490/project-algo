@@ -20,12 +20,46 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * 클라이언트와 통신해야함
+ * 매 페이즈마다 클라이언트와 확인절차를 거치게끔 하는게 좋을듯?
+ * 도중에 튕기면 그에 알맞는 조치를 취해야함
+ */
+
 @Service
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-    private final GameManagerRepository gameManagerRepository;
+//    private final GameManagerRepository gameManagerRepository;
 //    private final PlayerRepository playerRepository;
+
+    public void testLogging(String message) {
+        System.out.println(message);
+    }
+
+    public void updatePlayerReady(Player player, boolean isReady) {
+        player.updateReady(isReady);
+    }
+
+    public void checkAllPlayerReady(GameManager gameManager) {
+        int allPlayerCount = gameManager.getPlayerList().size();
+        int readyPlayerCount = (int) gameManager.getPlayerList().stream().filter(Player::isReady).count();
+
+        if (allPlayerCount >= 2 && allPlayerCount == readyPlayerCount) {
+            gameReset(gameManager);
+        }
+    }
+
+    public void gameReset(GameManager gameManager) { // 테스트해야함
+        gameManager.gameReset();
+        gameManager.playerOrderReset();
+
+        // playerOrder 클라이언트에 전달
+    }
+
+    public void gameStart(GameManager gameManager) {
+        gameManager.updatePhase(GameManager.Phase.READY);
+    }
 
     public void choiceBlock(GameManager gameManager, Player player, ChoiceBlockInfo choiceBlock) {
         List<Block> receivedBlock = new ArrayList<>();
@@ -34,19 +68,14 @@ public class GameServiceImpl implements GameService {
         receivedBlock.addAll(getRandomBlock(gameManager, BlockColor.BLACK, choiceBlock.getBlack()));
 
         receivedBlock.forEach(player::addBlock);
-        
+
         // 조커를 가지고있을때
     }
 
-    public void gameReset(GameManager gameManager) { // 테스트해야함
-        gameManager.gameReset();
-        gameManager.playerOrderReset();
-    }
-
-    public GameManager findGameManagerById(Long id) {
-        return gameManagerRepository.findById(id)
-                .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_MANAGER_NOT_FOUND));
-    }
+//    public GameManager findGameManagerById(Long id) {
+//        return gameManagerRepository.findById(id)
+//                .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_MANAGER_NOT_FOUND));
+//    }
 
     private void choiceFirstBlocks(List<Player> playerList) {
         /**

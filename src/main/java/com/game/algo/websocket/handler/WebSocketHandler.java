@@ -1,23 +1,31 @@
 package com.game.algo.websocket.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.game.algo.algo.service.GameService;
+import com.game.algo.websocket.data.MessageDataType;
+import com.game.algo.websocket.dto.MessageDataRequest;
+import com.game.algo.websocket.dto.PlayerReadyUpdate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Logger;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private static final Logger LOG = Logger.getGlobal();
+//    private static final Logger LOG = Logger.getGlobal();
 
     private static final Map<String, WebSocketSession> CLIENTS = new ConcurrentHashMap<>(); // 수정 가능성 높음
+
+    private final GameService gameService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -52,5 +60,26 @@ public class WebSocketHandler extends TextWebSocketHandler {
 //                }
 //            }
 //        });
+
+        String id = session.getId();
+
+        String input = message.getPayload();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        MessageDataRequest messageDataRequest = objectMapper.readValue(input, MessageDataRequest.class);
+
+        MessageDataType requestMessageType = messageDataRequest.getType();
+        String requestMessage = messageDataRequest.getMessage();
+
+        log.info("MessageData : id:{} / type:{} / message:{}", id, requestMessageType, requestMessage);
+
+        switch (requestMessageType) {
+            case PlayerReadyUpdate:
+                PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
+                gameService.testLogging(playerReadyUpdate.getName());
+                break;
+        }
+
     }
 }

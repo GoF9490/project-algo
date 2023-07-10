@@ -26,11 +26,11 @@ public class GameManager {
 
     private List<Player> playerOrder = new ArrayList<>();
 
-    private Integer turn = 0;
+    private Integer progressingPlayerIndex = 0;
 
-    private List<Block> whiteBlockList;
+    private List<Block> whiteBlockList = null;
 
-    private List<Block> blackBlockList;
+    private List<Block> blackBlockList = null;
 
 
 
@@ -38,7 +38,7 @@ public class GameManager {
     public void gameReset() {
         phase = Phase.READY;
         playerOrder = new ArrayList<>();
-        turn = 0;
+        progressingPlayerIndex = 0;
         blockReset();
     }
 
@@ -62,6 +62,10 @@ public class GameManager {
         } else {
             return blackBlockList.remove((int)(randomValue * blackBlockList.size()));
         }
+    }
+
+    public void updatePhase(Phase phase) {
+        this.phase = phase;
     }
 
     private void blockReset() {
