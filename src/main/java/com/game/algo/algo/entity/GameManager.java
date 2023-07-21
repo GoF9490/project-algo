@@ -1,10 +1,11 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,32 +13,37 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Getter
-//@Entity
+@Entity
 //@RedisHash(value = "game_manager")
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class GameManager {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Phase phase = Phase.WAIT;
 
+    @OneToMany(mappedBy = "gameManager", cascade = CascadeType.ALL)
     private List<Player> playerList = new ArrayList<>();
-
-    private List<Player> playerOrder = new ArrayList<>();
 
     private Integer progressingPlayerIndex = 0;
 
+    @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> whiteBlockList = null;
 
+    @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blackBlockList = null;
 
 
-
+    public static GameManager create(Player player) {
+        GameManager gameManager = new GameManager();
+        gameManager.joinPlayer(player);
+        return gameManager;
+    }
 
     public void gameReset() {
-        phase = Phase.READY;
-        playerOrder = new ArrayList<>();
+        phase = Phase.READY; // 고려
         progressingPlayerIndex = 0;
         blockReset();
     }
@@ -49,9 +55,12 @@ public class GameManager {
     }
 
     public void playerOrderReset() {
-        playerOrder = playerList.stream()
+        List<Player> playerOrderList = playerList.stream()
                 .sorted(Comparator.comparing(player -> Math.random()))
                 .collect(Collectors.toList());
+
+        IntStream.range(0, playerOrderList.size())
+                .forEach(i -> playerOrderList.get(i).updateOrder(i+1));
     }
 
     public Block drawRandomBlock(BlockColor blockColor) {

@@ -4,6 +4,8 @@ import com.game.algo.algo.data.BlockColor;
 import lombok.AccessLevel;
 import lombok.Getter;
 
+import javax.persistence.Embeddable;
+
 import static com.game.algo.algo.data.GameConstant.*;
 
 /**
@@ -13,6 +15,7 @@ import static com.game.algo.algo.data.GameConstant.*;
 
 @Getter
 //@Entity
+@Embeddable
 public class Block {
 
     @Getter(value = AccessLevel.NONE)

@@ -6,9 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class MessageDataRequest {
+@NoArgsConstructor
+public class MessageDataResponse {
 
     private MessageType type;
 

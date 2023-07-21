@@ -24,11 +24,11 @@ class GameServiceTest {
     @DisplayName("ChoiceBlockInfo 의 데이터를 토대로 GameManager 의 블록을 Player 에게 전달합니다.")
     public void choiceBlockTest() throws Exception {
         //given
-        GameManager gameManager = new GameManager();
-        gameManager.gameReset();
-
         Player player = Player.create("player1", null);
         player.gameReset();
+
+        GameManager gameManager = GameManager.create(player);
+        gameManager.gameReset();
 
         ChoiceBlockInfo choiceBlockInfo = new ChoiceBlockInfo(2, 3);
 

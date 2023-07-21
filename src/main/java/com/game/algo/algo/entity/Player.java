@@ -1,17 +1,17 @@
 package com.game.algo.algo.entity;
 
+import com.game.algo.algo.data.BlackJokerRange;
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.JokerRange;
+import com.game.algo.algo.data.WhiteJokerRange;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import lombok.AccessLevel;
 import lombok.Getter;
-import org.springframework.data.redis.core.RedisHash;
+import lombok.NoArgsConstructor;
 import org.springframework.web.socket.WebSocketSession;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,26 +19,36 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
-@RedisHash(value = "player")
-//@Entity
+//@RedisHash(value = "player")
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Player {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name; // or Member 객체
 
     private boolean ready = false;
 
-    private WebSocketSession webSocketSession;
+    private String webSocketSessionId; // 대안 필요(?)
 
+    @ManyToOne
+    @JoinColumn(name = "game_manager_id")
+    private GameManager gameManager;
+
+    private int orderNumber;
+
+    @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blockList = new ArrayList<>();
 
-    private JokerRange whiteJokerRange;
+    @Embedded // 수정필요
+    private WhiteJokerRange whiteJokerRange;
 
-    private JokerRange blackJokerRange;
-    
+    @Embedded
+    private BlackJokerRange blackJokerRange;
+
     private boolean needWhiteJokerRelocation = false;
 
     private boolean needBlackJokerRelocation = false;
@@ -51,8 +61,8 @@ public class Player {
 //        this.name = name;
 //    }
 
-    public static Player create(String name, WebSocketSession webSocketSession) {
-        return new Player(name, webSocketSession);
+    public static Player create(String name, String webSocketSessionId) {
+        return new Player(name, webSocketSessionId);
     }
 
     public List<Integer> getBlockListCode(boolean isMaster) {
@@ -66,6 +76,7 @@ public class Player {
     }
 
     public void gameReset() {
+        orderNumber = 0;
         blockList = new ArrayList<>();
         whiteJokerRange = null;
         blackJokerRange = null;
@@ -100,11 +111,11 @@ public class Player {
 
         if (jokerColor == BlockColor.WHITE && needWhiteJokerRelocation) {
             findJoker.setNum(backNum);
-            whiteJokerRange = new JokerRange(frontNum, backNum);
+            whiteJokerRange = new WhiteJokerRange(frontNum, backNum);
             needWhiteJokerRelocation = false;
         } else if (jokerColor == BlockColor.BLACK && needBlackJokerRelocation) {
             findJoker.setNum(backNum);
-            blackJokerRange = new JokerRange(frontNum, backNum);
+            blackJokerRange = new BlackJokerRange(frontNum, backNum);
             needBlackJokerRelocation = false;
         } else {
             throw new GameLogicException(GameExceptionCode.JOKER_ALREADY_CHANGED);
@@ -114,9 +125,13 @@ public class Player {
         sortBlock();
     }
 
-    private Player(String name, WebSocketSession webSocketSession) {
+    public void updateOrder(int order) {
+        this.orderNumber = order;
+    }
+
+    private Player(String name, String webSocketSessionId) {
         this.name = name;
-        this.webSocketSession = webSocketSession;
+        this.webSocketSessionId = webSocketSessionId;
     }
 
     private Block findJoker(int backNum, BlockColor jokerColor) {
@@ -146,10 +161,10 @@ public class Player {
     private void distinguishJoker(Block block) {
         if (block.isJoker()) {
             if (block.isWhite()) {
-                whiteJokerRange = new JokerRange(0, 12);
+                whiteJokerRange = new WhiteJokerRange(0, 12);
                 needWhiteJokerRelocation = true;
             } else {
-                blackJokerRange = new JokerRange(0, 12);
+                blackJokerRange = new BlackJokerRange(0, 12);
                 needBlackJokerRelocation = true;
             }
         }

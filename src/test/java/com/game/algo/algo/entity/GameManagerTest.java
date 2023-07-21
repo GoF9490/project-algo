@@ -1,18 +1,14 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 class GameManagerTest {
 
@@ -114,6 +110,6 @@ class GameManagerTest {
 //                .forEach(player -> System.out.println("order : " + player.getName()));
 
         gameManager.getPlayerList().stream()
-                .forEach(player -> assertThat(gameManager.getPlayerOrder().contains(player)).isTrue());
+                .forEach(player -> assertThat(player.getOrderNumber()).isBetween(1, 4));
     }
 }

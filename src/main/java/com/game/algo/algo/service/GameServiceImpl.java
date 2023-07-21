@@ -9,6 +9,7 @@ import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.GameManagerRepository;
+import com.game.algo.algo.repository.PlayerJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +31,8 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-//    private final GameManagerRepository gameManagerRepository;
-//    private final PlayerRepository playerRepository;
+    private final GameManagerRepository gameManagerRepository;
+    private final PlayerJpaRepository playerJpaRepository;
 
     public void testLogging(String message) {
         System.out.println(message);
@@ -72,10 +73,25 @@ public class GameServiceImpl implements GameService {
         // 조커를 가지고있을때
     }
 
-//    public GameManager findGameManagerById(Long id) {
-//        return gameManagerRepository.findById(id)
-//                .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_MANAGER_NOT_FOUND));
-//    }
+    public Long createGameManager(Player player){
+        GameManager gameManager = GameManager.create(player);
+        return gameManagerRepository.save(gameManager).getId();
+    }
+
+    public Long createPlayer(String name, String webSocketSessionId) {
+        Player player = Player.create(name, webSocketSessionId);
+        return playerJpaRepository.save(player).getId();
+    }
+
+    public GameManager findGameManagerById(Long id) {
+        return gameManagerRepository.findById(id)
+                .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_MANAGER_NOT_FOUND));
+    }
+
+    public Player findPlayerById(Long id) {
+        return playerJpaRepository.findById(id)
+                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
+    }
 
     private void choiceFirstBlocks(List<Player> playerList) {
         /**
