@@ -2,11 +2,10 @@ package com.game.algo.algo.service;
 
 import com.game.algo.algo.dto.ChoiceBlockInfo;
 import com.game.algo.algo.entity.Block;
-import com.game.algo.algo.entity.GameManager;
+import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -21,19 +20,19 @@ class GameServiceTest {
     @Autowired private GameService gameService;
 
     @RepeatedTest(5)
-    @DisplayName("ChoiceBlockInfo 의 데이터를 토대로 GameManager 의 블록을 Player 에게 전달합니다.")
+    @DisplayName("ChoiceBlockInfo 의 데이터를 토대로 GameRoom 의 블록을 Player 에게 전달합니다.")
     public void choiceBlockTest() throws Exception {
         //given
         Player player = Player.create("player1", null);
         player.gameReset();
 
-        GameManager gameManager = GameManager.create(player);
-        gameManager.gameReset();
+        GameRoom gameRoom = GameRoom.create(player);
+        gameRoom.gameReset();
 
         ChoiceBlockInfo choiceBlockInfo = new ChoiceBlockInfo(2, 3);
 
         //when
-        gameService.choiceBlock(gameManager, player, choiceBlockInfo);
+        gameService.choiceBlock(gameRoom, player, choiceBlockInfo);
 
         //then
         assertThat(player.getBlockList().size()).isEqualTo(choiceBlockInfo.getWhite() + choiceBlockInfo.getBlack());

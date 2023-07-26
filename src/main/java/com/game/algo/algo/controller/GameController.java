@@ -1,16 +1,14 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.dto.GameManagerCreate;
+import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.ResponseData;
+import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,11 +18,24 @@ public class GameController {
     private final GameService gameService;
 
     @PostMapping("/create")
-    public ResponseEntity gameCreate(@RequestBody GameManagerCreate gameManagerCreate){
-        Player findPlayer = gameService.findPlayerById(gameManagerCreate.getPlayerId());
-        Long gameManagerId = gameService.createGameManager(findPlayer);
+    public ResponseEntity gameCreate(@RequestBody GameRoomCreate gameRoomCreate){
+        Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
+        Long gameRoomId = gameService.createGameRoom();
+        gameService.joinGameRoom(gameService.findGameRoomById(gameRoomId), findPlayer);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseData(200, gameManagerId));
+                .body(new ResponseData(200, gameRoomId));
+    }
+
+    @PatchMapping("/join/{gameRoomId}")
+    public ResponseEntity joinGame(@PathVariable Long gameRoomId,
+                                   @RequestBody Long playerId) {
+        GameRoom gameRoom = gameService.findGameRoomById(gameRoomId);
+        Player player = gameService.findPlayerById(playerId);
+
+        gameService.joinGameRoom(gameRoom, player);
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .build();
     }
 }

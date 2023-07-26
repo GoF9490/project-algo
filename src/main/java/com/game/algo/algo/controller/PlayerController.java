@@ -1,9 +1,8 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.dto.PlayerCreate;
-import com.game.algo.algo.dto.PlayerSimple;
+import com.game.algo.algo.dto.messagetype.PlayerCreate;
+import com.game.algo.algo.dto.messagetype.PlayerSimple;
 import com.game.algo.algo.dto.ResponseData;
-import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

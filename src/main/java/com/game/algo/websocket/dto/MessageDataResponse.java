@@ -13,4 +13,11 @@ public class MessageDataResponse {
     private MessageType type;
 
     private String message;
+
+
+    public static MessageDataResponse create(MessageType type, String message){
+        return new MessageDataResponse(
+                type,
+                message);
+    }
 }

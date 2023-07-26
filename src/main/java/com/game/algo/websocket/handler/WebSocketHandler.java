@@ -1,11 +1,17 @@
 package com.game.algo.websocket.handler;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketHandler;
+import com.game.algo.algo.dto.messagetype.GameRoomCreate;
+import com.game.algo.algo.dto.messagetype.GameRoomJoin;
+import com.game.algo.algo.dto.messagetype.PlayerCreate;
+import com.game.algo.algo.dto.messagetype.PlayerSimple;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataRequest;
 import com.game.algo.websocket.dto.MessageDataResponse;
+import com.game.algo.websocket.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -14,32 +20,28 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private static final Map<String, WebSocketSession> CLIENTS = new ConcurrentHashMap<>();
     private final GameWebSocketHandler gameWebSocketHandler;
+    private final WebSocketService webSocketService;
     private final ObjectMapper objectMapper;
 
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = session.getId();
-        CLIENTS.put(sessionId, session);
+        webSocketService.addClient(sessionId, session);
 
         MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
-        sendMessageData(sessionId, messageDataResponse);
+        webSocketService.sendMessageData(sessionId, messageDataResponse);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        CLIENTS.remove(session.getId());
+        webSocketService.removeClient(session.getId());
     }
 
     @Override
@@ -57,31 +59,45 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
 
         // 메서드로 뺄 가능성 있음
-        MessageDataResponse messageDataResponse = null;
-
         try {
             switch (type) {
-//                case PlayerCreate:
-//                    PlayerCreate.Request playerCreateRequest = objectMapper.readValue(requestMessage, PlayerCreate.Request.class);
-//                    gameWebSocketHandler.createPlayer(playerCreateRequest, sessionId);
-//                    break;
+                case PlayerCreate:
+                    PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
-                case SessionId:
-                    messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
-                    sendMessageData(sessionId, messageDataResponse);
+                    PlayerSimple playerSimple = gameWebSocketHandler.createPlayer(playerCreate);
+                    webSocketService.sendMessageData(sessionId,
+                            MessageDataResponse.create(MessageType.PlayerSimple, toJson(playerSimple)));
                     break;
+
+                case GameRoomCreate:
+                    GameRoomCreate gameRoomCreate = objectMapper.readValue(requestMessage, GameRoomCreate.class);
+
+                    Long gameRoomId = gameWebSocketHandler.createGameRoom(gameRoomCreate);
+                    webSocketService.sendMessageData(sessionId,
+                            MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId.toString()));
+                    break;
+
+                case GameRoomJoin:
+                    GameRoomJoin gameRoomJoin = objectMapper.readValue(requestMessage, GameRoomJoin.class);
+
+                    MessageType messageType = gameWebSocketHandler.joinGameRoom(gameRoomJoin) ?
+                            MessageType.JoinRoomSuccess : MessageType.JoinRoomFail;
+                    webSocketService.sendMessageData(sessionId,
+                            MessageDataResponse.create(messageType, ""));
+                    break;
+
+
             }
         } catch (GameLogicException gameLogicException) {
-            messageDataResponse = new MessageDataResponse(MessageType.Exception, gameLogicException.getMessage());
-            sendMessageData(sessionId, messageDataResponse);
+            webSocketService.sendMessageData(sessionId,
+                    MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
         } catch (Exception e) {
             log.error(e.getMessage());
         }
 
     }
 
-    private void sendMessageData(String sessionId, MessageDataResponse messageDataResponse) throws IOException {
-        String json = objectMapper.writeValueAsString(messageDataResponse);
-        CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
+    private String toJson(PlayerSimple playerSimple) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(playerSimple);
     }
 }

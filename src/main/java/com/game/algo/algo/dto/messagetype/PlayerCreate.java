@@ -1,4 +1,4 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.messagetype;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

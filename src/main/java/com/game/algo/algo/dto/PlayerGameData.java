@@ -18,7 +18,7 @@ public class PlayerGameData {
 
     private Integer orderNumber;
 
-    private List<Integer> blockListCode;
+    private List<Integer> blockCodeList;
 
 
     public static PlayerGameData create(Player player) {

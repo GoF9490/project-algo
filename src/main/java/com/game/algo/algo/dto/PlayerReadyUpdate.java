@@ -13,7 +13,7 @@ public class PlayerReadyUpdate {
 
     private String name;
 
-    private Integer gameManagerId;
+    private Integer gameRoomId;
 
     private Boolean ready;
 }

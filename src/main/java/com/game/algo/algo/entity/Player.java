@@ -9,7 +9,6 @@ import com.game.algo.algo.exception.GameLogicException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.web.socket.WebSocketSession;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -35,8 +34,8 @@ public class Player {
     private String webSocketSessionId; // 대안 필요(?)
 
     @ManyToOne
-    @JoinColumn(name = "game_manager_id")
-    private GameManager gameManager;
+    @JoinColumn(name = "game_room_id")
+    private GameRoom gameRoom;
 
     private int orderNumber;
 
@@ -63,6 +62,10 @@ public class Player {
 
     public static Player create(String name, String webSocketSessionId) {
         return new Player(name, webSocketSessionId);
+    }
+
+    public void joinGameRoom(GameRoom gameRoom){
+        this.gameRoom = gameRoom;
     }
 
     public List<Integer> getBlockListCode(boolean isMaster) {

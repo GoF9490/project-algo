@@ -1,6 +1,7 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameServiceConst;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,11 +13,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static com.game.algo.algo.data.GameServiceConst.*;
+
 @Getter
 @Entity
 //@RedisHash(value = "game_manager")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class GameManager {
+public class GameRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +27,10 @@ public class GameManager {
 
     private Phase phase = Phase.WAIT;
 
-    @OneToMany(mappedBy = "gameManager", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL)
     private List<Player> playerList = new ArrayList<>();
 
-    private Integer progressingPlayerIndex = 0;
+    private Integer progressPlayerNumber = 0;
 
     @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> whiteBlockList = null;
@@ -36,22 +39,27 @@ public class GameManager {
     private List<Block> blackBlockList = null;
 
 
-    public static GameManager create(Player player) {
-        GameManager gameManager = new GameManager();
-        gameManager.joinPlayer(player);
-        return gameManager;
+    public static GameRoom create() {
+        GameRoom gameRoom = new GameRoom();
+        return gameRoom;
     }
 
     public void gameReset() {
         phase = Phase.READY; // 고려
-        progressingPlayerIndex = 0;
+        progressPlayerNumber = 0;
         blockReset();
     }
 
-    public void joinPlayer(Player player) {
+    public boolean joinPlayer(Player player) {
+        if (playerList.size() >= PLAYER_MAX_COUNT){
+            return false;
+        }
+
         List<Player> playerListEdit = new ArrayList<>(playerList);
         playerListEdit.add(player);
+        player.joinGameRoom(this);
         playerList = playerListEdit;
+        return true;
     }
 
     public void playerOrderReset() {
