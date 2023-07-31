@@ -10,7 +10,7 @@ import static com.game.algo.algo.data.GameConstant.*;
 
 /**
  * BlockCode
- * 0 ~ 11 숫자블록, 12 = 조커, 13 = Status.CLOSE
+ * 1 ~ 11 숫자블록, 12 = 조커, 13 = Status.CLOSE, 14 = 숫자 0;
  */
 
 @Getter
@@ -41,6 +41,10 @@ public class Block {
 
         if (isJoker()) {
             return JOKER_BLOCK_NUMBER * blackIsMinus();
+        }
+
+        if (num == 0) {
+            return ZERO_BLOCK_NUMBER * blackIsMinus();
         }
 
         return num * blackIsMinus();

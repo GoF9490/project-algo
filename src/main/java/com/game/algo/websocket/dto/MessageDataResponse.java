@@ -8,14 +8,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MessageDataResponse {
+public class MessageDataResponse<T> {
 
     private MessageType type;
 
-    private String message;
+    private T message;
 
 
-    public static MessageDataResponse create(MessageType type, String message){
+    public static MessageDataResponse create(MessageType type, Object message){
         return new MessageDataResponse(
                 type,
                 message);

@@ -20,12 +20,15 @@ public class PlayerGameData {
 
     private List<Integer> blockCodeList;
 
+    private boolean ready;
+
 
     public static PlayerGameData create(Player player) {
         return new PlayerGameData(
                 player.getId(),
                 player.getName(),
                 player.getOrderNumber(),
-                player.getBlockListCode(false));
+                player.getBlockListCode(false),
+                player.isReady());
     }
 }

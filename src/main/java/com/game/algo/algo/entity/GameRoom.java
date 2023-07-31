@@ -2,6 +2,8 @@ package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.GameServiceConst;
+import com.game.algo.algo.exception.GameExceptionCode;
+import com.game.algo.algo.exception.GameLogicException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,16 +52,15 @@ public class GameRoom {
         blockReset();
     }
 
-    public boolean joinPlayer(Player player) {
+    public void joinPlayer(Player player) {
         if (playerList.size() >= PLAYER_MAX_COUNT){
-            return false;
+            throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
         }
 
         List<Player> playerListEdit = new ArrayList<>(playerList);
         playerListEdit.add(player);
         player.joinGameRoom(this);
         playerList = playerListEdit;
-        return true;
     }
 
     public void playerOrderReset() {

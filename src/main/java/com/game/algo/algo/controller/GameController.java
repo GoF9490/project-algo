@@ -21,7 +21,6 @@ public class GameController {
     public ResponseEntity gameCreate(@RequestBody GameRoomCreate gameRoomCreate){
         Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
         Long gameRoomId = gameService.createGameRoom();
-        gameService.joinGameRoom(gameService.findGameRoomById(gameRoomId), findPlayer);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseData(200, gameRoomId));
@@ -30,10 +29,8 @@ public class GameController {
     @PatchMapping("/join/{gameRoomId}")
     public ResponseEntity joinGame(@PathVariable Long gameRoomId,
                                    @RequestBody Long playerId) {
-        GameRoom gameRoom = gameService.findGameRoomById(gameRoomId);
-        Player player = gameService.findPlayerById(playerId);
 
-        gameService.joinGameRoom(gameRoom, player);
+        gameService.joinGameRoom(gameRoomId, playerId);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .build();

@@ -64,31 +64,28 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 case PlayerCreate:
                     PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
-                    PlayerSimple playerSimple = gameWebSocketHandler.createPlayer(playerCreate);
-                    webSocketService.sendMessageData(sessionId,
-                            MessageDataResponse.create(MessageType.PlayerSimple, toJson(playerSimple)));
+                    MessageDataResponse createPlayer = gameWebSocketHandler.createPlayer(playerCreate);
+                    webSocketService.sendMessageData(sessionId, createPlayer);
                     break;
 
                 case GameRoomCreate:
                     GameRoomCreate gameRoomCreate = objectMapper.readValue(requestMessage, GameRoomCreate.class);
 
-                    Long gameRoomId = gameWebSocketHandler.createGameRoom(gameRoomCreate);
-                    webSocketService.sendMessageData(sessionId,
-                            MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId.toString()));
+                    MessageDataResponse createGameRoom = gameWebSocketHandler.createGameRoom(gameRoomCreate);
+                    webSocketService.sendMessageData(sessionId, createGameRoom);
                     break;
 
                 case GameRoomJoin:
                     GameRoomJoin gameRoomJoin = objectMapper.readValue(requestMessage, GameRoomJoin.class);
 
-                    MessageType messageType = gameWebSocketHandler.joinGameRoom(gameRoomJoin) ?
-                            MessageType.JoinRoomSuccess : MessageType.JoinRoomFail;
-                    webSocketService.sendMessageData(sessionId,
-                            MessageDataResponse.create(messageType, ""));
+                    MessageDataResponse joinGameRoom = gameWebSocketHandler.joinGameRoom(gameRoomJoin);
+                    webSocketService.sendMessageData(sessionId, joinGameRoom);
                     break;
 
 
             }
         } catch (GameLogicException gameLogicException) {
+            log.error("game logic exception : " + gameLogicException.getMessage());
             webSocketService.sendMessageData(sessionId,
                     MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
         } catch (Exception e) {

@@ -26,7 +26,7 @@ class GameServiceTest {
         Player player = Player.create("player1", null);
         player.gameReset();
 
-        GameRoom gameRoom = GameRoom.create(player);
+        GameRoom gameRoom = GameRoom.create();
         gameRoom.gameReset();
 
         ChoiceBlockInfo choiceBlockInfo = new ChoiceBlockInfo(2, 3);
