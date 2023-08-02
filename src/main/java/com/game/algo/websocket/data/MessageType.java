@@ -8,8 +8,9 @@ public enum MessageType {
     GameRoomCreate,
     CreateRoomSuccess,
     JoinRoomSuccess,
-    JoinRoomFail,
+    JoinRoomFail, // 재검토 필요
     GameRoomJoin,
+    PlayerReadyUpdate,
     GameStatusData,
     Exception;
 }

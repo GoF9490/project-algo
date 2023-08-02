@@ -13,14 +13,13 @@ public interface GameService {
 
     Player findPlayerById(Long id);
 
-    void updatePlayerReady(Player player, boolean isReady);
-
+    void updatePlayerReady(Long playerId, boolean isReady);
 
     Long createGameRoom();
 
     GameRoom findGameRoomById(Long id);
 
-    void sendGameStatusByWebSocket(Long gameRoomId);
+    void sendGameStatusByWebSocket(Long gameRoomId); // 테스트 방식 고민
 
     void joinGameRoom(Long gameRoomId, Long playerId);
 

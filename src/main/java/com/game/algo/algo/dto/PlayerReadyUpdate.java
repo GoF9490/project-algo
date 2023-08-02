@@ -9,11 +9,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PlayerReadyUpdate {
 
-    private Integer id;
+    private Long playerId;
 
-    private String name;
-
-    private Integer gameRoomId;
+    private Long gameRoomId;
 
     private Boolean ready;
 }

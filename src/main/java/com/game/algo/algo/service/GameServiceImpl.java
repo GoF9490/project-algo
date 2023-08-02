@@ -71,8 +71,10 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
-    public void updatePlayerReady(Player player, boolean isReady) {
-        player.updateReady(isReady);
+    @Transactional
+    public void updatePlayerReady(Long playerId, boolean isReady) {
+        Player findPlayer = findPlayerById(playerId);
+        findPlayer.updateReady(isReady);
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package com.game.algo.websocket.handler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketHandler;
+import com.game.algo.algo.dto.PlayerReadyUpdate;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
@@ -41,6 +42,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
+        gameWebSocketHandler.disconnectWebSession(session.getId());
         webSocketService.removeClient(session.getId());
     }
 
@@ -80,6 +82,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
                     MessageDataResponse joinGameRoom = gameWebSocketHandler.joinGameRoom(gameRoomJoin);
                     webSocketService.sendMessageData(sessionId, joinGameRoom);
+                    break;
+
+                case PlayerReadyUpdate:
+                    PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
+
+                    gameWebSocketHandler.updatePlayerReady(playerReadyUpdate);
                     break;
 
 
