@@ -1,9 +1,7 @@
 package com.game.algo.websocket.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.algo.entity.Player;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,28 +26,19 @@ public class WebSocketService {
         CLIENTS.put(sessionId, session);
     }
 
-    public void sendGameStatusDataToPlayers(List<Player> playerList, GameStatusData gameStatusData) {
-        String json = "";
-        try {
-            json = objectMapper.writeValueAsString(gameStatusData);
-        } catch (Exception e){
-            throw new RuntimeException(e);
-        }
-
-        MessageDataResponse message = MessageDataResponse.create(MessageType.GameStatusData, json);
-
-        playerList.forEach(player -> {
+    public void sendMessageToSessionIdList(List<String> sessionIdList, MessageDataResponse message) {
+        sessionIdList.forEach(sessionId -> {
             try {
-                sendMessageData(player.getWebSocketSessionId(), message);
+                sendMessageData(sessionId, message);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    public void sendMessageData(String recipientSessionId, MessageDataResponse messageDataResponse) throws IOException {
+    public void sendMessageData(String sessionId, MessageDataResponse messageDataResponse) throws IOException {
         String json = objectMapper.writeValueAsString(messageDataResponse);
-        CLIENTS.get(recipientSessionId).sendMessage(new TextMessage(json));
+        CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
     }
 
     public void removeClient(String sessionId){

@@ -7,8 +7,13 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChoiceBlockInfo {
+public class PlayerBlockDraw {
 
-    private int white = 0;
-    private int black = 0;
+    private Long playerId;
+
+    private Long gameRoomId;
+
+    private int whiteBlockCount = 0;
+
+    private int blackBlockCount = 0;
 }

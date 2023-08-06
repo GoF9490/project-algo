@@ -22,7 +22,7 @@ class GameRoomTest {
         gameRoom.gameReset();
 
         //then
-        assertThat(gameRoom.getPhase()).isEqualTo(GameRoom.Phase.READY);
+        assertThat(gameRoom.getProgressPlayerNumber()).isEqualTo(0);
     }
 
     @Test

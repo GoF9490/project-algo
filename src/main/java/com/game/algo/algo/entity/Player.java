@@ -31,6 +31,8 @@ public class Player {
 
     private boolean ready = false;
 
+    private boolean retire = false;
+
     private String webSocketSessionId; // 대안 필요(?)
 
     @ManyToOne
@@ -42,7 +44,7 @@ public class Player {
     @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blockList = new ArrayList<>();
 
-    @Embedded // 수정필요
+    @Embedded
     private WhiteJokerRange whiteJokerRange;
 
     @Embedded
@@ -130,6 +132,14 @@ public class Player {
 
     public void updateOrder(int order) {
         this.orderNumber = order;
+    }
+
+    public void completeWhiteJokerRelocation() {
+        needWhiteJokerRelocation = false;
+    }
+
+    public void completeBlackJokerRelocation() {
+        needBlackJokerRelocation = false;
     }
 
     private Player(String name, String webSocketSessionId) {

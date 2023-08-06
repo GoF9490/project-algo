@@ -3,6 +3,7 @@ package com.game.algo.websocket.handler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketHandler;
+import com.game.algo.algo.dto.PlayerBlockDraw;
 import com.game.algo.algo.dto.PlayerReadyUpdate;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
@@ -88,6 +89,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
 
                     gameWebSocketHandler.updatePlayerReady(playerReadyUpdate);
+                    break;
+
+                case PlayerBlockDraw:
+                    PlayerBlockDraw playerBlockDraw = objectMapper.readValue(requestMessage, PlayerBlockDraw.class);
+
+                    gameWebSocketHandler.drawBlock(playerBlockDraw);
                     break;
 
 

@@ -27,7 +27,7 @@ public class GameRoomAspect { // 필요성 재검토 요망
         Object proceed = joinPoint.proceed();
         GameStatusData gameStatusData = GameStatusData.create(gameRoom);
 
-        webSocketService.sendGameStatusDataToPlayers(gameRoom.getPlayerList(), gameStatusData);
+//        webSocketService.sendGameStatusDataToPlayers(gameRoom.getPlayerList(), gameStatusData);
         return proceed;
     }
 }

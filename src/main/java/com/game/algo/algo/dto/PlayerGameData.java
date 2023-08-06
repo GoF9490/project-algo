@@ -22,6 +22,8 @@ public class PlayerGameData {
 
     private boolean ready;
 
+    private boolean retire;
+
 
     public static PlayerGameData create(Player player) {
         return new PlayerGameData(
@@ -29,6 +31,7 @@ public class PlayerGameData {
                 player.getName(),
                 player.getOrderNumber(),
                 player.getBlockListCode(false),
-                player.isReady());
+                player.isReady(),
+                player.isRetire());
     }
 }
