@@ -1,10 +1,13 @@
 package com.game.algo.algo.service;
 
+import com.game.algo.algo.dto.GameStatusData;
+import com.game.algo.algo.dto.MultipleMessageSupporter;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.websocket.data.MessageType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -132,11 +136,13 @@ class GameServiceTest {
         Long playerId = gameService.createPlayer("foo", "sessionId");
         Long gameRoomId = gameService.createGameRoom();
 
-        int whiteBlockCount = 2;
+        int whiteBlockCount = 1;
         int blackBlockCount = 3;
 
+        gameService.findGameRoomById(gameRoomId).gameReset();
+
         //when
-        gameService.drawBlockAtStart(playerId, gameRoomId, whiteBlockCount, blackBlockCount);
+        gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount);
 
         Player player = gameService.findPlayerById(playerId);
 
@@ -152,6 +158,46 @@ class GameServiceTest {
         System.out.println(player.getBlockList().stream()
                 .map(block -> block.getBlockCode(true))
                 .collect(Collectors.toList()).toString());
+    }
+
+    @Test
+    @DisplayName("뽑으려는 블록의 개수가 비정상적일때 익셉션이 발생합니다.")
+    public void drawBlockTestFail_InvalidNumberOfBlocks() throws Exception {
+        //given
+        Long playerId = gameService.createPlayer("foo", "sessionId");
+        Long gameRoomId = gameService.createGameRoom();
+
+        int whiteBlockCount = 2;
+        int blackBlockCount = 3;
+
+        gameService.findGameRoomById(gameRoomId).gameReset();
+
+        //expect
+        assertThatExceptionOfType(GameLogicException.class)
+                .isThrownBy(() -> gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount))
+                .withMessageMatching(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("알맞은 GameRoom의 정보를 담은 MultipleMessageSupporter를 받아옵니다.")
+    public void getGameStatusMessageSupporterSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+
+        IntStream.range(0, 2)
+                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
+                .forEach(playerId -> gameService.joinGameRoom(gameRoomId, playerId));
+
+        //when
+        MultipleMessageSupporter<GameStatusData> messageSupporter = gameService.getGameStatusMessageSupporter(gameRoomId);
+
+        //then
+        assertThat(messageSupporter.getSessionIdList().size()).isEqualTo(2);
+        assertThat(messageSupporter.getSessionIdList().get(0)).isEqualTo("sessionId0");
+        assertThat(messageSupporter.getSessionIdList().get(1)).isEqualTo("sessionId1");
+        assertThat(messageSupporter.getMessageType()).isEqualTo(MessageType.GameStatusData);
+        assertThat(messageSupporter.getData().getId()).isEqualTo(gameRoomId);
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {
