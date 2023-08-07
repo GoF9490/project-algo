@@ -11,6 +11,7 @@ public enum GameExceptionCode {
     ALL_PLAYER_NOT_READY(400, "all player not ready"),
     INVALID_NUMBER_OF_BLOCKS(400, "invalid number of blocks"),
     OUT_OF_SYNC_GAME_PHASE(400, "out of sync game phase"),
+    BLOCK_IS_DEPLETED(400, "block is depleted"),
     JOKER_NOT_MATCH(400, "joker not match"),
     JOKER_ALREADY_CHANGED(400, "joker already changed");
 

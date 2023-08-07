@@ -34,15 +34,14 @@ public class GameRoom {
     private Integer progressPlayerNumber = 0;
 
     @ElementCollection(fetch = FetchType.LAZY)
-    private List<Block> whiteBlockList = null;
+    private List<Block> whiteBlockList = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
-    private List<Block> blackBlockList = null;
+    private List<Block> blackBlockList = new ArrayList<>();
 
 
     public static GameRoom create() {
-        GameRoom gameRoom = new GameRoom();
-        return gameRoom;
+        return new GameRoom();
     }
 
     public void gameReset() {
@@ -51,9 +50,7 @@ public class GameRoom {
     }
 
     public void joinPlayer(Player player) {
-        if (playerList.size() >= PLAYER_MAX_COUNT){
-            throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
-        }
+        checkVacancy();
 
         List<Player> playerListEdit = new ArrayList<>(playerList);
         playerListEdit.add(player);
@@ -91,14 +88,14 @@ public class GameRoom {
     public Block drawRandomBlock(BlockColor blockColor) {
         double randomValue = Math.random();
 
-        if (blockColor == BlockColor.WHITE) {
-            return (whiteBlockList.size() != 0)
-                    ? whiteBlockList.remove((int)(randomValue * whiteBlockList.size()))
-                    : blackBlockList.remove((int)(randomValue * blackBlockList.size()));
-        } else {
-            return (blackBlockList.size() != 0)
-                    ? blackBlockList.remove((int)(randomValue * blackBlockList.size()))
-                    : whiteBlockList.remove((int)(randomValue * whiteBlockList.size()));
+        try {
+            if (blockColor == BlockColor.WHITE) {
+                return whiteBlockList.remove((int)(randomValue * whiteBlockList.size()));
+            } else {
+                return blackBlockList.remove((int)(randomValue * blackBlockList.size()));
+            }
+        } catch (Exception e) {
+            throw new GameLogicException(GameExceptionCode.BLOCK_IS_DEPLETED);
         }
     }
 
@@ -122,6 +119,13 @@ public class GameRoom {
                 .collect(Collectors.toList());
     }
 
+    private void checkVacancy() {
+        if (playerList.size() >= PLAYER_MAX_COUNT){
+            throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
+        }
+    }
+
+
     public enum Phase {
         WAIT, // 게임 시작 전
         SETTING, // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
@@ -131,6 +135,6 @@ public class GameRoom {
         SORT, // 뽑은 블록을 정렬함 ( 조커 고려 )
         GUESS, // 뽑은 블록을 두고 추리함
         REPEAT, // 추리 성공 여부에따라 더할지 결정함
-        END
+        END;
     }
 }
