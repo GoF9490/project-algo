@@ -97,13 +97,7 @@ public class GameServiceImpl implements GameService {
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
     }
 
-    public void phaseTimeLimit(Long gameRoomId, int timeInSec) {
-        GameRoom gameRoom = findGameRoomById(gameRoomId);
-
-
-    }
-
-    public void nextPhase(Long gameRoomId) {
+    public void nextPhase(Long gameRoomId) { // 조정중
         GameRoom gameRoom = findGameRoomById(gameRoomId);
         switch (gameRoom.getPhase()) {
             case SETTING:
@@ -139,6 +133,18 @@ public class GameServiceImpl implements GameService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<String> getSessionIdListInGameRoom(Long gameRoomId) {
+        return findGameRoomById(gameRoomId).getPlayerList().stream()
+                .map(Player::getWebSocketSessionId)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public GameStatusData getGameStatusData(Long gameRoomId) {
+        return GameStatusData.create(findGameRoomById(gameRoomId));
+    }
+
     private void autoDrawAtStart(GameRoom gameRoom, Player player, int count) {
         double randomValue = Math.random();
 
@@ -150,16 +156,6 @@ public class GameServiceImpl implements GameService {
 
         player.completeWhiteJokerRelocation();
         player.completeBlackJokerRelocation();
-    }
-
-    @Transactional(readOnly = true)
-    public MultipleMessageSupporter getGameStatusMessageSupporter(Long gameRoomId) {
-        GameRoom findGameRoom = findGameRoomById(gameRoomId);
-
-        List<String> sessionIdList = getSessionIdListInGameRoom(findGameRoom);
-        GameStatusData gameStatusData = GameStatusData.create(findGameRoom);
-
-        return MultipleMessageSupporter.create(sessionIdList, MessageType.GameStatusData, gameStatusData);
     }
 
     private int numberOfBlockAtStart(GameRoom gameRoom) {

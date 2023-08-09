@@ -152,7 +152,7 @@ class GameServiceTest {
         assertThat(howManyWhiteBlock(player.getBlockList())).isEqualTo(whiteBlockCount);
         assertThat(howManyBlackBlock(player.getBlockList())).isEqualTo(blackBlockCount);
 
-        player.getBlockList().stream()
+        player.getBlockList()
                 .forEach(block -> assertThat(block.getNum()).isBetween(0, 12));
 
         System.out.println(player.getBlockList().stream()
@@ -176,28 +176,6 @@ class GameServiceTest {
         assertThatExceptionOfType(GameLogicException.class)
                 .isThrownBy(() -> gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount))
                 .withMessageMatching(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS.getMessage());
-
-    }
-
-    @Test
-    @DisplayName("알맞은 GameRoom의 정보를 담은 MultipleMessageSupporter를 받아옵니다.")
-    public void getGameStatusMessageSupporterSuccess() throws Exception {
-        //given
-        Long gameRoomId = gameService.createGameRoom();
-
-        IntStream.range(0, 2)
-                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
-                .forEach(playerId -> gameService.joinGameRoom(gameRoomId, playerId));
-
-        //when
-        MultipleMessageSupporter<GameStatusData> messageSupporter = gameService.getGameStatusMessageSupporter(gameRoomId);
-
-        //then
-        assertThat(messageSupporter.getSessionIdList().size()).isEqualTo(2);
-        assertThat(messageSupporter.getSessionIdList().get(0)).isEqualTo("sessionId0");
-        assertThat(messageSupporter.getSessionIdList().get(1)).isEqualTo("sessionId1");
-        assertThat(messageSupporter.getMessageType()).isEqualTo(MessageType.GameStatusData);
-        assertThat(messageSupporter.getData().getId()).isEqualTo(gameRoomId);
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {

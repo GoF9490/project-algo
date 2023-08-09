@@ -1,5 +1,6 @@
 package com.game.algo.algo.service;
 
+import com.game.algo.algo.dto.GameStatusData;
 import com.game.algo.algo.dto.MultipleMessageSupporter;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -22,7 +23,9 @@ public interface GameService {
 
     void gameStart(Long gameRoomId, Long playerId);
 
-    MultipleMessageSupporter getGameStatusMessageSupporter(Long gameRoomId);
-
     void drawBlockAtStart(Long gameRoomId, Long playerId, int whiteBlockCount, int BlackBlockCount);
+
+    GameStatusData getGameStatusData(Long gameRoomId);
+
+    List<String> getSessionIdListInGameRoom(Long gameRoomId);
 }

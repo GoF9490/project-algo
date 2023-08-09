@@ -2,7 +2,7 @@ package com.game.algo.websocket.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.game.algo.algo.controller.GameWebSocketHandler;
+import com.game.algo.algo.controller.GameWebSocketMessageController;
 import com.game.algo.algo.dto.PlayerBlockDraw;
 import com.game.algo.algo.dto.PlayerReadyUpdate;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
@@ -27,7 +27,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private final GameWebSocketHandler gameWebSocketHandler;
+    private final GameWebSocketMessageController gameMessageController;
     private final WebSocketService webSocketService;
     private final ObjectMapper objectMapper;
 
@@ -38,12 +38,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
         webSocketService.addClient(sessionId, session);
 
         MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
-        webSocketService.sendMessageData(sessionId, messageDataResponse);
+        webSocketService.sendMessage(sessionId, messageDataResponse);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        gameWebSocketHandler.disconnectWebSession(session.getId());
+        gameMessageController.disconnectWebSession(session.getId());
         webSocketService.removeClient(session.getId());
     }
 
@@ -67,44 +67,42 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 case PlayerCreate:
                     PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
-                    MessageDataResponse createPlayer = gameWebSocketHandler.createPlayer(playerCreate);
-                    webSocketService.sendMessageData(sessionId, createPlayer);
+                    gameMessageController.createPlayer(playerCreate);
                     break;
 
                 case GameRoomCreate:
                     GameRoomCreate gameRoomCreate = objectMapper.readValue(requestMessage, GameRoomCreate.class);
 
-                    MessageDataResponse createGameRoom = gameWebSocketHandler.createGameRoom(gameRoomCreate);
-                    webSocketService.sendMessageData(sessionId, createGameRoom);
+                    gameMessageController.createGameRoom(gameRoomCreate);
                     break;
 
                 case GameRoomJoin:
                     GameRoomJoin gameRoomJoin = objectMapper.readValue(requestMessage, GameRoomJoin.class);
 
-                    MessageDataResponse joinGameRoom = gameWebSocketHandler.joinGameRoom(gameRoomJoin);
-                    webSocketService.sendMessageData(sessionId, joinGameRoom);
+                    gameMessageController.joinGameRoom(gameRoomJoin);
                     break;
 
                 case PlayerReadyUpdate:
                     PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
 
-                    gameWebSocketHandler.updatePlayerReady(playerReadyUpdate);
+                    gameMessageController.updatePlayerReady(playerReadyUpdate);
                     break;
 
                 case PlayerBlockDraw:
                     PlayerBlockDraw playerBlockDraw = objectMapper.readValue(requestMessage, PlayerBlockDraw.class);
 
-                    gameWebSocketHandler.drawBlock(playerBlockDraw);
+                    gameMessageController.drawBlock(playerBlockDraw);
                     break;
 
 
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());
-            webSocketService.sendMessageData(sessionId,
+            webSocketService.sendMessage(sessionId,
                     MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
         } catch (Exception e) {
             log.error(e.getMessage());
+            webSocketService.sendMessage(sessionId, MessageDataResponse.create(MessageType.Exception, e.getMessage()));
         }
 
     }
