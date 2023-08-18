@@ -16,5 +16,6 @@ spring:
       ddl-auto: create # 서버가 실행될때마다 db의 테이블 초기화 및 생성
     properties:
       hibernate:
+        default_batch_fetch_size: 500
         format_sql: true
     show-sql: false

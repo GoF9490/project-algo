@@ -1,26 +1,19 @@
 package com.game.algo.algo.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.dto.*;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
 import com.game.algo.algo.dto.messagetype.PlayerSimple;
-import com.game.algo.algo.entity.GameRoom;
-import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
-import com.game.algo.websocket.annotation.ResponseMessageData;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataResponse;
 import com.game.algo.websocket.service.WebSocketService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 
 @Slf4j
 @Component
@@ -62,9 +55,18 @@ public class GameWebSocketMessageController {
     }
 
     public void gameStart(@NonNull GameStart gameStart) {
-        gameService.gameStart(gameStart.getGameRoomId(), gameStart.getPlayerId());
+        gameService.gameStart(gameStart.getGameRoomId());
 
         sendGameStatusData(gameStart.getGameRoomId());
+        sendWaitForSec(gameStart.getGameRoomId(), 5);
+    }
+
+    public void endSettingPhase(NextPhase nextPhase) {
+        gameService.updatePlayerReady(nextPhase.getPlayerId(), true);
+        if (gameService.endSettingPhase(nextPhase.getGameRoomId())) {
+            sendGameStatusData(nextPhase.getGameRoomId());
+            sendWaitForSec(nextPhase.getGameRoomId(), 20);
+        }
     }
 
     public void drawBlock(@NonNull PlayerBlockDraw playerBlockDraw) {
@@ -82,6 +84,11 @@ public class GameWebSocketMessageController {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,
                 gameService.getGameStatusData(gameRoomId));
 
+        gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
+    }
+
+    private void sendWaitForSec(Long gameRoomId, int timeInSec) {
+        MessageDataResponse messageData = MessageDataResponse.create(MessageType.WaitForSec, timeInSec);
         gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
     }
 

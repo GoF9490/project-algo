@@ -1,14 +1,14 @@
 package com.game.algo.websocket.handler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketMessageController;
+import com.game.algo.algo.dto.GameStart;
+import com.game.algo.algo.dto.NextPhase;
 import com.game.algo.algo.dto.PlayerBlockDraw;
 import com.game.algo.algo.dto.PlayerReadyUpdate;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
-import com.game.algo.algo.dto.messagetype.PlayerSimple;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataRequest;
@@ -88,13 +88,23 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     gameMessageController.updatePlayerReady(playerReadyUpdate);
                     break;
 
+                case GameStart:
+                    GameStart gameStart = objectMapper.readValue(requestMessage, GameStart.class);
+
+                    gameMessageController.gameStart(gameStart);
+                    break;
+
                 case PlayerBlockDraw:
                     PlayerBlockDraw playerBlockDraw = objectMapper.readValue(requestMessage, PlayerBlockDraw.class);
 
                     gameMessageController.drawBlock(playerBlockDraw);
                     break;
 
+                case NextPhase:
+                    NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
 
+                    nextPhase(nextPhase);
+                    break;
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());
@@ -107,7 +117,32 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     }
 
-    private String toJson(PlayerSimple playerSimple) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(playerSimple);
+    private void nextPhase(NextPhase nextPhase) {
+        switch (nextPhase.getPhase()) {
+            case SETTING:
+                gameMessageController.endSettingPhase(nextPhase);
+                break;
+
+            case START:
+                break;
+
+            case CONTROL:
+                break;
+
+            case DRAW:
+                break;
+
+            case SORT:
+                break;
+
+            case GUESS:
+                break;
+
+            case REPEAT:
+                break;
+
+            case END:
+                break;
+        }
     }
 }

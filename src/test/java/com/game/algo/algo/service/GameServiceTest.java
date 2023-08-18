@@ -1,13 +1,10 @@
 package com.game.algo.algo.service;
 
-import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.algo.dto.MultipleMessageSupporter;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import com.game.algo.websocket.data.MessageType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -127,6 +124,103 @@ class GameServiceTest {
         assertThatExceptionOfType(GameLogicException.class)
                 .isThrownBy(() -> gameService.joinGameRoom(gameRoomId, latePlayerId))
                 .withMessageMatching(GameExceptionCode.GAME_ROOM_IS_FULL.getMessage());
+    }
+
+    @Test
+    @DisplayName("모든 플레이어가 준비완료일때 정상적으로 게임이 시작됩니다.")
+    public void gameStartSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        IntStream.range(0, 4)
+                .mapToObj(i -> Player.create("player" + i, "foo"))
+                .forEach(player -> {
+                    findGameRoom.joinPlayer(player);
+                    player.updateReady(true);
+                });
+
+        //when
+        gameService.gameStart(gameRoomId);
+
+        //then
+        assertThat(findGameRoom.areAllPlayersReady()).isFalse();
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
+
+    }
+
+//    @Test
+//    @DisplayName("플레이어가 한명일경우 게임을 시작할 수 없습니다.")
+//    public void gameStartFailCase1() throws Exception {
+//        //given
+//        Long gameRoomId = gameService.createGameRoom();
+//        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+//        Player player = Player.create("player1", "foo");
+//        player.updateReady(true);
+//        findGameRoom.joinPlayer(player);
+//
+//        //expect
+//        assertThatExceptionOfType(GameLogicException.class)
+//                .isThrownBy(() -> gameService.gameStart(gameRoomId))
+//                .withMessageMatching(GameExceptionCode.LACK_OF_PLAYER.getMessage());
+//    }
+//
+//    @Test
+//    @DisplayName("모든 플레이어가 준비하지 않으면 게임을 시작할 수 없습니다.")
+//    public void gameStartFailCase2() throws Exception {
+//        //given
+//        Long gameRoomId = gameService.createGameRoom();
+//        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+//        IntStream.range(0, 4)
+//                .mapToObj(i -> Player.create("player" + i, "foo"))
+//                .forEach(player -> {
+//                    findGameRoom.joinPlayer(player);
+//                });
+//
+//        //expect
+//        assertThatExceptionOfType(GameLogicException.class)
+//                .isThrownBy(() -> gameService.gameStart(gameRoomId))
+//                .withMessageMatching(GameExceptionCode.ALL_PLAYER_NOT_READY.getMessage());
+//    }
+
+    @Test
+    @DisplayName("조건에 맞기에 Setting 페이즈가 넘어갑니다.")
+    public void endSettingPhaseSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+        IntStream.range(0, 2)
+                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
+                .forEach(playerId -> {
+                    gameService.joinGameRoom(gameRoomId, playerId);
+                    gameService.updatePlayerReady(playerId, true);
+                });
+
+        //when
+        boolean endPhase = gameService.endSettingPhase(gameRoomId);
+
+        //then
+        assertThat(endPhase).isTrue();
+    }
+
+    @Test
+    @DisplayName("조건에 맞지않기에 Setting 페이즈에 머무릅니다.")
+    public void endSettingPhaseFail() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+        IntStream.range(0, 2)
+                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
+                .forEach(playerId -> {
+                    gameService.joinGameRoom(gameRoomId, playerId);
+                });
+
+        //when
+        boolean endPhase = gameService.endSettingPhase(gameRoomId);
+
+        //then
+        assertThat(endPhase).isFalse();
     }
 
     @RepeatedTest(5)

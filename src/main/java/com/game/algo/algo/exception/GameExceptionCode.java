@@ -9,6 +9,7 @@ public enum GameExceptionCode {
     GAME_ROOM_IS_FULL(400, "game room not found"),
     PLAYER_NOT_FOUND(400, "player not found"),
     ALL_PLAYER_NOT_READY(400, "all player not ready"),
+    LACK_OF_PLAYER(400, "lack of player"),
     INVALID_NUMBER_OF_BLOCKS(400, "invalid number of blocks"),
     OUT_OF_SYNC_GAME_PHASE(400, "out of sync game phase"),
     BLOCK_IS_DEPLETED(400, "block is depleted"),

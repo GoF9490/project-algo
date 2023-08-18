@@ -13,7 +13,8 @@ public enum MessageType {
     PlayerReadyUpdate,
     GameStart,
     PlayerBlockDraw,
-    TimeDelay,
+    NextPhase,
+    WaitForSec,
     GameStatusData,
     Exception;
 }

@@ -2,7 +2,6 @@ package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.algo.dto.MultipleMessageSupporter;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
@@ -84,12 +83,10 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
-    public void gameStart(Long gameRoomId, Long playerId) {
+    public void gameStart(Long gameRoomId) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
-        if (!findGameRoom.areAllPlayersReady()) {
-            throw new GameLogicException(GameExceptionCode.ALL_PLAYER_NOT_READY);
-        }
+//        validGameStart(findGameRoom);
 
         findGameRoom.allPlayerReadyOff();
         findGameRoom.gameReset();
@@ -97,39 +94,35 @@ public class GameServiceImpl implements GameService {
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
     }
 
-    public void nextPhase(Long gameRoomId) { // 조정중
-        GameRoom gameRoom = findGameRoomById(gameRoomId);
-        switch (gameRoom.getPhase()) {
-            case SETTING:
-                if (gameRoom.areAllPlayersReady()) {
-                    gameRoom.allPlayerReadyOff();
-                    gameRoom.updatePhase(GameRoom.Phase.START);
-                } else {
-                    if (!gameRoom.getProgressPlayer().isReady()) {
-                        autoDrawAtStart(gameRoom, gameRoom.getProgressPlayer(), numberOfBlockAtStart(gameRoom));
-                    }
-                    gameRoom.nextPlayer();
-                }
-                break;
-
-            case START:
-                break;
-        }
-    }
-
     @Transactional
-    public void settingPhaseLogic(Long gameRoomId) {
+    public boolean endSettingPhase(Long gameRoomId) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
 
         if (findGameRoom.areAllPlayersReady()) {
             findGameRoom.allPlayerReadyOff();
             findGameRoom.updatePhase(GameRoom.Phase.START);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean endGameStartPhase(Long gameRoomId) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
+
+        if (findGameRoom.areAllPlayersReady()) {
+            findGameRoom.allPlayerReadyOff();
+            findGameRoom.updatePhase(GameRoom.Phase.START);
+            return true;
         } else {
             if (!findGameRoom.getProgressPlayer().isReady()) {
                 autoDrawAtStart(findGameRoom, findGameRoom.getProgressPlayer(), numberOfBlockAtStart(findGameRoom));
             }
             findGameRoom.nextPlayer();
+            return false;
         }
     }
 
@@ -143,6 +136,15 @@ public class GameServiceImpl implements GameService {
     @Transactional(readOnly = true)
     public GameStatusData getGameStatusData(Long gameRoomId) {
         return GameStatusData.create(findGameRoomById(gameRoomId));
+    }
+
+    private void validGameStart(GameRoom findGameRoom) {
+        if (!findGameRoom.areAllPlayersReady()) {
+            throw new GameLogicException(GameExceptionCode.ALL_PLAYER_NOT_READY);
+        }
+        if (findGameRoom.getPlayerList().size() < 2) {
+            throw new GameLogicException(GameExceptionCode.LACK_OF_PLAYER);
+        }
     }
 
     private void autoDrawAtStart(GameRoom gameRoom, Player player, int count) {
