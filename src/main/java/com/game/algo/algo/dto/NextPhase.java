@@ -15,4 +15,6 @@ public class NextPhase {
     private Long playerId;
 
     private GameRoom.Phase phase;
+
+    private Integer progressPlayerNum;
 }

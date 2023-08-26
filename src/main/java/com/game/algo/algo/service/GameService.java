@@ -1,6 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.dto.GameStatusData;
+import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 
@@ -22,11 +23,17 @@ public interface GameService {
 
     void gameStart(Long gameRoomId);
 
-    boolean endSettingPhase(Long gameRoomId);
+    boolean endSettingPhase(Long gameRoomId, int progressPlayerNum);
 
     void drawBlockAtStart(Long gameRoomId, Long playerId, int whiteBlockCount, int BlackBlockCount);
+
+    void autoDrawAtStart(Long gameRoomId);
+
+    boolean endStartPhase(Long gameRoomId, int playerOrderNum);
 
     GameStatusData getGameStatusData(Long gameRoomId);
 
     List<String> getSessionIdListInGameRoom(Long gameRoomId);
+
+    List<OwnerBlockData> getOwnerBlockDataList(Long gameRoomId);
 }

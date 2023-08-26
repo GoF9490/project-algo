@@ -74,6 +74,11 @@ public class GameRoom {
 
     public Player getProgressPlayer() {
         return playerList.get(progressPlayerNumber);
+
+//        return playerList.stream() // 플레이어 뜯어 찾는 방법
+//                .filter(player -> player.getOrderNumber() == progressPlayerNumber)
+//                .findFirst()
+//                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     public void playerOrderReset() {
@@ -82,7 +87,7 @@ public class GameRoom {
                 .collect(Collectors.toList());
 
         IntStream.range(0, playerOrderList.size())
-                .forEach(i -> playerOrderList.get(i).updateOrder(i+1));
+                .forEach(i -> playerOrderList.get(i).updateOrder(i));
     }
 
     public Block drawRandomBlock(BlockColor blockColor) {
@@ -104,8 +109,10 @@ public class GameRoom {
     }
 
     public void addJoker() {
-        whiteBlockList.add(Block.createBlock(BlockColor.WHITE, 12));
-        blackBlockList.add(Block.createBlock(BlockColor.BLACK, 12));
+        if (whiteBlockList.stream().noneMatch(Block::isJoker)) {
+            whiteBlockList.add(Block.createBlock(BlockColor.WHITE, 12));
+            blackBlockList.add(Block.createBlock(BlockColor.BLACK, 12));
+        }
     }
 
     private void blockReset() {

@@ -173,6 +173,6 @@ class GameRoomTest {
 //                .forEach(player -> System.out.println("order : " + player.getName()));
 
         gameRoom.getPlayerList().stream()
-                .forEach(player -> assertThat(player.getOrderNumber()).isBetween(1, 4));
+                .forEach(player -> assertThat(player.getOrderNumber()).isBetween(0, 3));
     }
 }

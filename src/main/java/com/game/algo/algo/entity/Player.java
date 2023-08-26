@@ -70,9 +70,9 @@ public class Player {
         this.gameRoom = gameRoom;
     }
 
-    public List<Integer> getBlockListCode(boolean isMaster) {
+    public List<Integer> getBlockListCode(boolean isOwner) {
         return blockList.stream()
-                .map(block -> block.getBlockCode(isMaster))
+                .map(block -> block.getBlockCode(isOwner))
                 .collect(Collectors.toList());
     }
 

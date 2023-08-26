@@ -2,6 +2,7 @@ package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.GameStatusData;
+import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
@@ -10,12 +11,17 @@ import com.game.algo.algo.repository.GameRoomRepository;
 import com.game.algo.algo.repository.PlayerJpaRepository;
 import com.game.algo.websocket.data.MessageType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.LockModeType;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.game.algo.algo.entity.GameRoom.*;
 
 /**
  * 클라이언트와 통신해야함
@@ -30,22 +36,6 @@ public class GameServiceImpl implements GameService {
     private final GameRoomRepository gameRoomRepository;
     private final PlayerJpaRepository playerJpaRepository;
 
-    @Transactional
-    public void drawBlockAtStart(Long gameRoomId, Long playerId, int whiteBlockCount, int blackBlockCount) {
-        GameRoom findGameRoom = findGameRoomById(gameRoomId);
-        Player findPlayer = findPlayerById(playerId);
-
-        int maxBlockCount = numberOfBlockAtStart(findGameRoom);
-
-        if (whiteBlockCount + blackBlockCount != maxBlockCount){
-            autoDrawAtStart(findGameRoom, findPlayer, maxBlockCount);
-            throw new GameLogicException(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS);
-        }
-
-        addRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
-        addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
-    }
-
     public Long createPlayer(String name, String webSocketSessionId) {
         Player player = Player.create(name, webSocketSessionId);
         return playerJpaRepository.save(player).getId();
@@ -59,7 +49,7 @@ public class GameServiceImpl implements GameService {
 
     @Transactional
     public Long createGameRoom(){
-        GameRoom gameRoom = GameRoom.create();
+        GameRoom gameRoom = create();
         return gameRoomRepository.save(gameRoom).getId();
     }
 
@@ -91,39 +81,86 @@ public class GameServiceImpl implements GameService {
         findGameRoom.allPlayerReadyOff();
         findGameRoom.gameReset();
         findGameRoom.playerOrderReset();
-        findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+        findGameRoom.updatePhase(Phase.SETTING);
     }
 
     @Transactional
-    public boolean endSettingPhase(Long gameRoomId) {
+    public boolean endSettingPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
-        checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
+
+        return doNextPhase(findGameRoom, progressPlayerNum, Phase.SETTING, Phase.START);
+    }
+
+    @Transactional
+    public void drawBlockAtStart(Long gameRoomId, Long playerId, int whiteBlockCount, int blackBlockCount) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        Player findPlayer = findPlayerById(playerId);
+
+        int maxBlockCount = numberOfBlockAtStart(findGameRoom);
+
+        if (whiteBlockCount + blackBlockCount != maxBlockCount){
+            autoDrawAtStart(gameRoomId);
+            throw new GameLogicException(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS);
+        }
+
+        addRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
+        addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
+
+        findPlayer.updateReady(true);
+    }
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void autoDrawAtStart(Long gameRoomId) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        Player findPlayer = findGameRoom.getProgressPlayer();
+
+        if (findPlayer.isReady()) {
+            return;
+        }
+
+        findPlayer.updateReady(true);
+
+        int count = numberOfBlockAtStart(findGameRoom);
+
+        double randomValue = Math.random();
+
+        int whiteBlockCount = (int) (randomValue * (count + 1));
+        int blackBlockCount = count - whiteBlockCount;
+
+        addRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
+        addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
+
+        findPlayer.completeWhiteJokerRelocation();
+        findPlayer.completeBlackJokerRelocation();
+    }
+
+    @Transactional
+    public boolean endStartPhase(Long gameRoomId, int playerOrderNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        if (doNextPhase(findGameRoom, playerOrderNum, Phase.START, Phase.CONTROL)) {
+            findGameRoom.addJoker();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean doNextPhase(GameRoom findGameRoom, int playerOrderNum, Phase nowPhase, Phase nextPhase) {
+        checkGamePhaseSync(findGameRoom, nowPhase);
+        checkPlayerOrderSync(findGameRoom, playerOrderNum);
 
         if (findGameRoom.areAllPlayersReady()) {
             findGameRoom.allPlayerReadyOff();
-            findGameRoom.updatePhase(GameRoom.Phase.START);
+            findGameRoom.updatePhase(nextPhase);
             return true;
         } else {
             return false;
         }
     }
 
-    @Transactional
-    public boolean endGameStartPhase(Long gameRoomId) {
-        GameRoom findGameRoom = findGameRoomById(gameRoomId);
-        checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
-
-        if (findGameRoom.areAllPlayersReady()) {
-            findGameRoom.allPlayerReadyOff();
-            findGameRoom.updatePhase(GameRoom.Phase.START);
-            return true;
-        } else {
-            if (!findGameRoom.getProgressPlayer().isReady()) {
-                autoDrawAtStart(findGameRoom, findGameRoom.getProgressPlayer(), numberOfBlockAtStart(findGameRoom));
-            }
-            findGameRoom.nextPlayer();
-            return false;
-        }
+    @Transactional(readOnly = true)
+    public GameStatusData getGameStatusData(Long gameRoomId) {
+        return GameStatusData.create(findGameRoomById(gameRoomId));
     }
 
     @Transactional(readOnly = true)
@@ -134,8 +171,12 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional(readOnly = true)
-    public GameStatusData getGameStatusData(Long gameRoomId) {
-        return GameStatusData.create(findGameRoomById(gameRoomId));
+    public List<OwnerBlockData> getOwnerBlockDataList(Long gameRoomId) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        return findGameRoom.getPlayerList().stream()
+                .map(OwnerBlockData::create)
+                .collect(Collectors.toList());
     }
 
     private void validGameStart(GameRoom findGameRoom) {
@@ -145,19 +186,6 @@ public class GameServiceImpl implements GameService {
         if (findGameRoom.getPlayerList().size() < 2) {
             throw new GameLogicException(GameExceptionCode.LACK_OF_PLAYER);
         }
-    }
-
-    private void autoDrawAtStart(GameRoom gameRoom, Player player, int count) {
-        double randomValue = Math.random();
-
-        int whiteBlockCount = (int) (randomValue * (count + 1));
-        int blackBlockCount = count - whiteBlockCount;
-
-        addRandomBlocks(gameRoom, player, BlockColor.WHITE, whiteBlockCount);
-        addRandomBlocks(gameRoom, player, BlockColor.BLACK, blackBlockCount);
-
-        player.completeWhiteJokerRelocation();
-        player.completeBlackJokerRelocation();
     }
 
     private int numberOfBlockAtStart(GameRoom gameRoom) {
@@ -176,8 +204,14 @@ public class GameServiceImpl implements GameService {
                 .collect(Collectors.toList());
     }
 
-    private void checkGamePhaseSync(GameRoom gameRoom, GameRoom.Phase phase) {
+    private void checkGamePhaseSync(GameRoom gameRoom, Phase phase) {
         if (gameRoom.getPhase() != phase) {
+            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+        }
+    }
+
+    private void checkPlayerOrderSync(GameRoom gameRoom, int playerOrderNum) {
+        if (gameRoom.getProgressPlayerNumber() != playerOrderNum) {
             throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
         }
     }

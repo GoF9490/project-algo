@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PlayerBlockDraw {
+public class StartBlockDraw {
 
     private Long playerId;
 

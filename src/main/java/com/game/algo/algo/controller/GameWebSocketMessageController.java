@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 
 @Slf4j
 @Component
@@ -63,17 +65,36 @@ public class GameWebSocketMessageController {
 
     public void endSettingPhase(NextPhase nextPhase) {
         gameService.updatePlayerReady(nextPhase.getPlayerId(), true);
-        if (gameService.endSettingPhase(nextPhase.getGameRoomId())) {
+        if (gameService.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum())) {
             sendGameStatusData(nextPhase.getGameRoomId());
             sendWaitForSec(nextPhase.getGameRoomId(), 20);
         }
     }
 
-    public void drawBlock(@NonNull PlayerBlockDraw playerBlockDraw) {
-        gameService.drawBlockAtStart(playerBlockDraw.getGameRoomId(), playerBlockDraw.getPlayerId(),
-                playerBlockDraw.getWhiteBlockCount(), playerBlockDraw.getBlackBlockCount());
+    public void drawBlockAtStart(StartBlockDraw blockDraw) {
+        gameService.drawBlockAtStart(blockDraw.getGameRoomId(), blockDraw.getPlayerId(),
+                blockDraw.getWhiteBlockCount(), blockDraw.getBlackBlockCount());
 
-        gameService.updatePlayerReady(playerBlockDraw.getPlayerId(), true);
+        int playerOrderNum = gameService.findPlayerById(blockDraw.getPlayerId()).getOrderNumber();
+
+        endStartPhase(blockDraw.getGameRoomId(), playerOrderNum);
+    }
+
+    public void autoDrawAtStart(NextPhase nextPhase) {
+        gameService.autoDrawAtStart(nextPhase.getGameRoomId());
+
+        endStartPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+    }
+
+    private void endStartPhase(Long gameRoomId, int playerOrderNum) {
+        if (gameService.endStartPhase(gameRoomId, playerOrderNum)) {
+            sendWaitForSec(gameRoomId, 30);
+        } else {
+            sendWaitForSec(gameRoomId, 20);
+        }
+
+        sendOwnerBlockData(gameRoomId);
+        sendGameStatusData(gameRoomId);
     }
 
     public void disconnectWebSession(String sessionId){
@@ -85,6 +106,13 @@ public class GameWebSocketMessageController {
                 gameService.getGameStatusData(gameRoomId));
 
         gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
+    }
+
+    private void sendOwnerBlockData(Long gameRoomId) {
+        List<OwnerBlockData> ownerBlockDataList = gameService.getOwnerBlockDataList(gameRoomId);
+
+        ownerBlockDataList.forEach(ownerBlockData -> sendMessage(ownerBlockData.getSessionId(),
+                MessageDataResponse.create(MessageType.OwnerBlockData, ownerBlockData)));
     }
 
     private void sendWaitForSec(Long gameRoomId, int timeInSec) {

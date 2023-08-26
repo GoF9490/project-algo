@@ -25,8 +25,10 @@ public class WebSocketService {
     }
 
     public void sendMessage(@NonNull String sessionId, @NonNull MessageDataResponse messageData) throws IOException {
-        MessageDataResponse convertMessageData =
-                new MessageDataResponse(messageData.getType(), objectMapper.writeValueAsString(messageData.getMessage()));
+        MessageDataResponse convertMessageData = MessageDataResponse.create(
+                messageData.getType(),
+                objectMapper.writeValueAsString(messageData.getMessage()));
+
         String json = objectMapper.writeValueAsString(convertMessageData);
         CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
     }

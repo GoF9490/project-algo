@@ -10,8 +10,14 @@ import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.CannotAcquireLockException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityTransaction;
+import javax.persistence.Persistence;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,6 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 class GameServiceTest {
 
     @Autowired private GameService gameService;
+
 
     @Test
     @DisplayName("존재하지 않는 Player의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")
@@ -183,12 +190,14 @@ class GameServiceTest {
 //    }
 
     @Test
-    @DisplayName("조건에 맞기에 Setting 페이즈가 넘어갑니다.")
+    @DisplayName("조건에 맞기에 SETTING 페이즈가 넘어갑니다.")
     public void endSettingPhaseSuccess() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
         GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+
         IntStream.range(0, 2)
                 .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
                 .forEach(playerId -> {
@@ -197,19 +206,22 @@ class GameServiceTest {
                 });
 
         //when
-        boolean endPhase = gameService.endSettingPhase(gameRoomId);
+        boolean endPhase = gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
 
         //then
         assertThat(endPhase).isTrue();
+        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
     }
 
     @Test
-    @DisplayName("조건에 맞지않기에 Setting 페이즈에 머무릅니다.")
+    @DisplayName("조건에 맞지않기에 SETTING 페이즈에 머무릅니다.")
     public void endSettingPhaseFail() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
         GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+
         IntStream.range(0, 2)
                 .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
                 .forEach(playerId -> {
@@ -217,10 +229,11 @@ class GameServiceTest {
                 });
 
         //when
-        boolean endPhase = gameService.endSettingPhase(gameRoomId);
+        boolean endPhase = gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
 
         //then
         assertThat(endPhase).isFalse();
+        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.SETTING);
     }
 
     @RepeatedTest(5)
@@ -264,12 +277,92 @@ class GameServiceTest {
         int whiteBlockCount = 2;
         int blackBlockCount = 3;
 
-        gameService.findGameRoomById(gameRoomId).gameReset();
+        gameService.joinGameRoom(gameRoomId, playerId);
 
         //expect
+        gameService.findGameRoomById(gameRoomId).gameReset();
         assertThatExceptionOfType(GameLogicException.class)
                 .isThrownBy(() -> gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount))
                 .withMessageMatching(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS.getMessage());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED) // 동시성 문제 체크를 위해
+    @DisplayName("요청이 여러번 들어와도 autoDraw 기능이 1번에 한해 성공적으로 이루어집니다.")
+    public void autoDrawAtStartSuccess() throws Exception {
+        //given
+        Long playerId = gameService.createPlayer("foo", "sessionId");
+        Long gameRoomId = gameService.createGameRoom();
+
+        gameService.gameStart(gameRoomId);
+
+        gameService.joinGameRoom(gameRoomId, playerId);
+
+        //when
+        try {
+            IntStream.range(0, 4)
+                    .parallel()
+                    .forEach(i -> gameService.autoDrawAtStart(gameRoomId));
+        } catch (CannotAcquireLockException e) {
+
+        }
+
+        //then
+        Player findPlayer = gameService.findPlayerById(playerId);
+        assertThat(findPlayer.getBlockList().size()).isEqualTo(4);
+        assertThat(findPlayer.isReady()).isTrue();
+
+        findPlayer.getBlockList()
+                .forEach(block -> System.out.println(block.getBlockCode(true)));
+    }
+
+    @Test
+    @DisplayName("START 페이즈에서 CONTROL 페이즈로 정상적으로 넘어가져야 합니다.")
+    public void endStartPhaseSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        findGameRoom.updatePhase(GameRoom.Phase.START);
+
+        IntStream.range(0, 2)
+                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
+                .forEach(playerId -> {
+                    gameService.joinGameRoom(gameRoomId, playerId);
+                    gameService.updatePlayerReady(playerId, true);
+                });
+
+        //when
+        boolean endPhase = gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+
+        //then
+        assertThat(endPhase).isTrue();
+        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.CONTROL);
+        assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().anyMatch(Block::isJoker)).isTrue();
+    }
+
+    @Test
+    @DisplayName("조건에 맞지않기에 START 페이즈에 머무릅니다.")
+    public void endStartPhaseFail() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        findGameRoom.updatePhase(GameRoom.Phase.START);
+
+        IntStream.range(0, 2)
+                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
+                .forEach(playerId -> {
+                    gameService.joinGameRoom(gameRoomId, playerId);
+                });
+
+        //when
+        boolean endPhase = gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+
+        //then
+        assertThat(endPhase).isFalse();
+        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
+        assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().noneMatch(Block::isJoker)).isTrue();
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {

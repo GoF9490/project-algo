@@ -12,9 +12,10 @@ public enum MessageType {
     GameRoomJoin,
     PlayerReadyUpdate,
     GameStart,
-    PlayerBlockDraw,
+    StartBlockDraw,
     NextPhase,
     WaitForSec,
     GameStatusData,
+    OwnerBlockData,
     Exception;
 }

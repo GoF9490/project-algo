@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketMessageController;
 import com.game.algo.algo.dto.GameStart;
 import com.game.algo.algo.dto.NextPhase;
-import com.game.algo.algo.dto.PlayerBlockDraw;
+import com.game.algo.algo.dto.StartBlockDraw;
 import com.game.algo.algo.dto.PlayerReadyUpdate;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
@@ -94,16 +94,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     gameMessageController.gameStart(gameStart);
                     break;
 
-                case PlayerBlockDraw:
-                    PlayerBlockDraw playerBlockDraw = objectMapper.readValue(requestMessage, PlayerBlockDraw.class);
-
-                    gameMessageController.drawBlock(playerBlockDraw);
-                    break;
-
                 case NextPhase:
                     NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
 
                     nextPhase(nextPhase);
+                    break;
+
+                case StartBlockDraw:
+                    StartBlockDraw startBlockDraw = objectMapper.readValue(requestMessage, StartBlockDraw.class);
+
+                    gameMessageController.drawBlockAtStart(startBlockDraw);
                     break;
             }
         } catch (GameLogicException gameLogicException) {
@@ -124,6 +124,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case START:
+                gameMessageController.autoDrawAtStart(nextPhase);
                 break;
 
             case CONTROL:

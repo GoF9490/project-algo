@@ -36,8 +36,8 @@ public class Block {
         return new Block(blockColor, num);
     }
 
-    public Integer getBlockCode(boolean isMaster) {
-        if (!isMaster && isClose()) {
+    public Integer getBlockCode(boolean isOwner) {
+        if (!isOwner && isClose()) {
             return CLOSED_BLOCK_NUMBER * blackIsMinus();
         }
 
