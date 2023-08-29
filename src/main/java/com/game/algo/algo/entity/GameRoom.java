@@ -1,6 +1,7 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameConstant;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import lombok.AccessLevel;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.game.algo.algo.data.GameServiceConst.*;
+
 
 @Getter
 @Entity
@@ -127,7 +128,7 @@ public class GameRoom {
     }
 
     private void checkVacancy() {
-        if (playerList.size() >= PLAYER_MAX_COUNT){
+        if (playerList.size() >= GameConstant.PLAYER_MAX_COUNT){
             throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
         }
     }
@@ -137,7 +138,7 @@ public class GameRoom {
         WAIT, // 게임 시작 전
         SETTING, // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
         START, // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
-        CONTROL, // 플레이어의 차례를 순서대로 바꿈
+        CONTROL, // 플레이어의 차례를 순서대로 바꿈 // 필요할까? 일단 빼고 구현해보기
         DRAW, // 블록을 하나 선택함
         SORT, // 뽑은 블록을 정렬함 ( 조커 고려 )
         GUESS, // 뽑은 블록을 두고 추리함

@@ -13,6 +13,7 @@ public enum MessageType {
     PlayerReadyUpdate,
     GameStart,
     StartBlockDraw,
+    BlockDraw,
     NextPhase,
     WaitForSec,
     GameStatusData,

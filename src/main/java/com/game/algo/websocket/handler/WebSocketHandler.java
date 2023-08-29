@@ -2,10 +2,7 @@ package com.game.algo.websocket.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketMessageController;
-import com.game.algo.algo.dto.GameStart;
-import com.game.algo.algo.dto.NextPhase;
-import com.game.algo.algo.dto.StartBlockDraw;
-import com.game.algo.algo.dto.PlayerReadyUpdate;
+import com.game.algo.algo.dto.*;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
@@ -64,6 +61,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
         // 메서드로 뺄 가능성 있음
         try {
             switch (type) {
+                case NextPhase:
+                    NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
+
+                    nextPhase(nextPhase);
+                    break;
+
                 case PlayerCreate:
                     PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
@@ -94,16 +97,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     gameMessageController.gameStart(gameStart);
                     break;
 
-                case NextPhase:
-                    NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
-
-                    nextPhase(nextPhase);
-                    break;
-
                 case StartBlockDraw:
                     StartBlockDraw startBlockDraw = objectMapper.readValue(requestMessage, StartBlockDraw.class);
 
                     gameMessageController.drawBlockAtStart(startBlockDraw);
+                    break;
+
+                case BlockDraw:
+                    BlockDraw blockDraw = objectMapper.readValue(requestMessage, BlockDraw.class);
+
+                    gameMessageController.drawBlockAtDrawPhase(blockDraw);
                     break;
             }
         } catch (GameLogicException gameLogicException) {
@@ -128,6 +131,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case CONTROL:
+                gameMessageController.autoDrawAtDrawPhase(nextPhase);
                 break;
 
             case DRAW:

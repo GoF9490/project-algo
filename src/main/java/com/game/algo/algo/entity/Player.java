@@ -1,9 +1,6 @@
 package com.game.algo.algo.entity;
 
-import com.game.algo.algo.data.BlackJokerRange;
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.JokerRange;
-import com.game.algo.algo.data.WhiteJokerRange;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import lombok.AccessLevel;
@@ -12,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -44,11 +40,11 @@ public class Player {
     @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blockList = new ArrayList<>();
 
-    @Embedded
-    private WhiteJokerRange whiteJokerRange;
+    private Integer drawBlockIndexNum;
 
-    @Embedded
-    private BlackJokerRange blackJokerRange;
+    private Integer whiteJokerRange; // startNum * 100 + endNum
+
+    private Integer blackJokerRange; // startNum * 100 + endNum
 
     private boolean needWhiteJokerRelocation = false;
 
@@ -99,16 +95,13 @@ public class Player {
                 .collect(Collectors.toList());
     }
 
-    public void addBlocks(Block... blocks) {
-        Arrays.stream(blocks).forEach(this::addBlock);
-    }
-
     public void addBlock(Block block) {
         distinguishJoker(block);
         exploreJokerRange(block);
 
         blockList.add(block);
         sortBlock();
+        setDrawBlockIndexNum(block);
     }
 
     public void updateJoker(int frontNum, int backNum, BlockColor jokerColor) {
@@ -116,11 +109,11 @@ public class Player {
 
         if (jokerColor == BlockColor.WHITE && needWhiteJokerRelocation) {
             findJoker.setNum(backNum);
-            whiteJokerRange = new WhiteJokerRange(frontNum, backNum);
+            whiteJokerRange = frontNum * 100 + backNum;
             needWhiteJokerRelocation = false;
         } else if (jokerColor == BlockColor.BLACK && needBlackJokerRelocation) {
             findJoker.setNum(backNum);
-            blackJokerRange = new BlackJokerRange(frontNum, backNum);
+            blackJokerRange = frontNum * 100 + backNum;
             needBlackJokerRelocation = false;
         } else {
             throw new GameLogicException(GameExceptionCode.JOKER_ALREADY_CHANGED);
@@ -128,6 +121,7 @@ public class Player {
 
         blockList = new ArrayList<>(blockList);
         sortBlock();
+        setDrawBlockIndexNum(findJoker);
     }
 
     public void updateOrder(int order) {
@@ -167,19 +161,23 @@ public class Player {
         }
     }
 
-    private boolean betweenRange(Block block, JokerRange jokerRange) {
-        return jokerRange.getFrontNum() <= block.getNum() && block.getNum() < jokerRange.getBackNum();
+    private boolean betweenRange(Block block, int jokerRange) {
+        return jokerRange / 100 <= block.getNum() && block.getNum() < jokerRange % 100;
     }
 
     private void distinguishJoker(Block block) {
         if (block.isJoker()) {
             if (block.isWhite()) {
-                whiteJokerRange = new WhiteJokerRange(0, 12);
+                whiteJokerRange = 12;
                 needWhiteJokerRelocation = true;
             } else {
-                blackJokerRange = new BlackJokerRange(0, 12);
+                blackJokerRange = 12;
                 needBlackJokerRelocation = true;
             }
         }
+    }
+
+    private void setDrawBlockIndexNum(Block block) {
+        drawBlockIndexNum = blockList.indexOf(block);
     }
 }

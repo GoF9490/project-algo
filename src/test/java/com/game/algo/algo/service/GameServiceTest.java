@@ -1,5 +1,6 @@
 package com.game.algo.algo.service;
 
+import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -34,7 +35,7 @@ class GameServiceTest {
 
     @Test
     @DisplayName("존재하지 않는 Player의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")
-    public void findPlayerByIdFailTest() throws Exception {
+    public void findPlayerByIdFail() throws Exception {
         //given
         Long playerId = 15L;
 
@@ -46,7 +47,7 @@ class GameServiceTest {
 
     @Test
     @DisplayName("Player를 생성하고 저장, Id로 찾기가 정상적으로 이루어져야 합니다.")
-    public void createPlayerAndFindPlayerByIdSuccessTest() throws Exception {
+    public void createPlayerAndFindPlayerByIdSuccess() throws Exception {
         //given
         String name = "foo";
         String webSocketSessionId = "sessionId";
@@ -78,7 +79,7 @@ class GameServiceTest {
 
     @Test
     @DisplayName("존재하지 않는 GameRoom의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")
-    public void findGameRoomById() throws Exception {
+    public void findGameRoomByIdSuccess() throws Exception {
         //given
         Long gameRoomId = 15L;
 
@@ -90,7 +91,7 @@ class GameServiceTest {
 
     @Test
     @DisplayName("GameRoom을 생성하고 저장, Id로 찾기가 정상적으로 이루어져야 합니다.")
-    public void createGameRoomAndFindGameRoomByIdSuccessTest() throws Exception {
+    public void createGameRoomAndFindGameRoomByIdSuccess() throws Exception {
         //given
 
         //when
@@ -363,6 +364,78 @@ class GameServiceTest {
         assertThat(endPhase).isFalse();
         assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
         assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().noneMatch(Block::isJoker)).isTrue();
+    }
+
+    @Test
+    @DisplayName("Player가 GameRoom에 있는 지정한 색깔의 블럭을 하나 가져옵니다.")
+    public void drawBlockAtDrawPhaseSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        Long playerId = gameService.createPlayer("foo", "bar");
+
+        gameService.joinGameRoom(gameRoomId, playerId);
+
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        findGameRoom.gameReset();
+        findGameRoom.addJoker();
+        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+
+        //when
+        gameService.drawBlockAtDrawPhase(gameRoomId, playerId, BlockColor.WHITE);
+
+        //then
+        Player findPlayer = gameService.findPlayerById(playerId);
+
+        assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
+        assertThat(findPlayer.getBlockList().get(0).isWhite()).isTrue();
+        assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
+        assertThat(findPlayer.isReady()).isTrue();
+    }
+
+    @Test
+    @DisplayName("플레이어가 자동으로 블럭을 하나 가져오는데 성공합니다.")
+    public void autoDrawAtDrawPhaseSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        Long playerId = gameService.createPlayer("foo", "bar");
+
+        gameService.joinGameRoom(gameRoomId, playerId);
+
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        findGameRoom.gameReset();
+        findGameRoom.addJoker();
+        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+
+        //when
+        gameService.autoDrawAtDrawPhase(gameRoomId);
+
+        //then
+        Player findPlayer = gameService.findPlayerById(playerId);
+
+        assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
+        assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
+        assertThat(findPlayer.isReady()).isTrue();
+    }
+
+    @Test
+    public void endDrawPhaseSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        Long playerId = gameService.createPlayer("foo", "bar");
+
+        gameService.joinGameRoom(gameRoomId, playerId);
+
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+
+        gameService.updatePlayerReady(playerId, true);
+
+        //when
+        gameService.endDrawPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+
+        //then
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SORT);
+        assertThat(findGameRoom.getProgressPlayer().isReady()).isFalse();
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {

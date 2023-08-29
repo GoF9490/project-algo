@@ -108,6 +108,8 @@ class PlayerTest {
 
         assertThat(player.getBlockList().get(3).getTypeNumber()).isEqualTo(3);
         assertThat(player.getBlockList().get(3).getNum()).isEqualTo(2);
+
+        assertThat(player.getDrawBlockIndexNum()).isEqualTo(3);
     }
 
     @Test
@@ -127,10 +129,10 @@ class PlayerTest {
         //then
         assertThat(player.isNeedWhiteJokerRelocation()).isTrue();
         assertThat(player.isNeedBlackJokerRelocation()).isTrue();
-        assertThat(player.getWhiteJokerRange().getFrontNum()).isEqualTo(0);
-        assertThat(player.getWhiteJokerRange().getBackNum()).isEqualTo(12);
-        assertThat(player.getBlackJokerRange().getFrontNum()).isEqualTo(0);
-        assertThat(player.getBlackJokerRange().getBackNum()).isEqualTo(12);
+        assertThat(player.getWhiteJokerRange() / 100).isEqualTo(0);
+        assertThat(player.getWhiteJokerRange() % 100).isEqualTo(12);
+        assertThat(player.getBlackJokerRange() / 100).isEqualTo(0);
+        assertThat(player.getBlackJokerRange() % 100).isEqualTo(12);
     }
 
     @Test
@@ -148,7 +150,9 @@ class PlayerTest {
         Player player = Player.create("foo", null);
         player.gameReset();
 
-        player.addBlocks(frontBlock, backBlock, jokerBlock);
+        player.addBlock(frontBlock);
+        player.addBlock(backBlock);
+        player.addBlock(jokerBlock);
 
         //when
         player.updateJoker(frontNum, backNum, BlockColor.WHITE);
@@ -156,8 +160,8 @@ class PlayerTest {
         //then
 //        System.out.println(player.getBlockListCode(true).toString());
         assertThat(player.isNeedWhiteJokerRelocation()).isFalse();
-        assertThat(player.getWhiteJokerRange().getFrontNum()).isEqualTo(frontNum);
-        assertThat(player.getWhiteJokerRange().getBackNum()).isEqualTo(backNum);
+        assertThat(player.getWhiteJokerRange() / 100).isEqualTo(frontNum);
+        assertThat(player.getWhiteJokerRange() % 100).isEqualTo(backNum);
 
         assertThat(player.getBlockList().get(0).getNum()).isEqualTo(frontNum);
         assertThat(player.getBlockList().get(0).isJoker()).isFalse();

@@ -3,20 +3,18 @@ package com.game.algo.algo.service;
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.GameStatusData;
 import com.game.algo.algo.dto.OwnerBlockData;
+import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.GameRoomRepository;
 import com.game.algo.algo.repository.PlayerJpaRepository;
-import com.game.algo.websocket.data.MessageType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.LockModeType;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -88,7 +86,16 @@ public class GameServiceImpl implements GameService {
     public boolean endSettingPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
-        return doNextPhase(findGameRoom, progressPlayerNum, Phase.SETTING, Phase.START);
+        checkGamePhaseSync(findGameRoom, Phase.SETTING);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        if (findGameRoom.areAllPlayersReady()) { // 구조를 바꿀까, 컨트롤러단에서 체크해서 호출하게끔 (boolean 리턴타입이 거슬림)
+            findGameRoom.allPlayerReadyOff();
+            findGameRoom.updatePhase(Phase.START);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Transactional
@@ -130,32 +137,72 @@ public class GameServiceImpl implements GameService {
         addRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
         addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
 
-        findPlayer.completeWhiteJokerRelocation();
-        findPlayer.completeBlackJokerRelocation();
+        // 굳이? 일단 주석처리 해놓고 오류없으면 지우기
+//        findPlayer.completeWhiteJokerRelocation();
+//        findPlayer.completeBlackJokerRelocation();
     }
 
     @Transactional
-    public boolean endStartPhase(Long gameRoomId, int playerOrderNum) {
+    public boolean endStartPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
-        if (doNextPhase(findGameRoom, playerOrderNum, Phase.START, Phase.CONTROL)) {
-            findGameRoom.addJoker();
-            return true;
-        }
-        return false;
-    }
+        checkGamePhaseSync(findGameRoom, Phase.START);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
 
-    private boolean doNextPhase(GameRoom findGameRoom, int playerOrderNum, Phase nowPhase, Phase nextPhase) {
-        checkGamePhaseSync(findGameRoom, nowPhase);
-        checkPlayerOrderSync(findGameRoom, playerOrderNum);
-
-        if (findGameRoom.areAllPlayersReady()) {
+        if (findGameRoom.areAllPlayersReady()) { // 구조를 바꿀까
             findGameRoom.allPlayerReadyOff();
-            findGameRoom.updatePhase(nextPhase);
+            findGameRoom.updatePhase(Phase.DRAW);
+            findGameRoom.addJoker();
             return true;
         } else {
             return false;
         }
+    }
+    
+    @Transactional
+    public void drawBlockAtDrawPhase(Long gameRoomId, Long playerId, BlockColor blockColor) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        Player findPlayer = findPlayerById(playerId);
+
+        Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
+        findPlayer.addBlock(drawBlock);
+
+        findPlayer.updateReady(true);
+    }
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void autoDrawAtDrawPhase(Long gameRoomId) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        Player findPlayer = findGameRoom.getProgressPlayer();
+
+        double randomValue = Math.random();
+        BlockColor blockColor = (randomValue * 2 < 1) ? BlockColor.WHITE : BlockColor.BLACK;
+
+        Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
+        findPlayer.addBlock(drawBlock);
+
+        findPlayer.updateReady(true);
+    }
+    
+    @Transactional
+    public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+        
+        checkGamePhaseSync(findGameRoom, Phase.DRAW);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        
+        if (findGameRoom.getProgressPlayer().isReady()) {
+            findGameRoom.getProgressPlayer().updateReady(false);
+            findGameRoom.updatePhase(Phase.SORT);
+        } else {
+            throw new GameLogicException(GameExceptionCode.PLAYER_NOT_READY); // 변경 필요?
+        }
+    }
+
+    public void updatePlayerJoker(Long playerId, int frontNum, int backNum, BlockColor blockColor) {
+        Player findPlayer = findPlayerById(playerId);
+
+        findPlayer.updateJoker(frontNum, backNum, blockColor);
     }
 
     @Transactional(readOnly = true)
@@ -181,7 +228,7 @@ public class GameServiceImpl implements GameService {
 
     private void validGameStart(GameRoom findGameRoom) {
         if (!findGameRoom.areAllPlayersReady()) {
-            throw new GameLogicException(GameExceptionCode.ALL_PLAYER_NOT_READY);
+            throw new GameLogicException(GameExceptionCode.PLAYER_NOT_READY);
         }
         if (findGameRoom.getPlayerList().size() < 2) {
             throw new GameLogicException(GameExceptionCode.LACK_OF_PLAYER);

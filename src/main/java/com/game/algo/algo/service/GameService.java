@@ -1,5 +1,6 @@
 package com.game.algo.algo.service;
 
+import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.GameStatusData;
 import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.GameRoom;
@@ -30,6 +31,14 @@ public interface GameService {
     void autoDrawAtStart(Long gameRoomId);
 
     boolean endStartPhase(Long gameRoomId, int playerOrderNum);
+
+    void drawBlockAtDrawPhase(Long gameRoomId, Long playerId, BlockColor blockColor);
+
+    void autoDrawAtDrawPhase(Long gameRoomId);
+
+    void endDrawPhase(Long gameRoomId, int progressPlayerNum);
+
+    void updatePlayerJoker(Long playerId, int frontNum, int backNum, BlockColor blockColor);
 
     GameStatusData getGameStatusData(Long gameRoomId);
 
