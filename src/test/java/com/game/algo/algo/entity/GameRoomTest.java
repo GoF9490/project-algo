@@ -1,7 +1,7 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.GameConstant;
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import org.junit.jupiter.api.DisplayName;
@@ -76,9 +76,9 @@ class GameRoomTest {
 
         //then
         assertThat(gameRoom.getWhiteBlockList().get(0).isJoker()).isTrue();
-        assertThat(gameRoom.getWhiteBlockList().get(0).getNum()).isEqualTo(GameConstant.JOKER_BLOCK_NUMBER);
+        assertThat(gameRoom.getWhiteBlockList().get(0).getNum()).isEqualTo(GameProperty.JOKER_BLOCK_NUMBER);
         assertThat(gameRoom.getBlackBlockList().get(0).isJoker()).isTrue();
-        assertThat(gameRoom.getBlackBlockList().get(0).getNum()).isEqualTo(GameConstant.JOKER_BLOCK_NUMBER);
+        assertThat(gameRoom.getBlackBlockList().get(0).getNum()).isEqualTo(GameProperty.JOKER_BLOCK_NUMBER);
     }
 
     @Test

@@ -35,6 +35,14 @@ public class GameStatusData {
                         .collect(Collectors.toList()),
                 gameRoom.getProgressPlayerNumber(),
                 gameRoom.getWhiteBlockList().size(),
-                gameRoom.getBlackBlockList().size());
+                gameRoom.getBlackBlockList().size())
+                .hidePlayerDataBeforeSorting();
+    }
+
+    public GameStatusData hidePlayerDataBeforeSorting() {
+        if (this.phase == GameRoom.Phase.SORT) {
+            this.playerDataList = null;
+        }
+        return this;
     }
 }

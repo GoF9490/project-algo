@@ -83,19 +83,14 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
-    public boolean endSettingPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endSettingPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, Phase.SETTING);
         checkPlayerOrderSync(findGameRoom, progressPlayerNum);
 
-        if (findGameRoom.areAllPlayersReady()) { // 구조를 바꿀까, 컨트롤러단에서 체크해서 호출하게끔 (boolean 리턴타입이 거슬림)
-            findGameRoom.allPlayerReadyOff();
-            findGameRoom.updatePhase(Phase.START);
-            return true;
-        } else {
-            return false;
-        }
+        findGameRoom.allPlayerReadyOff();
+        findGameRoom.updatePhase(Phase.START);
     }
 
     @Transactional
@@ -136,26 +131,21 @@ public class GameServiceImpl implements GameService {
 
         addRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
         addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
-
-        // 굳이? 일단 주석처리 해놓고 오류없으면 지우기
-//        findPlayer.completeWhiteJokerRelocation();
-//        findPlayer.completeBlackJokerRelocation();
     }
 
     @Transactional
-    public boolean endStartPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, Phase.START);
         checkPlayerOrderSync(findGameRoom, progressPlayerNum);
 
-        if (findGameRoom.areAllPlayersReady()) { // 구조를 바꿀까
+        if (findGameRoom.areAllPlayersReady()) {
             findGameRoom.allPlayerReadyOff();
             findGameRoom.updatePhase(Phase.DRAW);
             findGameRoom.addJoker();
-            return true;
         } else {
-            return false;
+            findGameRoom.nextPlayer();
         }
     }
     
@@ -166,8 +156,6 @@ public class GameServiceImpl implements GameService {
 
         Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
         findPlayer.addBlock(drawBlock);
-
-        findPlayer.updateReady(true);
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
@@ -180,8 +168,6 @@ public class GameServiceImpl implements GameService {
 
         Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
         findPlayer.addBlock(drawBlock);
-
-        findPlayer.updateReady(true);
     }
     
     @Transactional
@@ -190,19 +176,15 @@ public class GameServiceImpl implements GameService {
         
         checkGamePhaseSync(findGameRoom, Phase.DRAW);
         checkPlayerOrderSync(findGameRoom, progressPlayerNum);
-        
-        if (findGameRoom.getProgressPlayer().isReady()) {
-            findGameRoom.getProgressPlayer().updateReady(false);
-            findGameRoom.updatePhase(Phase.SORT);
-        } else {
-            throw new GameLogicException(GameExceptionCode.PLAYER_NOT_READY); // 변경 필요?
-        }
+
+        findGameRoom.updatePhase(Phase.SORT);
+        findGameRoom.allPlayerReadyOff();
     }
 
-    public void updatePlayerJoker(Long playerId, int frontNum, int backNum, BlockColor blockColor) {
+    public void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor) {
         Player findPlayer = findPlayerById(playerId);
 
-        findPlayer.updateJoker(frontNum, backNum, blockColor);
+        findPlayer.changeJokerNum(newJokerIndex, blockColor);
     }
 
     @Transactional(readOnly = true)

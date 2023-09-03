@@ -24,13 +24,13 @@ public interface GameService {
 
     void gameStart(Long gameRoomId);
 
-    boolean endSettingPhase(Long gameRoomId, int progressPlayerNum);
+    void endSettingPhase(Long gameRoomId, int progressPlayerNum);
 
     void drawBlockAtStart(Long gameRoomId, Long playerId, int whiteBlockCount, int BlackBlockCount);
 
     void autoDrawAtStart(Long gameRoomId);
 
-    boolean endStartPhase(Long gameRoomId, int playerOrderNum);
+    void endStartPhase(Long gameRoomId, int playerOrderNum);
 
     void drawBlockAtDrawPhase(Long gameRoomId, Long playerId, BlockColor blockColor);
 
@@ -38,7 +38,7 @@ public interface GameService {
 
     void endDrawPhase(Long gameRoomId, int progressPlayerNum);
 
-    void updatePlayerJoker(Long playerId, int frontNum, int backNum, BlockColor blockColor);
+    void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor);
 
     GameStatusData getGameStatusData(Long gameRoomId);
 

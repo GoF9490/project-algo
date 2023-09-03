@@ -2,22 +2,27 @@ package com.game.algo.websocket.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.game.algo.algo.controller.GameWebSocketMessageController;
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.dto.*;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.algo.exception.StopMethodException;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataRequest;
 import com.game.algo.websocket.dto.MessageDataResponse;
 import com.game.algo.websocket.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+
+import java.io.IOException;
 
 @Slf4j
 @Component
@@ -32,10 +37,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = session.getId();
-        webSocketService.addClient(sessionId, session);
 
-        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
-        webSocketService.sendMessage(sessionId, messageDataResponse);
+        webSocketService.addClient(sessionId, session);
+        sendGameVersion(sessionId);
     }
 
     @Override
@@ -61,6 +65,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
         // 메서드로 뺄 가능성 있음
         try {
             switch (type) {
+                case SessionId:
+                    sendSessionId(sessionId);
+                    break;
+
                 case NextPhase:
                     NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
 
@@ -113,11 +121,28 @@ public class WebSocketHandler extends TextWebSocketHandler {
             log.error("game logic exception : " + gameLogicException.getMessage());
             webSocketService.sendMessage(sessionId,
                     MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
+
+        } catch (StopMethodException e) {
+            log.info("stop method by session id : " + sessionId);
+
+        } catch (CannotAcquireLockException e) {
+            log.info("CannotAcquireLockException by session id : " + sessionId);
+
         } catch (Exception e) {
             log.error(e.getMessage());
             webSocketService.sendMessage(sessionId, MessageDataResponse.create(MessageType.Exception, e.getMessage()));
         }
 
+    }
+
+    private void sendGameVersion(String sessionId) throws IOException {
+        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.Version, GameProperty.VERSION);
+        webSocketService.sendMessage(sessionId, messageDataResponse);
+    }
+
+    private void sendSessionId(String sessionId) throws Exception {
+        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
+        webSocketService.sendMessage(sessionId, messageDataResponse);
     }
 
     private void nextPhase(NextPhase nextPhase) {
@@ -130,11 +155,11 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 gameMessageController.autoDrawAtStart(nextPhase);
                 break;
 
-            case CONTROL:
-                gameMessageController.autoDrawAtDrawPhase(nextPhase);
-                break;
+//            case CONTROL:
+//                break;
 
             case DRAW:
+                gameMessageController.autoDrawAtDrawPhase(nextPhase);
                 break;
 
             case SORT:

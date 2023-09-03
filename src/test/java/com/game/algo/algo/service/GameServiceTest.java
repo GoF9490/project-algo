@@ -135,7 +135,7 @@ class GameServiceTest {
     }
 
     @Test
-    @DisplayName("모든 플레이어가 준비완료일때 정상적으로 게임이 시작됩니다.")
+    @DisplayName("모든 플레이어가 준비완료일때 정상적으로 게임이 시작되며 SETTING 페이즈로 넘어갑니다.")
     public void gameStartSuccess() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
@@ -191,7 +191,7 @@ class GameServiceTest {
 //    }
 
     @Test
-    @DisplayName("조건에 맞기에 SETTING 페이즈가 넘어갑니다.")
+    @DisplayName("조건에 맞기에 SETTING 페이즈가 START 페이즈로 넘어갑니다.")
     public void endSettingPhaseSuccess() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
@@ -207,15 +207,14 @@ class GameServiceTest {
                 });
 
         //when
-        boolean endPhase = gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(endPhase).isTrue();
         assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
     }
 
     @Test
-    @DisplayName("조건에 맞지않기에 SETTING 페이즈에 머무릅니다.")
+    @DisplayName("progressPlayerNum 숫자가 맞지않기에 SETTING 페이즈에 머무릅니다.")
     public void endSettingPhaseFail() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
@@ -229,12 +228,13 @@ class GameServiceTest {
                     gameService.joinGameRoom(gameRoomId, playerId);
                 });
 
-        //when
-        boolean endPhase = gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        //expect
+        assertThatExceptionOfType(GameLogicException.class)
+                .isThrownBy(() -> gameService.endSettingPhase(gameRoomId, 10))
+                .withMessageMatching(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE.getMessage());
 
-        //then
-        assertThat(endPhase).isFalse();
         assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.SETTING);
+
     }
 
     @RepeatedTest(5)
@@ -318,7 +318,7 @@ class GameServiceTest {
     }
 
     @Test
-    @DisplayName("START 페이즈에서 CONTROL 페이즈로 정상적으로 넘어가져야 합니다.")
+    @DisplayName("START 페이즈에서 DRAW 페이즈로 정상적으로 넘어가져야 합니다.")
     public void endStartPhaseSuccess() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();
@@ -334,11 +334,10 @@ class GameServiceTest {
                 });
 
         //when
-        boolean endPhase = gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(endPhase).isTrue();
-        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.CONTROL);
+        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.DRAW);
         assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().anyMatch(Block::isJoker)).isTrue();
     }
 
@@ -358,10 +357,9 @@ class GameServiceTest {
                 });
 
         //when
-        boolean endPhase = gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(endPhase).isFalse();
         assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
         assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().noneMatch(Block::isJoker)).isTrue();
     }
@@ -389,7 +387,7 @@ class GameServiceTest {
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
         assertThat(findPlayer.getBlockList().get(0).isWhite()).isTrue();
         assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
-        assertThat(findPlayer.isReady()).isTrue();
+//        assertThat(findPlayer.isReady()).isTrue();
     }
 
     @Test
@@ -414,10 +412,11 @@ class GameServiceTest {
 
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
         assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
-        assertThat(findPlayer.isReady()).isTrue();
+//        assertThat(findPlayer.isReady()).isTrue();
     }
 
     @Test
+    @DisplayName("DRAW 페이즈가 정상적으로 SORT 페이즈로 넘어갑니다.")
     public void endDrawPhaseSuccess() throws Exception {
         //given
         Long gameRoomId = gameService.createGameRoom();

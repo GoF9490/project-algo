@@ -1,7 +1,6 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.GameConstant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -9,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.game.algo.algo.data.GameConstant.JOKER_BLOCK_NUMBER;
+import static com.game.algo.algo.data.GameProperty.JOKER_BLOCK_NUMBER;
 import static org.assertj.core.api.Assertions.*;
 
 class PlayerTest {
@@ -155,10 +154,10 @@ class PlayerTest {
         player.addBlock(jokerBlock);
 
         //when
-        player.updateJoker(frontNum, backNum, BlockColor.WHITE);
+        player.changeJokerNum(1, BlockColor.WHITE);
 
         //then
-//        System.out.println(player.getBlockListCode(true).toString());
+        System.out.println(player.getBlockListCode(true).toString());
         assertThat(player.isNeedWhiteJokerRelocation()).isFalse();
         assertThat(player.getWhiteJokerRange() / 100).isEqualTo(frontNum);
         assertThat(player.getWhiteJokerRange() % 100).isEqualTo(backNum);
@@ -167,7 +166,7 @@ class PlayerTest {
         assertThat(player.getBlockList().get(0).isJoker()).isFalse();
         assertThat(player.getBlockListCode(true).get(0)).isEqualTo(frontNum);
 
-        assertThat(player.getBlockList().get(1).getNum()).isEqualTo(backNum);
+        assertThat(player.getBlockList().get(1).getNum()).isEqualTo(JOKER_BLOCK_NUMBER);
         assertThat(player.getBlockList().get(1).isJoker()).isTrue();
         assertThat(player.getBlockListCode(true).get(1)).isEqualTo(JOKER_BLOCK_NUMBER);
 
@@ -186,12 +185,19 @@ class PlayerTest {
 
         Block block = Block.createBlock(BlockColor.WHITE, betweenNum);
 
+        Block frontBlock = Block.createBlock(BlockColor.WHITE, frontNum);
+        Block backBlock = Block.createBlock(BlockColor.WHITE, backNum);
+        Block jokerBlock = Block.createBlock(BlockColor.WHITE, JOKER_BLOCK_NUMBER);
+
+
         Player player = Player.create("foo", null);
         player.gameReset();
 
-        player.addBlock(Block.createBlock(BlockColor.WHITE, JOKER_BLOCK_NUMBER));
+        player.addBlock(frontBlock);
+        player.addBlock(backBlock);
+        player.addBlock(jokerBlock);
 
-        player.updateJoker(frontNum, backNum, BlockColor.WHITE);
+        player.changeJokerNum(1, BlockColor.WHITE);
 
         //when
         player.addBlock(block);

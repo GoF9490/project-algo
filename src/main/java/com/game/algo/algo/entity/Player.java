@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
@@ -40,7 +39,7 @@ public class Player {
     @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blockList = new ArrayList<>();
 
-    private Integer drawBlockIndexNum;
+    private Integer drawBlockIndexNum = -1; // 유니티의 플레이어 데이터와 이 변수를 이용해 뽑은 카드 노출, 조커카드 재배치 로직 작성
 
     private Integer whiteJokerRange; // startNum * 100 + endNum
 
@@ -83,44 +82,47 @@ public class Player {
         blackJokerRange = null;
     }
 
-    public void sortBlock() {
-        blockList =  blockList.stream()
-                .sorted((a, b) -> {
-                    if(Objects.equals(a.getNum(), b.getNum())) {
-                        return a.getTypeNumber() - b.getTypeNumber();
-                    } else {
-                        return a.getNum() - b.getNum();
-                    }
-                })
-                .collect(Collectors.toList());
+    public int findPosition(Block drawBlock) {
+        Block findBlock = blockList.stream()
+                .filter(block -> block.comparePosition(drawBlock))
+                .findFirst()
+                .orElse(null);
+
+        if (findBlock == null) {
+            return blockList.size();
+        }
+        return blockList.indexOf(findBlock);
     }
 
     public void addBlock(Block block) {
         distinguishJoker(block);
         exploreJokerRange(block);
 
-        blockList.add(block);
-        sortBlock();
+        int indexNum = findPosition(block);
+        blockList.add(indexNum, block);
         setDrawBlockIndexNum(block);
     }
 
-    public void updateJoker(int frontNum, int backNum, BlockColor jokerColor) {
-        Block findJoker = findJoker(backNum, jokerColor);
+    public void changeJokerNum(int index, BlockColor jokerColor) {
+        Block findJoker = findJoker(jokerColor);
+        blockList.remove(findJoker);
+
+        int frontNum = (index == 0) ? 0 : blockList.get(index - 1).getNum();
+        int backNum = (index >= blockList.size()) ? 12 : blockList.get(index).getNum();
 
         if (jokerColor == BlockColor.WHITE && needWhiteJokerRelocation) {
-            findJoker.setNum(backNum);
             whiteJokerRange = frontNum * 100 + backNum;
             needWhiteJokerRelocation = false;
         } else if (jokerColor == BlockColor.BLACK && needBlackJokerRelocation) {
-            findJoker.setNum(backNum);
             blackJokerRange = frontNum * 100 + backNum;
             needBlackJokerRelocation = false;
         } else {
             throw new GameLogicException(GameExceptionCode.JOKER_ALREADY_CHANGED);
         }
 
+        blockList.add(index, findJoker);
+
         blockList = new ArrayList<>(blockList);
-        sortBlock();
         setDrawBlockIndexNum(findJoker);
     }
 
@@ -141,7 +143,7 @@ public class Player {
         this.webSocketSessionId = webSocketSessionId;
     }
 
-    private Block findJoker(int backNum, BlockColor jokerColor) {
+    private Block findJoker(BlockColor jokerColor) {
         List<Block> findJoker = blockList.stream()
                 .filter(block -> block.isJoker(jokerColor))
                 .collect(Collectors.toList());

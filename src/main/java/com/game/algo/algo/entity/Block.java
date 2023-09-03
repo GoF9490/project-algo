@@ -6,8 +6,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Embeddable;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
-import static com.game.algo.algo.data.GameConstant.*;
+import java.util.Objects;
+
+import static com.game.algo.algo.data.GameProperty.*;
 
 /**
  * BlockCode
@@ -21,8 +25,10 @@ import static com.game.algo.algo.data.GameConstant.*;
 public class Block {
 
     @Getter(value = AccessLevel.NONE)
+    @Enumerated(value = EnumType.STRING)
     private Type type;
 
+    @Enumerated(value = EnumType.STRING)
     private Status status = Status.CLOSE;
 
     private Integer num = 0;
@@ -74,6 +80,18 @@ public class Block {
 
     public boolean isJoker(BlockColor blockColor) {
         return blockColor == BlockColor.WHITE ? type == Type.WHITE_JOKER : type == Type.BLACK_JOKER;
+    }
+
+    public boolean comparePosition(Block otherBlock) {
+        if (otherBlock.isJoker()) {
+            return false;
+        }
+
+        if(Objects.equals(this.getNum(), otherBlock.getNum())) {
+            return this.getTypeNumber() > otherBlock.getTypeNumber();
+        } else {
+            return this.getNum() > otherBlock.getNum();
+        }
     }
 
     private Type matchType(BlockColor blockColor, Integer num) {

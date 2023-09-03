@@ -60,15 +60,14 @@ public class GameWebSocketMessageController {
         gameService.gameStart(gameStart.getGameRoomId());
 
         sendGameStatusData(gameStart.getGameRoomId());
-        sendWaitForSec(gameStart.getGameRoomId(), 5);
+        sendWaitForSec(gameStart.getGameRoomId());
     }
 
     public void endSettingPhase(NextPhase nextPhase) {
         gameService.updatePlayerReady(nextPhase.getPlayerId(), true);
-        if (gameService.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum())) {
-            sendGameStatusData(nextPhase.getGameRoomId());
-            sendWaitForSec(nextPhase.getGameRoomId(), 20);
-        }
+        gameService.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+        sendGameStatusData(nextPhase.getGameRoomId());
+        sendWaitForSec(nextPhase.getGameRoomId());
     }
 
     public void drawBlockAtStart(StartBlockDraw startBlockDraw) {
@@ -111,30 +110,18 @@ public class GameWebSocketMessageController {
         endDrawPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
     }
 
-    private void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
-        gameService.endDrawPhase(gameRoomId, progressPlayerNum);
-        sendWaitForSec(gameRoomId, 30);
-    }
-
     private void endStartPhase(Long gameRoomId, int playerOrderNum) {
-        if (gameService.endStartPhase(gameRoomId, playerOrderNum)) {
-            sendWaitForSec(gameRoomId, 30);
-            /**
-             * 직관적이지 못하다.
-             * 현재 방식은 해당 페이즈가 끝날 때 다음페이즈에 대한 타이머를 설정해 주어야 하는 방식이다.
-             * 해당 페이즈가 시작할 때 그 페이즈에 알맞게 타이머가 작동되는것이 더 직관적이다.
-             * 그런 방식으로 할 경우
-             *  1. 클라이언트가 페이즈를 읽고 스스로 타이머를 작동한다.
-             *      (클라이언트가 페이즈에 알맞는 타이머 시간을 가지고있거나 게임 시작시 서버에서 한꺼번에 지급한다.)
-             *  2. end * Phase 메서드로 페이즈가 성공적으로 끝났다는 통신을 보내고 이후 페이즈 시작 통신을 한번 더 한다.
-             *      (현재 방식보다 통신이 한번 더 이루어지는 번거로움? 리소스낭비? 가 생긴다.)
-             */
-        } else {
-            sendWaitForSec(gameRoomId, 20);
-        }
-
+        gameService.endStartPhase(gameRoomId, playerOrderNum);
         sendOwnerBlockData(gameRoomId);
         sendGameStatusData(gameRoomId);
+        sendWaitForSec(gameRoomId);
+    }
+
+    private void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.endDrawPhase(gameRoomId, progressPlayerNum);
+        sendOwnerBlockData(gameRoomId);
+        sendGameStatusData(gameRoomId);
+        sendWaitForSec(gameRoomId);
     }
 
     public void disconnectWebSession(String sessionId){
@@ -155,8 +142,10 @@ public class GameWebSocketMessageController {
                 MessageDataResponse.create(MessageType.OwnerBlockData, ownerBlockData)));
     }
 
-    private void sendWaitForSec(Long gameRoomId, int timeInSec) { // 직관적이지 못함
-        MessageDataResponse messageData = MessageDataResponse.create(MessageType.WaitForSec, timeInSec);
+    private void sendWaitForSec(Long gameRoomId) {
+        MessageDataResponse messageData = MessageDataResponse.create(MessageType.WaitForSec,
+                gameService.findGameRoomById(gameRoomId).getPhase().getWaitTime());
+
         gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
     }
 

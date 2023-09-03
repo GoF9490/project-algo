@@ -20,6 +20,8 @@ public class PlayerGameData {
 
     private List<Integer> blockCodeList;
 
+    private Integer drawBlockIndexNum;
+
     private boolean ready;
 
     private boolean retire;
@@ -31,6 +33,7 @@ public class PlayerGameData {
                 player.getName(),
                 player.getOrderNumber(),
                 player.getBlockListCode(false),
+                player.getDrawBlockIndexNum(),
                 player.isReady(),
                 player.isRetire());
     }

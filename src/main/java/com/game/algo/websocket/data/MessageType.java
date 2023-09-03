@@ -2,7 +2,9 @@ package com.game.algo.websocket.data;
 
 public enum MessageType {
 
+    Version,
     SessionId,
+    WaitTimeForPhase,
     PlayerCreate,
     PlayerSimple,
     GameRoomCreate,

@@ -1,7 +1,7 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.GameConstant;
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import lombok.AccessLevel;
@@ -128,21 +128,31 @@ public class GameRoom {
     }
 
     private void checkVacancy() {
-        if (playerList.size() >= GameConstant.PLAYER_MAX_COUNT){
+        if (playerList.size() >= GameProperty.PLAYER_MAX_COUNT){
             throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
         }
     }
 
 
     public enum Phase {
-        WAIT, // 게임 시작 전
-        SETTING, // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
-        START, // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
-        CONTROL, // 플레이어의 차례를 순서대로 바꿈 // 필요할까? 일단 빼고 구현해보기
-        DRAW, // 블록을 하나 선택함
-        SORT, // 뽑은 블록을 정렬함 ( 조커 고려 )
-        GUESS, // 뽑은 블록을 두고 추리함
-        REPEAT, // 추리 성공 여부에따라 더할지 결정함
-        END;
+        WAIT(0), // 게임 시작 전
+        SETTING(5), // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
+        START(20), // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
+        CONTROL(0), // 플레이어의 차례를 순서대로 바꿈 // 필요할까? 일단 빼고 구현해보기
+        DRAW(10), // 블록을 하나 선택함
+        SORT(10), // 뽑은 블록을 정렬함 ( 조커 고려 )
+        GUESS(30), // 뽑은 블록을 두고 추리함
+        REPEAT(30), // 추리 성공 여부에따라 더할지 결정함
+        END(10);
+
+        private int waitTime;
+
+        Phase(int waitTime) {
+            this.waitTime = waitTime;
+        }
+
+        public int getWaitTime() {
+            return waitTime;
+        }
     }
 }
