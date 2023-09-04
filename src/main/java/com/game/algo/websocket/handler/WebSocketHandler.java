@@ -116,6 +116,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
                     gameMessageController.drawBlockAtDrawPhase(blockDraw);
                     break;
+
+                case JokerUpdate:
+                    JokerUpdate jokerUpdate = objectMapper.readValue(requestMessage, JokerUpdate.class);
+
+                    gameMessageController.updateJoker(jokerUpdate);
+                    break;
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());

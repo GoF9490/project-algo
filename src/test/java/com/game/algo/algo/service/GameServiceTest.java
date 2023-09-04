@@ -15,10 +15,6 @@ import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
-import javax.persistence.Persistence;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -435,6 +431,28 @@ class GameServiceTest {
         //then
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SORT);
         assertThat(findGameRoom.getProgressPlayer().isReady()).isFalse();
+    }
+
+    @Test
+    @DisplayName("해당 Player의 Joker의 위차가 정상적으로 변경됩니다.")
+    public void updatePlayerJokerSuccess() throws Exception {
+        //given
+        Long gameRoomId = gameService.createGameRoom();
+        Long playerId = gameService.createPlayer("foo", "bar");
+
+        gameService.findGameRoomById(gameRoomId).gameReset();
+        gameService.joinGameRoom(gameRoomId, playerId);
+        gameService.autoDrawAtStart(gameRoomId);
+        gameService.findPlayerById(playerId).addBlock(Block.createBlock(BlockColor.WHITE, 12));
+
+        //when
+        gameService.updatePlayerJoker(playerId, 0, BlockColor.WHITE);
+
+        //then
+        Player findPlayer = gameService.findPlayerById(playerId);
+        assertThat(findPlayer.getBlockList().get(0).isWhite()).isTrue();
+        assertThat(findPlayer.getBlockList().get(0).getNum()).isEqualTo(12);
+        assertThat(findPlayer.getWhiteJokerRange() / 100).isEqualTo(0);
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {

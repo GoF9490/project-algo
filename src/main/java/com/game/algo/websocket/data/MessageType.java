@@ -4,7 +4,6 @@ public enum MessageType {
 
     Version,
     SessionId,
-    WaitTimeForPhase,
     PlayerCreate,
     PlayerSimple,
     GameRoomCreate,
@@ -16,8 +15,10 @@ public enum MessageType {
     GameStart,
     StartBlockDraw,
     BlockDraw,
+    JokerUpdate, // 핸들러에서 받아서 업데이트
     NextPhase,
     WaitForSec,
+    DrawBlockData, // draw 페이즈 끝날때 만들어서 보내기
     GameStatusData,
     OwnerBlockData,
     Exception;

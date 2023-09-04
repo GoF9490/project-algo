@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChoiceJokerPos {
+public class JokerUpdate {
 
     private Long playerId;
 

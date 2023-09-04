@@ -1,6 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.dto.DrawBlockData;
 import com.game.algo.algo.dto.GameStatusData;
 import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.Block;
@@ -206,6 +207,13 @@ public class GameServiceImpl implements GameService {
         return findGameRoom.getPlayerList().stream()
                 .map(OwnerBlockData::create)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public DrawBlockData getDrawBlockData(Long gameRoomId) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        return DrawBlockData.create(findPlayerById(findGameRoom.getProgressPlayer().getId()));
     }
 
     private void validGameStart(GameRoom findGameRoom) {

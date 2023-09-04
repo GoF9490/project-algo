@@ -13,39 +13,29 @@ import java.util.stream.Collectors;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RelocationJokerData { // 보내고 받아서 쓰기
+public class DrawBlockData { // 보내고 받아서 쓰기
 
     private String sessionId;
-
-    private BlockColor blockColor;
 
     private List<Integer> blockCodeList;
 
     private Integer drawBlockCode;
 
-    public static RelocationJokerData create(Player player, BlockColor blockColor) {
+    public static DrawBlockData create(Player player) {
         List<Integer> newBlockCodeList = player.getBlockListCode(true);
 
-        return new RelocationJokerData(
+        return new DrawBlockData(
                 player.getWebSocketSessionId(),
-                blockColor,
                 newBlockCodeList,
                 newBlockCodeList.get(player.getDrawBlockIndexNum()))
-                .filterBlockCodeList(blockColor);
+                .filterDrawBlock();
     }
 
-    private RelocationJokerData filterBlockCodeList(BlockColor blockColor) {
+    private DrawBlockData filterDrawBlock() {
         blockCodeList = blockCodeList.stream()
-                .filter(i -> !Objects.equals(i, drawBlockCode) && isInRange(i, blockColor))
+                .filter(i -> !Objects.equals(i, drawBlockCode))
                 .collect(Collectors.toList());
 
         return this;
-    }
-    
-    private boolean isInRange(int i, BlockColor blockColor) {
-        if (blockColor == BlockColor.WHITE) {
-            return i > 0;
-        }
-        return i < 0;
     }
 }

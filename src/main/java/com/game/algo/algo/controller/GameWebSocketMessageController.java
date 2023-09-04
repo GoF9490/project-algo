@@ -110,6 +110,16 @@ public class GameWebSocketMessageController {
         endDrawPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
     }
 
+    public void updateJoker(JokerUpdate jokerUpdate) {
+        gameService.updatePlayerJoker(jokerUpdate.getPlayerId(), jokerUpdate.getIndex(), jokerUpdate.getBlockColor());
+    }
+
+    public void disconnectWebSession(String sessionId){
+        // 세션아이디에 따른 플레이어 객체를 삭제, 수정하거나 해서 게임아웃을 시키던지, 재접속의 여지를 남기던지 하면 될듯.
+    }
+
+    /** end 시리즈 */
+
     private void endStartPhase(Long gameRoomId, int playerOrderNum) {
         gameService.endStartPhase(gameRoomId, playerOrderNum);
         sendOwnerBlockData(gameRoomId);
@@ -122,11 +132,10 @@ public class GameWebSocketMessageController {
         sendOwnerBlockData(gameRoomId);
         sendGameStatusData(gameRoomId);
         sendWaitForSec(gameRoomId);
+        sendDrawBlockData(gameRoomId);
     }
 
-    public void disconnectWebSession(String sessionId){
-        // 세션아이디에 따른 플레이어 객체를 삭제, 수정하거나 해서 게임아웃을 시키던지, 재접속의 여지를 남기던지 하면 될듯.
-    }
+    /** send 시리즈 */
 
     private void sendGameStatusData(Long gameRoomId) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,
@@ -147,6 +156,13 @@ public class GameWebSocketMessageController {
                 gameService.findGameRoomById(gameRoomId).getPhase().getWaitTime());
 
         gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
+    }
+
+    private void sendDrawBlockData(Long gameRoomId) {
+        DrawBlockData drawBlockData = gameService.getDrawBlockData(gameRoomId);
+        MessageDataResponse messageData = MessageDataResponse.create(MessageType.DrawBlockData, drawBlockData);
+
+        sendMessage(drawBlockData.getSessionId(), messageData);
     }
 
     private void sendMessage(String sessionId, MessageDataResponse messageData) {

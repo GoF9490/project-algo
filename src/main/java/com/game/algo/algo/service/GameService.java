@@ -1,6 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.dto.DrawBlockData;
 import com.game.algo.algo.dto.GameStatusData;
 import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.GameRoom;
@@ -40,9 +41,13 @@ public interface GameService {
 
     void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor);
 
+    // 밑에 메서드들 없애고 컨트롤러에서 가져와서 처리할까?
+
     GameStatusData getGameStatusData(Long gameRoomId);
 
     List<String> getSessionIdListInGameRoom(Long gameRoomId);
 
     List<OwnerBlockData> getOwnerBlockDataList(Long gameRoomId);
+
+    DrawBlockData getDrawBlockData(Long gameRoomId);
 }
