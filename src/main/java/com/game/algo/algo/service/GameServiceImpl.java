@@ -169,6 +169,7 @@ public class GameServiceImpl implements GameService {
 
         Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
         findPlayer.addBlock(drawBlock);
+        findPlayer.updateReady(true);
     }
     
     @Transactional

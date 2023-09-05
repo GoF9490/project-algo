@@ -6,6 +6,8 @@ import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.algo.repository.GameRoomRepository;
+import com.game.algo.algo.repository.PlayerJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,9 @@ class GameServiceTest {
 
     @Autowired private GameService gameService;
 
+    @Autowired private GameRoomRepository gameRoomRepository;
+
+    @Autowired private PlayerJpaRepository playerRepository;
 
     @Test
     @DisplayName("존재하지 않는 Player의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")
@@ -62,14 +67,15 @@ class GameServiceTest {
     @DisplayName("Player의 ready값이 true로 변경되어야 합니다.")
     public void updatePlayerReadySuccess() throws Exception {
         //given
-        Long playerId = gameService.createPlayer("foo", "sessionId");
+        Player player = Player.create("foo", "sessionId");
+        Long playerId = playerRepository.save(player).getId();
 
         //when
         gameService.updatePlayerReady(playerId, true);
-        Player player = gameService.findPlayerById(playerId);
 
         //then
-        assertThat(player.isReady()).isTrue();
+        Player findPlayer = playerRepository.findById(playerId).get();
+        assertThat(findPlayer.isReady()).isTrue();
 
     }
 
@@ -88,8 +94,6 @@ class GameServiceTest {
     @Test
     @DisplayName("GameRoom을 생성하고 저장, Id로 찾기가 정상적으로 이루어져야 합니다.")
     public void createGameRoomAndFindGameRoomByIdSuccess() throws Exception {
-        //given
-
         //when
         Long gameRoomId = gameService.createGameRoom();
         GameRoom gameRoom = gameService.findGameRoomById(gameRoomId);
@@ -102,27 +106,27 @@ class GameServiceTest {
     @DisplayName("GameRoom에 Player가 정상적으로 참가되어야 합니다.")
     public void joinGameRoomSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        Long playerId = gameService.createPlayer("foo", "sessionId");
+        Long gameRoomId = gameRoomRepository.save(GameRoom.create()).getId();
+        Long playerId = playerRepository.save(Player.create("foo", "sessionId")).getId();
 
         //when
         gameService.joinGameRoom(gameRoomId, playerId);
-        GameRoom gameRoom = gameService.findGameRoomById(gameRoomId);
 
         //then
-        assertThat(gameRoom.getPlayerList().size()).isEqualTo(1);
-        assertThat(gameRoom.getPlayerList().get(0).getId()).isEqualTo(playerId);
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoomId).get();
+        assertThat(findGameRoom.getPlayerList().size()).isEqualTo(1);
+        assertThat(findGameRoom.getPlayerList().get(0).getId()).isEqualTo(playerId);
     }
 
     @Test
     @DisplayName("GameRoom에 Player가 4명이상 있을경우 익셉션이 발생합니다.")
     public void joinGameRoomFail() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
+        Long gameRoomId = gameRoomRepository.save(GameRoom.create()).getId();
         LongStream.range(0, 4)
-                .map(l -> gameService.createPlayer("foo" + l, "sessionId" + l))
+                .map(l -> playerRepository.save(Player.create("foo" + l, "sessionId" + l)).getId())
                 .forEach(playerId -> gameService.joinGameRoom(gameRoomId, playerId));
-        Long latePlayerId = gameService.createPlayer("latePlayer", "sessionId");
+        Long latePlayerId = playerRepository.save(Player.create("lastPlayer", "sessionId")).getId();
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
@@ -134,37 +138,37 @@ class GameServiceTest {
     @DisplayName("모든 플레이어가 준비완료일때 정상적으로 게임이 시작되며 SETTING 페이즈로 넘어갑니다.")
     public void gameStartSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
         IntStream.range(0, 4)
-                .mapToObj(i -> Player.create("player" + i, "foo"))
+                .mapToObj(i -> playerRepository.save(Player.create("player" + i, "sessionId")))
                 .forEach(player -> {
-                    findGameRoom.joinPlayer(player);
                     player.updateReady(true);
+                    gameRoom.joinPlayer(player);
                 });
 
         //when
-        gameService.gameStart(gameRoomId);
+        gameService.gameStart(gameRoom.getId());
 
         //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
         assertThat(findGameRoom.areAllPlayersReady()).isFalse();
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
 
     }
-
+    
+    // 1인 플레이 환경으로 테스트중이기에 다인플레이에서의 익셉션은 잠시 닫아놓기
 //    @Test
 //    @DisplayName("플레이어가 한명일경우 게임을 시작할 수 없습니다.")
 //    public void gameStartFailCase1() throws Exception {
 //        //given
-//        Long gameRoomId = gameService.createGameRoom();
-//        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
-//        Player player = Player.create("player1", "foo");
+//        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+//        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 //        player.updateReady(true);
-//        findGameRoom.joinPlayer(player);
+//        gameRoom.joinPlayer(player);
 //
 //        //expect
 //        assertThatExceptionOfType(GameLogicException.class)
-//                .isThrownBy(() -> gameService.gameStart(gameRoomId))
+//                .isThrownBy(() -> gameService.gameStart(gameRoom.getId()))
 //                .withMessageMatching(GameExceptionCode.LACK_OF_PLAYER.getMessage());
 //    }
 //
@@ -172,64 +176,59 @@ class GameServiceTest {
 //    @DisplayName("모든 플레이어가 준비하지 않으면 게임을 시작할 수 없습니다.")
 //    public void gameStartFailCase2() throws Exception {
 //        //given
-//        Long gameRoomId = gameService.createGameRoom();
-//        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+//        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 //        IntStream.range(0, 4)
-//                .mapToObj(i -> Player.create("player" + i, "foo"))
-//                .forEach(player -> {
-//                    findGameRoom.joinPlayer(player);
-//                });
+//                .mapToObj(i -> playerRepository.save(Player.create("player" + i, "sessionId")))
+//                .forEach(gameRoom::joinPlayer);
 //
 //        //expect
 //        assertThatExceptionOfType(GameLogicException.class)
-//                .isThrownBy(() -> gameService.gameStart(gameRoomId))
-//                .withMessageMatching(GameExceptionCode.ALL_PLAYER_NOT_READY.getMessage());
+//                .isThrownBy(() -> gameService.gameStart(gameRoom.getId()))
+//                .withMessageMatching(GameExceptionCode.PLAYER_NOT_READY.getMessage());
 //    }
 
     @Test
     @DisplayName("조건에 맞기에 SETTING 페이즈가 START 페이즈로 넘어갑니다.")
     public void endSettingPhaseSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
-        findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+        gameRoom.updatePhase(GameRoom.Phase.SETTING);
 
         IntStream.range(0, 2)
-                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
-                .forEach(playerId -> {
-                    gameService.joinGameRoom(gameRoomId, playerId);
-                    gameService.updatePlayerReady(playerId, true);
+                .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
+                .forEach(player -> {
+                    player.updateReady(true);
+                    gameRoom.joinPlayer(player);
                 });
 
         //when
-        gameService.endSettingPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endSettingPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.START);
     }
 
     @Test
     @DisplayName("progressPlayerNum 숫자가 맞지않기에 SETTING 페이즈에 머무릅니다.")
     public void endSettingPhaseFail() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
-        findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+        gameRoom.updatePhase(GameRoom.Phase.SETTING);
 
         IntStream.range(0, 2)
-                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
-                .forEach(playerId -> {
-                    gameService.joinGameRoom(gameRoomId, playerId);
-                });
+                .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
+                .forEach(gameRoom::joinPlayer);
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> gameService.endSettingPhase(gameRoomId, 10))
+                .isThrownBy(() -> gameService.endSettingPhase(gameRoom.getId(), 10))
                 .withMessageMatching(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE.getMessage());
 
-        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.SETTING);
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
 
     }
 
@@ -237,29 +236,28 @@ class GameServiceTest {
     @DisplayName("GameRoom의 블록을 Player에게 알맞게 전달합니다.")
     public void drawBlockTestSuccess() throws Exception {
         //given
-        Long playerId = gameService.createPlayer("foo", "sessionId");
-        Long gameRoomId = gameService.createGameRoom();
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
         int whiteBlockCount = 1;
         int blackBlockCount = 3;
 
-        gameService.findGameRoomById(gameRoomId).gameReset();
+        gameRoom.gameReset();
 
         //when
-        gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount);
-
-        Player player = gameService.findPlayerById(playerId);
+        gameService.drawBlockAtStart(gameRoom.getId(), player.getId(), whiteBlockCount, blackBlockCount);
 
         //then
-        assertThat(player.getBlockList().size()).isEqualTo(whiteBlockCount + blackBlockCount);
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+        assertThat(findPlayer.getBlockList().size()).isEqualTo(whiteBlockCount + blackBlockCount);
 
-        assertThat(howManyWhiteBlock(player.getBlockList())).isEqualTo(whiteBlockCount);
-        assertThat(howManyBlackBlock(player.getBlockList())).isEqualTo(blackBlockCount);
+        assertThat(howManyWhiteBlock(findPlayer.getBlockList())).isEqualTo(whiteBlockCount);
+        assertThat(howManyBlackBlock(findPlayer.getBlockList())).isEqualTo(blackBlockCount);
 
-        player.getBlockList()
+        findPlayer.getBlockList()
                 .forEach(block -> assertThat(block.getNum()).isBetween(0, 12));
 
-        System.out.println(player.getBlockList().stream()
+        System.out.println(findPlayer.getBlockList().stream()
                 .map(block -> block.getBlockCode(true))
                 .collect(Collectors.toList()).toString());
     }
@@ -268,18 +266,18 @@ class GameServiceTest {
     @DisplayName("뽑으려는 블록의 개수가 비정상적일때 익셉션이 발생합니다.")
     public void drawBlockTestFail_InvalidNumberOfBlocks() throws Exception {
         //given
-        Long playerId = gameService.createPlayer("foo", "sessionId");
-        Long gameRoomId = gameService.createGameRoom();
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
         int whiteBlockCount = 2;
         int blackBlockCount = 3;
 
-        gameService.joinGameRoom(gameRoomId, playerId);
+        gameRoom.joinPlayer(player);
+        gameRoom.gameReset();
 
         //expect
-        gameService.findGameRoomById(gameRoomId).gameReset();
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> gameService.drawBlockAtStart(gameRoomId, playerId, whiteBlockCount, blackBlockCount))
+                .isThrownBy(() -> gameService.drawBlockAtStart(gameRoom.getId(), player.getId(), whiteBlockCount, blackBlockCount))
                 .withMessageMatching(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS.getMessage());
     }
 
@@ -288,12 +286,17 @@ class GameServiceTest {
     @DisplayName("요청이 여러번 들어와도 autoDraw 기능이 1번에 한해 성공적으로 이루어집니다.")
     public void autoDrawAtStartSuccess() throws Exception {
         //given
-        Long playerId = gameService.createPlayer("foo", "sessionId");
-        Long gameRoomId = gameService.createGameRoom();
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
-        gameService.gameStart(gameRoomId);
+        gameRoom.gameReset();
+        gameRoom.joinPlayer(player);
 
-        gameService.joinGameRoom(gameRoomId, playerId);
+        // 트랜잭션이 안끝나서 변경감지가 안먹히는듯. 수동으로 변경사항 저장.
+        gameRoomRepository.save(gameRoom);
+        playerRepository.save(player);
+
+        Long gameRoomId = gameRoom.getId();
 
         //when
         try {
@@ -305,7 +308,7 @@ class GameServiceTest {
         }
 
         //then
-        Player findPlayer = gameService.findPlayerById(playerId);
+        Player findPlayer = playerRepository.findById(player.getId()).get();
         assertThat(findPlayer.getBlockList().size()).isEqualTo(4);
         assertThat(findPlayer.isReady()).isTrue();
 
@@ -317,68 +320,64 @@ class GameServiceTest {
     @DisplayName("START 페이즈에서 DRAW 페이즈로 정상적으로 넘어가져야 합니다.")
     public void endStartPhaseSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
-        findGameRoom.updatePhase(GameRoom.Phase.START);
+        gameRoom.updatePhase(GameRoom.Phase.START);
 
         IntStream.range(0, 2)
-                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
-                .forEach(playerId -> {
-                    gameService.joinGameRoom(gameRoomId, playerId);
-                    gameService.updatePlayerReady(playerId, true);
+                .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
+                .forEach(player -> {
+                    player.updateReady(true);
+                    gameRoom.joinPlayer(player);
                 });
 
         //when
-        gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.DRAW);
-        assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().anyMatch(Block::isJoker)).isTrue();
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.DRAW);
+        assertThat(findGameRoom.getWhiteBlockList().stream().anyMatch(Block::isJoker)).isTrue();
     }
 
     @Test
     @DisplayName("조건에 맞지않기에 START 페이즈에 머무릅니다.")
     public void endStartPhaseFail() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
 
-        findGameRoom.updatePhase(GameRoom.Phase.START);
+        gameRoom.updatePhase(GameRoom.Phase.START);
 
         IntStream.range(0, 2)
-                .mapToLong(i -> gameService.createPlayer("player" + i, "sessionId" + i))
-                .forEach(playerId -> {
-                    gameService.joinGameRoom(gameRoomId, playerId);
-                });
+                .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
+                .forEach(gameRoom::joinPlayer);
 
         //when
-        gameService.endStartPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
 
         //then
-        assertThat(gameService.findGameRoomById(gameRoomId).getPhase()).isEqualTo(GameRoom.Phase.START);
-        assertThat(gameService.findGameRoomById(gameRoomId).getWhiteBlockList().stream().noneMatch(Block::isJoker)).isTrue();
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.START);
+        assertThat(findGameRoom.getWhiteBlockList().stream().noneMatch(Block::isJoker)).isTrue();
     }
 
     @Test
     @DisplayName("Player가 GameRoom에 있는 지정한 색깔의 블럭을 하나 가져옵니다.")
     public void drawBlockAtDrawPhaseSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        Long playerId = gameService.createPlayer("foo", "bar");
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
-        gameService.joinGameRoom(gameRoomId, playerId);
-
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
-        findGameRoom.gameReset();
-        findGameRoom.addJoker();
-        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+        gameRoom.joinPlayer(player);
+        gameRoom.gameReset();
+        gameRoom.addJoker();
+        gameRoom.updatePhase(GameRoom.Phase.DRAW);
 
         //when
-        gameService.drawBlockAtDrawPhase(gameRoomId, playerId, BlockColor.WHITE);
+        gameService.drawBlockAtDrawPhase(gameRoom.getId(), player.getId(), BlockColor.WHITE);
 
         //then
-        Player findPlayer = gameService.findPlayerById(playerId);
+        Player findPlayer = playerRepository.findById(player.getId()).get();
 
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
         assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
@@ -390,45 +389,42 @@ class GameServiceTest {
     @DisplayName("플레이어가 자동으로 블럭을 하나 가져오는데 성공합니다.")
     public void autoDrawAtDrawPhaseSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        Long playerId = gameService.createPlayer("foo", "bar");
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
-        gameService.joinGameRoom(gameRoomId, playerId);
-
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
-        findGameRoom.gameReset();
-        findGameRoom.addJoker();
-        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+        gameRoom.joinPlayer(player);
+        gameRoom.gameReset();
+        gameRoom.addJoker();
+        gameRoom.updatePhase(GameRoom.Phase.DRAW);
 
         //when
-        gameService.autoDrawAtDrawPhase(gameRoomId);
+        gameService.autoDrawAtDrawPhase(gameRoom.getId());
 
         //then
-        Player findPlayer = gameService.findPlayerById(playerId);
+        Player findPlayer = playerRepository.findById(player.getId()).get();
 
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
         assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
-//        assertThat(findPlayer.isReady()).isTrue();
+        assertThat(findPlayer.isReady()).isTrue();
     }
 
     @Test
     @DisplayName("DRAW 페이즈가 정상적으로 SORT 페이즈로 넘어갑니다.")
     public void endDrawPhaseSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        Long playerId = gameService.createPlayer("foo", "bar");
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
-        gameService.joinGameRoom(gameRoomId, playerId);
-
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
-        findGameRoom.updatePhase(GameRoom.Phase.DRAW);
-
-        gameService.updatePlayerReady(playerId, true);
+        gameRoom.joinPlayer(player);
+        gameRoom.updatePhase(GameRoom.Phase.DRAW);
+        player.updateReady(true);
 
         //when
-        gameService.endDrawPhase(gameRoomId, findGameRoom.getProgressPlayerNumber());
+        gameService.endDrawPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
 
         //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SORT);
         assertThat(findGameRoom.getProgressPlayer().isReady()).isFalse();
     }
@@ -437,21 +433,21 @@ class GameServiceTest {
     @DisplayName("해당 Player의 Joker의 위차가 정상적으로 변경됩니다.")
     public void updatePlayerJokerSuccess() throws Exception {
         //given
-        Long gameRoomId = gameService.createGameRoom();
-        Long playerId = gameService.createPlayer("foo", "bar");
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
-        gameService.findGameRoomById(gameRoomId).gameReset();
-        gameService.findGameRoomById(gameRoomId).updatePhase(GameRoom.Phase.SORT);
-        gameService.joinGameRoom(gameRoomId, playerId);
-        gameService.autoDrawAtStart(gameRoomId);
-        gameService.findPlayerById(playerId).addBlock(Block.createBlock(BlockColor.WHITE, 12));
-        gameService.updatePlayerReady(playerId, false);
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.SORT);
+        gameRoom.joinPlayer(player);
+        IntStream.range(0, 4).forEach(i -> player.addBlock(gameRoom.drawRandomBlock(BlockColor.WHITE)));
+        player.addBlock(Block.createBlock(BlockColor.WHITE, 12));
 
         //when
-        gameService.updatePlayerJoker(playerId, 0, BlockColor.WHITE);
+        gameService.updatePlayerJoker(player.getId(), 0, BlockColor.WHITE);
 
         //then
-        Player findPlayer = gameService.findPlayerById(playerId);
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+
         assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(findPlayer.getBlockList().get(0).getNum()).isEqualTo(12);
         assertThat(findPlayer.getWhiteJokerRange() / 100).isEqualTo(0);
