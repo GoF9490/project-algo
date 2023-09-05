@@ -381,7 +381,7 @@ class GameServiceTest {
         Player findPlayer = gameService.findPlayerById(playerId);
 
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
-        assertThat(findPlayer.getBlockList().get(0).isWhite()).isTrue();
+        assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
 //        assertThat(findPlayer.isReady()).isTrue();
     }
@@ -441,9 +441,11 @@ class GameServiceTest {
         Long playerId = gameService.createPlayer("foo", "bar");
 
         gameService.findGameRoomById(gameRoomId).gameReset();
+        gameService.findGameRoomById(gameRoomId).updatePhase(GameRoom.Phase.SORT);
         gameService.joinGameRoom(gameRoomId, playerId);
         gameService.autoDrawAtStart(gameRoomId);
         gameService.findPlayerById(playerId).addBlock(Block.createBlock(BlockColor.WHITE, 12));
+        gameService.updatePlayerReady(playerId, false);
 
         //when
         gameService.updatePlayerJoker(playerId, 0, BlockColor.WHITE);
@@ -460,6 +462,6 @@ class GameServiceTest {
     }
 
     private long howManyBlackBlock(List<Block> BlockList) {
-        return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();
+        return BlockList.stream().filter(block -> block.isColor(BlockColor.BLACK)).count();
     }
 }

@@ -45,7 +45,7 @@ class PlayerTest {
         //then
         assertThat(player.getBlockList().size()).isEqualTo(1);
 
-        assertThat(player.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
+        assertThat(player.getBlockList().get(0).isColor(BlockColor.BLACK)).isTrue();
         assertThat(player.getBlockList().get(0).getNum()).isEqualTo(1);
     }
 
@@ -66,13 +66,13 @@ class PlayerTest {
         //then
         assertThat(player.getBlockList().size()).isEqualTo(3);
 
-        assertThat(player.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
+        assertThat(player.getBlockList().get(0).isColor(BlockColor.BLACK)).isTrue();
         assertThat(player.getBlockList().get(0).getNum()).isEqualTo(0);
 
-        assertThat(player.getBlockList().get(1).isColor(BlockColor.WHITE)).isTrue();
+        assertThat(player.getBlockList().get(1).isColor(BlockColor.BLACK)).isTrue();
         assertThat(player.getBlockList().get(1).getNum()).isEqualTo(1);
 
-        assertThat(player.getBlockList().get(2).isColor(BlockColor.WHITE)).isTrue();
+        assertThat(player.getBlockList().get(2).isColor(BlockColor.BLACK)).isTrue();
         assertThat(player.getBlockList().get(2).getNum()).isEqualTo(2);
     }
 
@@ -99,10 +99,10 @@ class PlayerTest {
         assertThat(player.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(player.getBlockList().get(0).getNum()).isEqualTo(0);
 
-        assertThat(player.getBlockList().get(1).isColor(BlockColor.WHITE)).isTrue();
+        assertThat(player.getBlockList().get(1).isColor(BlockColor.BLACK)).isTrue();
         assertThat(player.getBlockList().get(1).getNum()).isEqualTo(1);
 
-        assertThat(player.getBlockList().get(2).isColor(BlockColor.BLACK)).isTrue();
+        assertThat(player.getBlockList().get(2).isColor(BlockColor.WHITE)).isTrue();
         assertThat(player.getBlockList().get(2).getNum()).isEqualTo(1);
 
         assertThat(player.getBlockList().get(3).isColor(BlockColor.WHITE)).isTrue();
