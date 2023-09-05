@@ -41,6 +41,8 @@ public interface GameService {
 
     void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor);
 
+    void endSortPhase(Long gameRoomId, int progressPlayerNum);
+
     // 밑에 메서드들 없애고 컨트롤러에서 가져와서 처리할까?
 
     GameStatusData getGameStatusData(Long gameRoomId);

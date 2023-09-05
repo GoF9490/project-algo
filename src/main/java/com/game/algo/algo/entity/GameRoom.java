@@ -112,7 +112,10 @@ public class GameRoom {
     public void addJoker() {
         if (whiteBlockList.stream().noneMatch(Block::isJoker)) {
             whiteBlockList.add(Block.createBlock(BlockColor.WHITE, 12));
+            whiteBlockList = new ArrayList<>(whiteBlockList);
+
             blackBlockList.add(Block.createBlock(BlockColor.BLACK, 12));
+            blackBlockList = new ArrayList<>(blackBlockList);
         }
     }
 

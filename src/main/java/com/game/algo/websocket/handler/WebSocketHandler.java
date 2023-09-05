@@ -169,6 +169,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case SORT:
+                gameMessageController.endSortPhase(nextPhase);
                 break;
 
             case GUESS:

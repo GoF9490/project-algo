@@ -117,7 +117,7 @@ public class Player {
             blackJokerRange = frontNum * 100 + backNum;
             needBlackJokerRelocation = false;
         } else {
-            throw new GameLogicException(GameExceptionCode.JOKER_ALREADY_CHANGED);
+            throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
         }
 
         blockList.add(index, findJoker);

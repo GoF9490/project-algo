@@ -182,10 +182,30 @@ public class GameServiceImpl implements GameService {
         findGameRoom.allPlayerReadyOff();
     }
 
+    @Transactional
     public void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor) {
         Player findPlayer = findPlayerById(playerId);
 
+        if (findPlayer.getGameRoom().getPhase() != Phase.SORT) {
+            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+        }
+        if (findPlayer.isReady()) {
+            throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
+        }
+
         findPlayer.changeJokerNum(newJokerIndex, blockColor);
+        findPlayer.updateReady(true);
+    }
+
+    @Transactional
+    public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        checkGamePhaseSync(findGameRoom, Phase.SORT);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        findGameRoom.updatePhase(Phase.GUESS);
+        findGameRoom.allPlayerReadyOff();
     }
 
     @Transactional(readOnly = true)

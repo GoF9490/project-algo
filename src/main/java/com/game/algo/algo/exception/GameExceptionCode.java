@@ -15,7 +15,7 @@ public enum GameExceptionCode {
     OUT_OF_SYNC_PLAYER_ORDER(400, "out of sync player order"),
     BLOCK_IS_DEPLETED(400, "block is depleted"),
     JOKER_NOT_MATCH(400, "joker not match"),
-    JOKER_ALREADY_CHANGED(400, "joker already changed");
+    ALREADY_EXECUTED(400, "already executed");
 
     private int status;
 
