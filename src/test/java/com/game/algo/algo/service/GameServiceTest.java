@@ -450,16 +450,16 @@ class GameServiceTest {
 
         //then
         Player findPlayer = gameService.findPlayerById(playerId);
-        assertThat(findPlayer.getBlockList().get(0).isWhite()).isTrue();
+        assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(findPlayer.getBlockList().get(0).getNum()).isEqualTo(12);
         assertThat(findPlayer.getWhiteJokerRange() / 100).isEqualTo(0);
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {
-        return BlockList.stream().filter(Block::isWhite).count();
+        return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();
     }
 
     private long howManyBlackBlock(List<Block> BlockList) {
-        return BlockList.stream().filter(Block::isBlack).count();
+        return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();
     }
 }

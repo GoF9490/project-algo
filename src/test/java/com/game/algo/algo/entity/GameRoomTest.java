@@ -55,13 +55,8 @@ class GameRoomTest {
 
         //then
         IntStream.range(0, 12).forEach(i -> {
-            if (i == 12) {
-                assertThat(gameRoom.getWhiteBlockList().get(i).getTypeNumber()).isEqualTo(1);
-                assertThat(gameRoom.getBlackBlockList().get(i).getTypeNumber()).isEqualTo(2);
-            } else {
-                assertThat(gameRoom.getWhiteBlockList().get(i).getTypeNumber()).isEqualTo(3);
-                assertThat(gameRoom.getBlackBlockList().get(i).getTypeNumber()).isEqualTo(4);
-            }
+            assertThat(gameRoom.getWhiteBlockList().get(i).isColor(BlockColor.WHITE)).isTrue();
+            assertThat(gameRoom.getBlackBlockList().get(i).isColor(BlockColor.BLACK)).isTrue();
         });
     }
 

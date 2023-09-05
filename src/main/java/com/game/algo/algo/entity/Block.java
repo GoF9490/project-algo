@@ -24,17 +24,17 @@ import static com.game.algo.algo.data.GameProperty.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Block {
 
-    @Getter(value = AccessLevel.NONE)
     @Enumerated(value = EnumType.STRING)
-    private Type type;
+    private BlockColor blockColor;
 
+    @Getter(value = AccessLevel.NONE)
     @Enumerated(value = EnumType.STRING)
     private Status status = Status.CLOSE;
 
     private Integer num = 0;
 
     private Block(BlockColor blockColor, Integer num) {
-        this.type = matchType(blockColor, num);
+        this.blockColor = blockColor;
         this.num = num;
     }
 
@@ -44,42 +44,30 @@ public class Block {
 
     public Integer getBlockCode(boolean isOwner) {
         if (!isOwner && isClose()) {
-            return CLOSED_BLOCK_NUMBER * blackIsMinus();
+            return CLOSED_BLOCK_NUMBER * blockColor.getOrder();
         }
 
         if (isJoker()) {
-            return JOKER_BLOCK_NUMBER * blackIsMinus();
+            return JOKER_BLOCK_NUMBER * blockColor.getOrder();
         }
 
         if (num == 0) {
-            return ZERO_BLOCK_NUMBER * blackIsMinus();
+            return ZERO_BLOCK_NUMBER * blockColor.getOrder();
         }
 
-        return num * blackIsMinus();
+        return num * blockColor.getOrder();
     }
 
-    public void setNum(int num) {
-        this.num = num;
-    }
-
-    public int getTypeNumber() {
-        return type.getOrder();
-    }
-
-    public boolean isBlack() {
-        return type == Type.BLACK || type == Type.BLACK_JOKER;
-    }
-
-    public boolean isWhite() {
-        return type == Type.WHITE || type == Type.WHITE_JOKER;
+    public boolean isColor(BlockColor blockColor) {
+        return this.blockColor == blockColor;
     }
 
     public boolean isJoker() {
-        return type == Type.WHITE_JOKER || type == Type.BLACK_JOKER;
+        return num == JOKER_BLOCK_NUMBER || num == -1 * JOKER_BLOCK_NUMBER;
     }
 
-    public boolean isJoker(BlockColor blockColor) {
-        return blockColor == BlockColor.WHITE ? type == Type.WHITE_JOKER : type == Type.BLACK_JOKER;
+    public void open() {
+        this.status = Status.OPEN;
     }
 
     public boolean comparePosition(Block otherBlock) {
@@ -88,53 +76,16 @@ public class Block {
         }
 
         if(Objects.equals(this.getNum(), otherBlock.getNum())) {
-            return this.getTypeNumber() > otherBlock.getTypeNumber();
+            return this.blockColor.getOrder() > otherBlock.getBlockColor().getOrder();
         } else {
             return this.getNum() > otherBlock.getNum();
         }
-    }
-
-    private Type matchType(BlockColor blockColor, Integer num) {
-        if (blockColor == BlockColor.WHITE) {
-            return num == JOKER_BLOCK_NUMBER ? Type.WHITE_JOKER : Type.WHITE;
-        } else {
-            return num == JOKER_BLOCK_NUMBER ? Type.BLACK_JOKER : Type.BLACK;
-        }
-    }
-
-    private int blackIsMinus() {
-        return isBlack() ? -1 : 1;
     }
 
     private boolean isClose() {
         return status == Status.CLOSE;
     }
 
-    private boolean isJokerNumber() {
-        return num == JOKER_BLOCK_NUMBER;
-    }
-
-
-    /**
-     * enum
-     */
-
-    private enum Type {
-        WHITE_JOKER(1),
-        BLACK_JOKER(2),
-        WHITE(3),
-        BLACK(4);
-
-        private final int order;
-
-        Type(int order) {
-            this.order = order;
-        }
-
-        public int getOrder() {
-            return order;
-        }
-    }
 
     private enum Status {
         CLOSE,

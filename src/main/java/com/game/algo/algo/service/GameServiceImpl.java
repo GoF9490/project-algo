@@ -208,6 +208,13 @@ public class GameServiceImpl implements GameService {
         findGameRoom.allPlayerReadyOff();
     }
 
+    @Transactional
+    public void guessBlock(Long playerId) {
+        Player findPlayer = findPlayerById(playerId);
+
+
+    }
+
     @Transactional(readOnly = true)
     public GameStatusData getGameStatusData(Long gameRoomId) {
         return GameStatusData.create(findGameRoomById(gameRoomId));

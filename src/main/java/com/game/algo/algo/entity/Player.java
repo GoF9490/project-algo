@@ -39,23 +39,20 @@ public class Player {
     @ElementCollection(fetch = FetchType.LAZY)
     private List<Block> blockList = new ArrayList<>();
 
-    private Integer drawBlockIndexNum = -1; // 유니티의 플레이어 데이터와 이 변수를 이용해 뽑은 카드 노출, 조커카드 재배치 로직 작성
+    private Integer drawBlockIndexNum = -1;
 
+    // 필요한가? 아래 트리거를 키는 용도로 쓰였는데 아래 변수가 사라지면 필요성이 정밀한 검증용도로만 쓸 수 있을텐데 이 또한 게임 로직을 정밀하게 탐색하기는 구조적으로 힘들다.
+    // 그렇다고 안전장치를 아예 없애기에는 게임 핵등에 취약할듯. (쓸사람이 있겠냐 싶지만)
+    // 아래 boolean 변수를 없애고 JokerRange 로만 한정적인 검증을 하는게 좋을지도?
     private Integer whiteJokerRange; // startNum * 100 + endNum
 
     private Integer blackJokerRange; // startNum * 100 + endNum
 
+    // 필요한가? 원래는 트리거로 쓰려했는데 검증용도로만 쓰인다.
     private boolean needWhiteJokerRelocation = false;
 
     private boolean needBlackJokerRelocation = false;
-    
-    // 조커 재배치 메서드 만들기
 
-
-//    @Builder
-//    public Player(String name) {
-//        this.name = name;
-//    }
 
     public static Player create(String name, String webSocketSessionId) {
         return new Player(name, webSocketSessionId);
@@ -130,12 +127,13 @@ public class Player {
         this.orderNumber = order;
     }
 
-    public void completeWhiteJokerRelocation() {
-        needWhiteJokerRelocation = false;
-    }
-
-    public void completeBlackJokerRelocation() {
-        needBlackJokerRelocation = false;
+    public boolean guessBlock(int index, int num) {
+        Block findBlock = blockList.get(index);
+        if (findBlock.getNum() == num) {
+            findBlock.open();
+            return true;
+        }
+        return false;
     }
 
     private Player(String name, String webSocketSessionId) {
@@ -143,9 +141,9 @@ public class Player {
         this.webSocketSessionId = webSocketSessionId;
     }
 
-    private Block findJoker(BlockColor jokerColor) {
+    private Block findJoker(BlockColor blockColor) {
         List<Block> findJoker = blockList.stream()
-                .filter(block -> block.isJoker(jokerColor))
+                .filter(block -> block.isColor(blockColor) && block.isJoker())
                 .collect(Collectors.toList());
 
         if (findJoker.size() != 1) {
@@ -156,9 +154,9 @@ public class Player {
     }
 
     private void exploreJokerRange(Block block) {
-        if (whiteJokerRange != null && block.isWhite() && betweenRange(block, whiteJokerRange)) {
+        if (whiteJokerRange != null && block.isColor(BlockColor.WHITE) && betweenRange(block, whiteJokerRange)) {
             needWhiteJokerRelocation = true;
-        } else if (blackJokerRange != null && block.isBlack() && betweenRange(block, blackJokerRange)) {
+        } else if (blackJokerRange != null && block.isColor(BlockColor.BLACK) && betweenRange(block, blackJokerRange)) {
             needBlackJokerRelocation = true;
         }
     }
@@ -169,7 +167,7 @@ public class Player {
 
     private void distinguishJoker(Block block) {
         if (block.isJoker()) {
-            if (block.isWhite()) {
+            if (block.isColor(BlockColor.WHITE)) {
                 whiteJokerRange = 12;
                 needWhiteJokerRelocation = true;
             } else {
