@@ -122,6 +122,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
                     gameMessageController.updateJoker(jokerUpdate);
                     break;
+
+                case BlockGuess:
+                    BlockGuess blockGuess = objectMapper.readValue(requestMessage, BlockGuess.class);
+
+                    gameMessageController.guessBlock(blockGuess);
+                    break;
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());
@@ -154,31 +160,32 @@ public class WebSocketHandler extends TextWebSocketHandler {
     private void nextPhase(NextPhase nextPhase) {
         switch (nextPhase.getPhase()) {
             case SETTING:
-                gameMessageController.endSettingPhase(nextPhase);
+                gameMessageController.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
             case START:
-                gameMessageController.autoDrawAtStart(nextPhase);
+                gameMessageController.endStartPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
-//            case CONTROL:
-//                break;
-
             case DRAW:
-                gameMessageController.autoDrawAtDrawPhase(nextPhase);
+                gameMessageController.endDrawPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
             case SORT:
-                gameMessageController.endSortPhase(nextPhase);
+                gameMessageController.endSortPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
             case GUESS:
+                gameMessageController.endGuessPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
             case REPEAT:
                 break;
 
             case END:
+                break;
+
+            case GAMEOVER:
                 break;
         }
     }

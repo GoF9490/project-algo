@@ -37,7 +37,7 @@ class PlayerTest {
         Player player = Player.create("foo", null);
         player.gameReset();
 
-        Block block = Block.createBlock(BlockColor.BLACK, 1);
+        Block block = Block.create(BlockColor.BLACK, 1);
 
         //when
         player.addBlock(block);
@@ -57,10 +57,10 @@ class PlayerTest {
         player.gameReset();
 
         List<Block> blockList = IntStream.range(0, 3)
-                .mapToObj(i -> Block.createBlock(BlockColor.WHITE, i))
+                .mapToObj(i -> Block.create(BlockColor.WHITE, i))
                 .collect(Collectors.toList());
 
-        Block block = Block.createBlock(BlockColor.BLACK, 1);
+        Block block = Block.create(BlockColor.BLACK, 1);
 
         //when
         player.addBlock(block);
@@ -91,9 +91,9 @@ class PlayerTest {
         int frontNum = 1;
         int backNum = 5;
 
-        Block frontBlock = Block.createBlock(BlockColor.WHITE, frontNum);
-        Block backBlock = Block.createBlock(BlockColor.WHITE, backNum);
-        Block jokerBlock = Block.createBlock(BlockColor.WHITE, JOKER_BLOCK_NUMBER);
+        Block frontBlock = Block.create(BlockColor.WHITE, frontNum);
+        Block backBlock = Block.create(BlockColor.WHITE, backNum);
+        Block jokerBlock = Block.create(BlockColor.WHITE, JOKER_BLOCK_NUMBER);
 
 
         Player player = Player.create("foo", null);

@@ -38,24 +38,24 @@ public class Block {
         this.num = num;
     }
 
-    public static Block createBlock(BlockColor blockColor, int num) {
+    public static Block create(BlockColor blockColor, int num) {
         return new Block(blockColor, num);
     }
 
     public Integer getBlockCode(boolean isOwner) {
         if (!isOwner && isClose()) {
-            return CLOSED_BLOCK_NUMBER * blockColor.getOrder();
+            return CLOSED_BLOCK_NUMBER * blockColor.getCode();
         }
 
         if (isJoker()) {
-            return JOKER_BLOCK_NUMBER * blockColor.getOrder();
+            return JOKER_BLOCK_NUMBER * blockColor.getCode();
         }
 
         if (num == 0) {
-            return ZERO_BLOCK_NUMBER * blockColor.getOrder();
+            return ZERO_BLOCK_NUMBER * blockColor.getCode();
         }
 
-        return num * blockColor.getOrder();
+        return num * blockColor.getCode();
     }
 
     public boolean isColor(BlockColor blockColor) {
@@ -76,13 +76,13 @@ public class Block {
         }
 
         if(Objects.equals(this.getNum(), otherBlock.getNum())) {
-            return this.blockColor.getOrder() > otherBlock.getBlockColor().getOrder();
+            return this.blockColor.getCode() > otherBlock.getBlockColor().getCode();
         } else {
             return this.getNum() > otherBlock.getNum();
         }
     }
 
-    private boolean isClose() {
+    public boolean isClose() {
         return status == Status.CLOSE;
     }
 

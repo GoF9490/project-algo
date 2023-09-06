@@ -40,8 +40,6 @@ public class GameWebSocketMessageController {
         sendMessage(sessionId, MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
     }
 
-
-
     public void joinGameRoom(@NonNull GameRoomJoin gameRoomJoin) {
         String sessionId = gameService.findPlayerById(gameRoomJoin.getPlayerId()).getWebSocketSessionId();
         gameService.joinGameRoom(gameRoomJoin.getGameRoomId(), gameRoomJoin.getPlayerId());
@@ -63,13 +61,6 @@ public class GameWebSocketMessageController {
         sendWaitForSec(gameStart.getGameRoomId());
     }
 
-    public void endSettingPhase(NextPhase nextPhase) {
-        gameService.updatePlayerReady(nextPhase.getPlayerId(), true);
-        gameService.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
-        sendGameStatusData(nextPhase.getGameRoomId());
-        sendWaitForSec(nextPhase.getGameRoomId());
-    }
-
     public void drawBlockAtStart(StartBlockDraw startBlockDraw) {
         gameService.drawBlockAtStart(startBlockDraw.getGameRoomId(), startBlockDraw.getPlayerId(),
                 startBlockDraw.getWhiteBlockCount(), startBlockDraw.getBlackBlockCount());
@@ -79,12 +70,6 @@ public class GameWebSocketMessageController {
         endStartPhase(startBlockDraw.getGameRoomId(), playerOrderNum);
     }
 
-    public void autoDrawAtStart(NextPhase nextPhase) {
-        gameService.autoDrawAtStart(nextPhase.getGameRoomId());
-
-        endStartPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
-    }
-
     public void drawBlockAtDrawPhase(BlockDraw blockDraw) {
         gameService.drawBlockAtDrawPhase(blockDraw.getGameRoomId(), blockDraw.getPlayerId(), blockDraw.getBlockColor());
 
@@ -92,21 +77,18 @@ public class GameWebSocketMessageController {
 
         endDrawPhase(blockDraw.getGameRoomId(), playerOrderNum);
     }
-    
-    public void autoDrawAtDrawPhase(NextPhase nextPhase) {
-        gameService.autoDrawAtDrawPhase(nextPhase.getGameRoomId());
-        endDrawPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
-    }
 
     public void updateJoker(JokerUpdate jokerUpdate) {
         gameService.updatePlayerJoker(jokerUpdate.getPlayerId(), jokerUpdate.getIndex(), jokerUpdate.getBlockColor());
     }
-    
-    public void endSortPhase(NextPhase nextPhase) {
-        gameService.endSortPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
-        
-        sendGameStatusData(nextPhase.getGameRoomId());
-        sendWaitForSec(nextPhase.getGameRoomId());
+
+    public void guessBlock(BlockGuess blockGuess) {
+        gameService.guessBlock(blockGuess.getPlayerId(), blockGuess.getTargetPlayerId(),
+                blockGuess.getBlockIndex(), blockGuess.getBlockNum());
+
+        int playerOrderNum = gameService.findPlayerById(blockGuess.getPlayerId()).getOrderNumber();
+
+        endGuessPhase(blockGuess.getGameRoomId(), playerOrderNum);
     }
 
     public void disconnectWebSession(String sessionId){
@@ -115,19 +97,45 @@ public class GameWebSocketMessageController {
 
     /** end 시리즈 */
 
-    private void endStartPhase(Long gameRoomId, int playerOrderNum) {
-        gameService.endStartPhase(gameRoomId, playerOrderNum);
+    public void endSettingPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.updatePlayerReady(gameRoomId, true);
+        gameService.endSettingPhase(gameRoomId, progressPlayerNum);
+
+        sendGameStatusData(gameRoomId);
+        sendWaitForSec(gameRoomId);
+    }
+
+    public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.autoDrawAtStart(gameRoomId);
+        gameService.endStartPhase(gameRoomId, progressPlayerNum);
+
         sendOwnerBlockData(gameRoomId);
         sendGameStatusData(gameRoomId);
         sendWaitForSec(gameRoomId);
     }
 
-    private void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.autoDrawAtDrawPhase(gameRoomId);
         gameService.endDrawPhase(gameRoomId, progressPlayerNum);
+
         sendOwnerBlockData(gameRoomId);
         sendGameStatusData(gameRoomId);
         sendWaitForSec(gameRoomId);
         sendDrawBlockData(gameRoomId);
+    }
+
+    public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.endSortPhase(gameRoomId, progressPlayerNum);
+
+        sendGameStatusData(gameRoomId);
+        sendWaitForSec(gameRoomId);
+    }
+
+    public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.endGuessPhase(gameRoomId, progressPlayerNum);
+
+        sendGameStatusData(gameRoomId);
+        sendWaitForSec(gameRoomId);
     }
 
     /** send 시리즈 (JPA 쿼리 수정 또는 DB변경을 통해 파라미터가 GameRoom 오브젝트로 수정, 쿼리횟수 줄이는 효과 기대가능) */

@@ -6,13 +6,13 @@ public enum BlockColor {
     BLACK(-1),
     WHITE(1);
 
-    final int order;
+    final int code;
 
-    BlockColor(int order) {
-        this.order = order;
+    BlockColor(int code) {
+        this.code = code;
     }
 
-    public int getOrder() {
-        return order;
+    public int getCode() {
+        return code;
     }
 }

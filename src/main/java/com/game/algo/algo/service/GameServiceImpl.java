@@ -68,6 +68,9 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public void updatePlayerReady(Long playerId, boolean isReady) {
         Player findPlayer = findPlayerById(playerId);
+
+        checkGamePhaseSync(findPlayer.getGameRoom(), Phase.WAIT);
+
         findPlayer.updateReady(isReady);
     }
 
@@ -164,6 +167,10 @@ public class GameServiceImpl implements GameService {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         Player findPlayer = findGameRoom.getProgressPlayer();
 
+        if (findPlayer.isReady()) {
+            return;
+        }
+
         double randomValue = Math.random();
         BlockColor blockColor = (randomValue * 2 < 1) ? BlockColor.WHITE : BlockColor.BLACK;
 
@@ -210,11 +217,35 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
-    public void guessBlock(Long playerId) {
-        Player findPlayer = findPlayerById(playerId);
+    public void guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num) {
+        Player targetPlayer = findPlayerById(targetPlayerId);
 
-
+        if (targetPlayer.guessBlock(index, num)) {
+            Player guessPlayer = findPlayerById(guessPlayerId);
+            guessPlayer.updateReady(true);
+        }
     }
+
+    @Transactional
+    public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        checkGamePhaseSync(findGameRoom, Phase.GUESS);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        Player progressPlayer = findGameRoom.getProgressPlayer();
+
+        if (progressPlayer.isReady()) {
+            findGameRoom.updatePhase(Phase.REPEAT);
+        } else {
+            findGameRoom.getProgressPlayer().openDrawCard();
+            findGameRoom.updatePhase(Phase.END);
+        }
+
+        progressPlayer.updateReady(false);
+    }
+
+    /** get시리즈 */
 
     @Transactional(readOnly = true)
     public GameStatusData getGameStatusData(Long gameRoomId) {

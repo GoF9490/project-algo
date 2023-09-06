@@ -111,10 +111,10 @@ public class GameRoom {
 
     public void addJoker() {
         if (whiteBlockList.stream().noneMatch(Block::isJoker)) {
-            whiteBlockList.add(Block.createBlock(BlockColor.WHITE, 12));
+            whiteBlockList.add(Block.create(BlockColor.WHITE, 12));
             whiteBlockList = new ArrayList<>(whiteBlockList);
 
-            blackBlockList.add(Block.createBlock(BlockColor.BLACK, 12));
+            blackBlockList.add(Block.create(BlockColor.BLACK, 12));
             blackBlockList = new ArrayList<>(blackBlockList);
         }
     }
@@ -126,7 +126,7 @@ public class GameRoom {
 
     private List<Block> blockSet(BlockColor blockColor) {
         return IntStream.range(0, 12)
-                .mapToObj(num -> Block.createBlock(blockColor, num))
+                .mapToObj(num -> Block.create(blockColor, num))
                 .collect(Collectors.toList());
     }
 
@@ -141,12 +141,12 @@ public class GameRoom {
         WAIT(0), // 게임 시작 전
         SETTING(5), // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
         START(20), // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
-        CONTROL(0), // 플레이어의 차례를 순서대로 바꿈 // 필요할까? 일단 빼고 구현해보기
         DRAW(10), // 블록을 하나 선택함
         SORT(10), // 뽑은 블록을 정렬함 ( 조커 고려 )
         GUESS(30), // 뽑은 블록을 두고 추리함
         REPEAT(30), // 추리 성공 여부에따라 더할지 결정함
-        END(10);
+        END(5), // 현재 플레이어의 차례를 끝내고 다음 플레이어의 차례로 바꿈
+        GAMEOVER(10);
 
         private int waitTime;
 

@@ -117,17 +117,20 @@ public class Player {
         this.orderNumber = order;
     }
 
-    public Block getDrawBlock() {
-        return blockList.get(drawBlockIndexNum);
-    }
-
     public boolean guessBlock(int index, int num) {
         Block findBlock = blockList.get(index);
         if (findBlock.getNum() == num) {
             findBlock.open();
+            blockList = new ArrayList<>(blockList);
+            checkRetire();
             return true;
         }
         return false;
+    }
+
+    public void openDrawCard() {
+        getDrawBlock().open();
+        blockList = new ArrayList<>(blockList);
     }
 
     private Player(String name, String webSocketSessionId) {
@@ -156,5 +159,15 @@ public class Player {
 
     private void setDrawBlockIndexNum(Block block) {
         drawBlockIndexNum = blockList.indexOf(block);
+    }
+
+    private Block getDrawBlock() {
+        return blockList.get(drawBlockIndexNum);
+    }
+
+    private void checkRetire() {
+        if (blockList.stream().noneMatch(Block::isClose)) {
+            retire = true;
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -67,14 +68,17 @@ class GameServiceTest {
     @DisplayName("Player의 ready값이 true로 변경되어야 합니다.")
     public void updatePlayerReadySuccess() throws Exception {
         //given
-        Player player = Player.create("foo", "sessionId");
-        Long playerId = playerRepository.save(player).getId();
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.joinPlayer(player);
+        gameRoom.updatePhase(GameRoom.Phase.WAIT);
 
         //when
-        gameService.updatePlayerReady(playerId, true);
+        gameService.updatePlayerReady(player.getId(), true);
 
         //then
-        Player findPlayer = playerRepository.findById(playerId).get();
+        Player findPlayer = playerRepository.findById(player.getId()).get();
         assertThat(findPlayer.isReady()).isTrue();
 
     }
@@ -106,31 +110,32 @@ class GameServiceTest {
     @DisplayName("GameRoom에 Player가 정상적으로 참가되어야 합니다.")
     public void joinGameRoomSuccess() throws Exception {
         //given
-        Long gameRoomId = gameRoomRepository.save(GameRoom.create()).getId();
-        Long playerId = playerRepository.save(Player.create("foo", "sessionId")).getId();
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         //when
-        gameService.joinGameRoom(gameRoomId, playerId);
+        gameService.joinGameRoom(gameRoom.getId(), player.getId());
 
         //then
-        GameRoom findGameRoom = gameRoomRepository.findById(gameRoomId).get();
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
         assertThat(findGameRoom.getPlayerList().size()).isEqualTo(1);
-        assertThat(findGameRoom.getPlayerList().get(0).getId()).isEqualTo(playerId);
+        assertThat(findGameRoom.getPlayerList().get(0).getId()).isEqualTo(player.getId());
     }
 
     @Test
     @DisplayName("GameRoom에 Player가 4명이상 있을경우 익셉션이 발생합니다.")
     public void joinGameRoomFail() throws Exception {
         //given
-        Long gameRoomId = gameRoomRepository.save(GameRoom.create()).getId();
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
         LongStream.range(0, 4)
                 .map(l -> playerRepository.save(Player.create("foo" + l, "sessionId" + l)).getId())
-                .forEach(playerId -> gameService.joinGameRoom(gameRoomId, playerId));
+                .forEach(playerId -> gameService.joinGameRoom(gameRoom.getId(), playerId));
         Long latePlayerId = playerRepository.save(Player.create("lastPlayer", "sessionId")).getId();
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> gameService.joinGameRoom(gameRoomId, latePlayerId))
+                .isThrownBy(() -> gameService.joinGameRoom(gameRoom.getId(), latePlayerId))
                 .withMessageMatching(GameExceptionCode.GAME_ROOM_IS_FULL.getMessage());
     }
 
@@ -440,7 +445,7 @@ class GameServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.SORT);
         gameRoom.joinPlayer(player);
         IntStream.range(0, 4).forEach(i -> player.addBlock(gameRoom.drawRandomBlock(BlockColor.WHITE)));
-        player.addBlock(Block.createBlock(BlockColor.WHITE, 12));
+        player.addBlock(Block.create(BlockColor.WHITE, 12));
 
         //when
         gameService.updatePlayerJoker(player.getId(), 0, BlockColor.WHITE);
@@ -451,6 +456,138 @@ class GameServiceTest {
         assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(findPlayer.getBlockList().get(0).getNum()).isEqualTo(12);
         assertThat(findPlayer.getWhiteJokerRange() / 100).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("추리에 성공하면 해당 Block의 Status가 OPEN으로 변경되고, 추리에 성공한 Player의 ready가 true가 됩니다.")
+    public void guessBlockSuccess() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+
+        gameRoom.joinPlayer(targetPlayer);
+        IntStream.range(0, 4).forEach(i -> targetPlayer.addBlock(Block.create(BlockColor.WHITE, i)));
+
+        //when
+        gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
+
+        //then
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+        Player findTargetPlayer = playerRepository.findById(targetPlayer.getId()).get();
+
+        assertThat(findTargetPlayer.getBlockList().get(0).isClose()).isFalse();
+        assertThat(findPlayer.isReady()).isTrue();
+    }
+
+    @Test
+    @DisplayName("추리에 실패하면 실패한 Player의 ready는 false를 유지합니다.")
+    public void guessBlockFail() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+
+        gameRoom.joinPlayer(targetPlayer);
+        IntStream.range(0, 4).forEach(i -> targetPlayer.addBlock(Block.create(BlockColor.WHITE, i)));
+
+        //when
+        gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 5);
+
+        //then
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+        Player findTargetPlayer = playerRepository.findById(targetPlayer.getId()).get();
+
+        assertThat(findTargetPlayer.getBlockList().get(0).isClose()).isTrue();
+        assertThat(findPlayer.isReady()).isFalse();
+    }
+
+    @Test
+    @DisplayName("추리에 성공해 targetPlayer의 모든 Block이 OPNE 된 경우 해당 Player를 retire 시킵니다.")
+    public void RetireTargetPlayer() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+
+        gameRoom.joinPlayer(targetPlayer);
+        targetPlayer.addBlock(Block.create(BlockColor.WHITE, 0));
+
+        //when
+        gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
+
+        //then
+        Player findTargetPlayer = playerRepository.findById(targetPlayer.getId()).get();
+
+        assertThat(findTargetPlayer.getBlockList().get(0).isClose()).isFalse();
+        assertThat(findTargetPlayer.isRetire()).isTrue();
+    }
+
+    @Test
+    @DisplayName("추리에 성공한(ready == true) Player는 REPEAT 페이즈로 넘어가며, 최근 뽑은 Block이 공개되지 않습니다.")
+    public void endGuessPhaseSuccess() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+        player.updateReady(true);
+
+        //when
+        gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.REPEAT);
+        assertThat(findPlayer.getBlockList().get(findPlayer.getDrawBlockIndexNum()).isClose()).isTrue();
+        assertThat(findPlayer.isReady()).isFalse();
+    }
+
+    @Test
+    @DisplayName("추리에 실패하거나 조작을 하지않은(ready == false) Player는 END 페이즈로 넘어가며, 최근 뽑은 Block이 공개됩니다.")
+    public void endGuessPhaseFail() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+        player.updateReady(false);
+
+        //when
+        gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.END);
+        assertThat(findPlayer.getBlockList().get(findPlayer.getDrawBlockIndexNum()).isClose()).isFalse();
+        assertThat(findPlayer.isReady()).isFalse();
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {
