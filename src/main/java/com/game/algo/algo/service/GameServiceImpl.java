@@ -247,36 +247,6 @@ public class GameServiceImpl implements GameService {
         progressPlayer.updateReady(false);
     }
 
-    /** get시리즈 */
-
-    @Transactional(readOnly = true)
-    public GameStatusData getGameStatusData(Long gameRoomId) {
-        return GameStatusData.create(findGameRoomById(gameRoomId));
-    }
-
-    @Transactional(readOnly = true)
-    public List<String> getSessionIdListInGameRoom(Long gameRoomId) {
-        return findGameRoomById(gameRoomId).getPlayerList().stream()
-                .map(Player::getWebSocketSessionId)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<OwnerBlockData> getOwnerBlockDataList(Long gameRoomId) {
-        GameRoom findGameRoom = findGameRoomById(gameRoomId);
-
-        return findGameRoom.getPlayerList().stream()
-                .map(OwnerBlockData::create)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public DrawBlockData getDrawBlockData(Long gameRoomId) {
-        GameRoom findGameRoom = findGameRoomById(gameRoomId);
-
-        return DrawBlockData.create(findPlayerById(findGameRoom.getProgressPlayer().getId()));
-    }
-
     private void validGameStart(GameRoom findGameRoom) {
         if (!findGameRoom.areAllPlayersReady()) {
             throw new GameLogicException(GameExceptionCode.PLAYER_NOT_READY);

@@ -5,6 +5,8 @@ import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
 import com.game.algo.algo.dto.messagetype.PlayerCreate;
 import com.game.algo.algo.dto.messagetype.PlayerSimple;
+import com.game.algo.algo.entity.GameRoom;
+import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataResponse;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -44,21 +47,27 @@ public class GameWebSocketMessageController {
         String sessionId = gameService.findPlayerById(gameRoomJoin.getPlayerId()).getWebSocketSessionId();
         gameService.joinGameRoom(gameRoomJoin.getGameRoomId(), gameRoomJoin.getPlayerId());
 
-        sendGameStatusData(gameRoomJoin.getGameRoomId());
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomJoin.getGameRoomId());
+
+        sendGameStatusData(findGameRoom);
         sendMessage(sessionId, MessageDataResponse.create(MessageType.JoinRoomSuccess, ""));
     }
 
     public void updatePlayerReady(@NonNull PlayerReadyUpdate playerReadyUpdate) {
         gameService.updatePlayerReady(playerReadyUpdate.getPlayerId(), playerReadyUpdate.getReady());
 
-        sendGameStatusData(playerReadyUpdate.getGameRoomId());
+        GameRoom findGameRoom = gameService.findGameRoomById(playerReadyUpdate.getGameRoomId());
+
+        sendGameStatusData(findGameRoom);
     }
 
     public void gameStart(@NonNull GameStart gameStart) {
         gameService.gameStart(gameStart.getGameRoomId());
 
-        sendGameStatusData(gameStart.getGameRoomId());
-        sendWaitForSec(gameStart.getGameRoomId());
+        GameRoom findGameRoom = gameService.findGameRoomById(gameStart.getGameRoomId());
+
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
     }
 
     public void drawBlockAtStart(StartBlockDraw startBlockDraw) {
@@ -101,71 +110,91 @@ public class GameWebSocketMessageController {
 //        gameService.updatePlayerReady(gameRoomId, true);
         gameService.endSettingPhase(gameRoomId, progressPlayerNum);
 
-        sendGameStatusData(gameRoomId);
-        sendWaitForSec(gameRoomId);
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
     }
 
     public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.autoDrawAtStart(gameRoomId);
         gameService.endStartPhase(gameRoomId, progressPlayerNum);
 
-        sendOwnerBlockData(gameRoomId);
-        sendGameStatusData(gameRoomId);
-        sendWaitForSec(gameRoomId);
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendOwnerBlockData(findGameRoom);
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
     }
 
     public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.autoDrawAtDrawPhase(gameRoomId);
         gameService.endDrawPhase(gameRoomId, progressPlayerNum);
 
-        sendOwnerBlockData(gameRoomId);
-        sendGameStatusData(gameRoomId);
-        sendWaitForSec(gameRoomId);
-        sendDrawBlockData(gameRoomId);
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendOwnerBlockData(findGameRoom);
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
+        sendDrawBlockData(findGameRoom);
     }
 
     public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.endSortPhase(gameRoomId, progressPlayerNum);
 
-        sendOwnerBlockData(gameRoomId);
-        sendGameStatusData(gameRoomId);
-        sendWaitForSec(gameRoomId);
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendOwnerBlockData(findGameRoom);
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
     }
 
     public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.endGuessPhase(gameRoomId, progressPlayerNum);
 
-        sendGameStatusData(gameRoomId);
-        sendWaitForSec(gameRoomId);
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
     }
 
     /** send 시리즈 (JPA 쿼리 수정 또는 DB변경을 통해 파라미터가 GameRoom 오브젝트로 수정, 쿼리횟수 줄이는 효과 기대가능) */
     // 이거 시작해볼까?
     // 유니티 클라이언트 테스트 계속해서 하면서 버그찾기
 
-    private void sendGameStatusData(Long gameRoomId) {
+    private void sendGameStatusData(GameRoom gameRoom) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,
-                gameService.getGameStatusData(gameRoomId));
+                GameStatusData.create(gameRoom));
 
-        gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
+        List<String> sessionIdList = gameRoom.getPlayerList().stream()
+                .map(Player::getWebSocketSessionId)
+                .collect(Collectors.toList());
+
+        sessionIdList.forEach(sid -> sendMessage(sid, messageData));
     }
 
-    private void sendOwnerBlockData(Long gameRoomId) {
-        List<OwnerBlockData> ownerBlockDataList = gameService.getOwnerBlockDataList(gameRoomId);
+    private void sendOwnerBlockData(GameRoom gameRoom) {
+        List<OwnerBlockData> ownerBlockDataList = gameRoom.getPlayerList().stream()
+                .map(OwnerBlockData::create)
+                .collect(Collectors.toList());
 
         ownerBlockDataList.forEach(ownerBlockData -> sendMessage(ownerBlockData.getSessionId(),
                 MessageDataResponse.create(MessageType.OwnerBlockData, ownerBlockData)));
     }
 
-    private void sendWaitForSec(Long gameRoomId) {
+    private void sendWaitForSec(GameRoom gameRoom) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.WaitForSec,
-                gameService.findGameRoomById(gameRoomId).getPhase().getWaitTime());
+                gameRoom.getPhase().getWaitTime());
 
-        gameService.getSessionIdListInGameRoom(gameRoomId).forEach(sid -> sendMessage(sid, messageData));
+        List<String> sessionIdList = gameRoom.getPlayerList().stream()
+                .map(Player::getWebSocketSessionId)
+                .collect(Collectors.toList());
+
+        sessionIdList.forEach(sid -> sendMessage(sid, messageData));
     }
 
-    private void sendDrawBlockData(Long gameRoomId) {
-        DrawBlockData drawBlockData = gameService.getDrawBlockData(gameRoomId);
+    private void sendDrawBlockData(GameRoom gameRoom) {
+        DrawBlockData drawBlockData = DrawBlockData.create(gameRoom.getProgressPlayer());
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.DrawBlockData, drawBlockData);
 
         sendMessage(drawBlockData.getSessionId(), messageData);

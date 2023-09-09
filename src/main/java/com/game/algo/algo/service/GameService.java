@@ -46,14 +46,4 @@ public interface GameService {
     void guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num);
 
     void endGuessPhase(Long gameRoomId, int progressPlayerNum);
-
-    // 밑에 메서드들 없애고 컨트롤러에서 가져와서 처리할까?
-
-    GameStatusData getGameStatusData(Long gameRoomId);
-
-    List<String> getSessionIdListInGameRoom(Long gameRoomId);
-
-    List<OwnerBlockData> getOwnerBlockDataList(Long gameRoomId);
-
-    DrawBlockData getDrawBlockData(Long gameRoomId);
 }

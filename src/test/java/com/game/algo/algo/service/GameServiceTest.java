@@ -357,6 +357,8 @@ class GameServiceTest {
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
+        gameRoom.playerOrderReset();
+
         //when
         gameService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
 
