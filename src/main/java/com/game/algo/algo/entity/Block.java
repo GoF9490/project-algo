@@ -1,7 +1,9 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameProperty;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,24 +24,36 @@ import static com.game.algo.algo.data.GameProperty.*;
 //@Entity
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Block {
 
-    @Enumerated(value = EnumType.STRING)
     private BlockColor blockColor;
-
-    @Getter(value = AccessLevel.NONE)
-    @Enumerated(value = EnumType.STRING)
-    private Status status = Status.CLOSE;
 
     private Integer num = 0;
 
-    private Block(BlockColor blockColor, Integer num) {
+    private boolean isOpen;
+
+
+    protected Block(BlockColor blockColor, Integer num) {
         this.blockColor = blockColor;
         this.num = num;
     }
 
     public static Block create(BlockColor blockColor, int num) {
         return new Block(blockColor, num);
+    }
+
+    public static Block create(BlockColor blockColor, int num, boolean isOpen) {
+        return new Block(blockColor, num, isOpen);
+    }
+
+    public static int parseBlockCode(int blockCode) {
+        int num = Math.abs(blockCode);
+
+        if (num == ZERO_BLOCK_NUMBER) {
+            return 0;
+        }
+        return num;
     }
 
     public Integer getBlockCode(boolean isOwner) {
@@ -67,7 +81,7 @@ public class Block {
     }
 
     public void open() {
-        this.status = Status.OPEN;
+        this.isOpen = true;
     }
 
     public boolean comparePosition(Block otherBlock) {
@@ -83,12 +97,6 @@ public class Block {
     }
 
     public boolean isClose() {
-        return status == Status.CLOSE;
-    }
-
-
-    private enum Status {
-        CLOSE,
-        OPEN;
+        return !isOpen;
     }
 }

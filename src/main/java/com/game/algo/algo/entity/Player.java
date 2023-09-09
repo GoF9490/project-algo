@@ -3,6 +3,7 @@ package com.game.algo.algo.entity;
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.global.converter.BlockArrayConverter;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,7 +37,7 @@ public class Player {
 
     private int orderNumber;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
     private List<Block> blockList = new ArrayList<>();
 
     private Integer drawBlockIndexNum = -1;

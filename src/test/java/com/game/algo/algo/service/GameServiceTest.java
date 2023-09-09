@@ -387,7 +387,7 @@ class GameServiceTest {
         assertThat(findPlayer.getBlockList().size()).isEqualTo(1);
         assertThat(findPlayer.getBlockList().get(0).isColor(BlockColor.WHITE)).isTrue();
         assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(0);
-//        assertThat(findPlayer.isReady()).isTrue();
+        assertThat(findPlayer.isReady()).isTrue();
     }
 
     @Test

@@ -148,6 +148,7 @@ public class GameServiceImpl implements GameService {
             findGameRoom.allPlayerReadyOff();
             findGameRoom.updatePhase(Phase.DRAW);
             findGameRoom.addJoker();
+            findGameRoom.progressZero();
         } else {
             findGameRoom.nextPlayer();
         }
@@ -160,6 +161,7 @@ public class GameServiceImpl implements GameService {
 
         Block drawBlock = findGameRoom.drawRandomBlock(blockColor);
         findPlayer.addBlock(drawBlock);
+        findPlayer.updateReady(true);
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)

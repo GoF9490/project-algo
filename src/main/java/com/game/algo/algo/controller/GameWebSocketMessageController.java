@@ -98,7 +98,7 @@ public class GameWebSocketMessageController {
     /** end 시리즈 */
 
     public void endSettingPhase(Long gameRoomId, int progressPlayerNum) {
-        gameService.updatePlayerReady(gameRoomId, true);
+//        gameService.updatePlayerReady(gameRoomId, true);
         gameService.endSettingPhase(gameRoomId, progressPlayerNum);
 
         sendGameStatusData(gameRoomId);
@@ -127,6 +127,7 @@ public class GameWebSocketMessageController {
     public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.endSortPhase(gameRoomId, progressPlayerNum);
 
+        sendOwnerBlockData(gameRoomId);
         sendGameStatusData(gameRoomId);
         sendWaitForSec(gameRoomId);
     }
@@ -139,6 +140,8 @@ public class GameWebSocketMessageController {
     }
 
     /** send 시리즈 (JPA 쿼리 수정 또는 DB변경을 통해 파라미터가 GameRoom 오브젝트로 수정, 쿼리횟수 줄이는 효과 기대가능) */
+    // 이거 시작해볼까?
+    // 유니티 클라이언트 테스트 계속해서 하면서 버그찾기
 
     private void sendGameStatusData(Long gameRoomId) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,

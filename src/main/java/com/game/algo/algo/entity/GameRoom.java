@@ -4,6 +4,7 @@ import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.global.converter.BlockArrayConverter;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class GameRoom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(value = EnumType.STRING)
     private Phase phase = Phase.WAIT;
 
     @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL)
@@ -34,11 +36,18 @@ public class GameRoom {
 
     private Integer progressPlayerNumber = 0;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
     private List<Block> whiteBlockList = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
     private List<Block> blackBlockList = new ArrayList<>();
+
+    private boolean gameOver = false;
+
+//    private int turnCount = 0;
+
+//    @Convert(converter = IntegerArrayConverter.class)
+//    private List<Integer> orderList = new ArrayList<>();
 
 
     public static GameRoom create() {
@@ -68,18 +77,23 @@ public class GameRoom {
     }
 
     public void nextPlayer() {
-        if (++progressPlayerNumber == playerList.size()) {
-            progressPlayerNumber = 0;
+        for (int i=0; i<playerList.size(); i++) {
+            progressPlayerNumberUp();
+            if (!getProgressPlayer().isRetire()){
+                return;
+            }
         }
     }
 
-    public Player getProgressPlayer() {
-        return playerList.get(progressPlayerNumber);
+    public void progressZero() {
+        progressPlayerNumber = 0;
+    }
 
-//        return playerList.stream() // 플레이어 뜯어 찾는 방법
-//                .filter(player -> player.getOrderNumber() == progressPlayerNumber)
-//                .findFirst()
-//                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
+    public Player getProgressPlayer() {
+        return playerList.stream() // 플레이어 뜯어 찾는 방법
+                .filter(player -> player.getOrderNumber() == progressPlayerNumber)
+                .findFirst()
+                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     public void playerOrderReset() {
@@ -88,7 +102,9 @@ public class GameRoom {
                 .collect(Collectors.toList());
 
         IntStream.range(0, playerOrderList.size())
-                .forEach(i -> playerOrderList.get(i).updateOrder(i));
+                .forEach(i -> {
+                    playerOrderList.get(i).updateOrder(i);
+                });
     }
 
     public Block drawRandomBlock(BlockColor blockColor) {
@@ -133,6 +149,12 @@ public class GameRoom {
     private void checkVacancy() {
         if (playerList.size() >= GameProperty.PLAYER_MAX_COUNT){
             throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
+        }
+    }
+
+    private void progressPlayerNumberUp() {
+        if (++progressPlayerNumber == playerList.size()) {
+            progressPlayerNumber = 0;
         }
     }
 
