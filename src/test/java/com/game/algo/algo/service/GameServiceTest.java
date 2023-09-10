@@ -592,6 +592,76 @@ class GameServiceTest {
         assertThat(findPlayer.isReady()).isFalse();
     }
 
+    @Test
+    @DisplayName("추리에 성공하여 자신 이외에 모든 플레이어가 retire 했다면 isGameOver를 true로 출력합니다.")
+    public void endGuessPhaseGameOver() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+        player.updateReady(true);
+
+        //when
+        gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
+        assertThat(findGameRoom.isGameOver()).isTrue();
+    }
+
+    @Test
+    @DisplayName("REPEAT 페이즈에서 추리를 더 하기 원한다면, GUESS 페이즈로 넘어갑니다.")
+    public void endRepeatPhaseTrue() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+
+        //when
+        gameService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), true);
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
+
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.GUESS);
+        assertThat(findGameRoom.getProgressPlayer().getBlockList().get(0).isClose()).isTrue();
+    }
+
+    @Test
+    @DisplayName("REPEAT 페이즈에서 추리를 그만둔다면, END 페이즈로 넘어갑니다.")
+    public void endRepeatPhaseFalse() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+
+        //when
+        gameService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), false);
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.END);
+        assertThat(findGameRoom.getProgressPlayer().getBlockList().get(0).isClose()).isTrue();
+    }
+
     private long howManyWhiteBlock(List<Block> BlockList) {
         return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();
     }

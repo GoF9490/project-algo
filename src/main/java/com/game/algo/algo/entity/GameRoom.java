@@ -42,8 +42,6 @@ public class GameRoom {
     @Convert(converter = BlockArrayConverter.class)
     private List<Block> blackBlockList = new ArrayList<>();
 
-    private boolean gameOver = false;
-
 //    private int turnCount = 0;
 
 //    @Convert(converter = IntegerArrayConverter.class)
@@ -133,6 +131,14 @@ public class GameRoom {
             blackBlockList.add(Block.create(BlockColor.BLACK, 12));
             blackBlockList = new ArrayList<>(blackBlockList);
         }
+    }
+
+    public boolean isGameOver() {
+        int leftPlayer = (int) playerList.stream()
+                .filter(player -> !player.isRetire())
+                .count();
+
+        return leftPlayer == 1;
     }
 
     private void blockReset() {

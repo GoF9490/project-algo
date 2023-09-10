@@ -219,12 +219,15 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
-    public void guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num) {
+    public boolean guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num) {
         Player targetPlayer = findPlayerById(targetPlayerId);
 
         if (targetPlayer.guessBlock(index, num)) {
             Player guessPlayer = findPlayerById(guessPlayerId);
             guessPlayer.updateReady(true);
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -238,13 +241,31 @@ public class GameServiceImpl implements GameService {
         Player progressPlayer = findGameRoom.getProgressPlayer();
 
         if (progressPlayer.isReady()) {
-            findGameRoom.updatePhase(Phase.REPEAT);
+            if (findGameRoom.isGameOver()) {
+                findGameRoom.updatePhase(Phase.GAMEOVER);
+            } else {
+                findGameRoom.updatePhase(Phase.REPEAT);
+            }
         } else {
             findGameRoom.getProgressPlayer().openDrawCard();
             findGameRoom.updatePhase(Phase.END);
         }
 
         progressPlayer.updateReady(false);
+    }
+
+    @Transactional
+    public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        checkGamePhaseSync(findGameRoom, Phase.REPEAT);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        if (repeatGuess) {
+            findGameRoom.updatePhase(Phase.GUESS);
+        } else {
+            findGameRoom.updatePhase(Phase.END);
+        }
     }
 
     private void validGameStart(GameRoom findGameRoom) {

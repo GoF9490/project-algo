@@ -88,6 +88,7 @@ public class Player {
         int indexNum = findPosition(block);
         blockList.add(indexNum, block);
         setDrawBlockIndexNum(block);
+        blockList = new ArrayList<>(blockList);
     }
 
     public void changeJokerNum(int index, BlockColor jokerColor) {

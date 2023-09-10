@@ -128,6 +128,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
                     gameMessageController.guessBlock(blockGuess);
                     break;
+
+                case GuessRepeat:
+                    GuessRepeat guessRepeat = objectMapper.readValue(requestMessage, GuessRepeat.class);
+
+                    gameMessageController.choiceRepeatGuess(guessRepeat);
+                    break;
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());
@@ -180,6 +186,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case REPEAT:
+                gameMessageController.endRepeatPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum(), false);
                 break;
 
             case END:

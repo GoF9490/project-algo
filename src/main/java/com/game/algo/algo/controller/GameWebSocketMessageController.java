@@ -100,6 +100,15 @@ public class GameWebSocketMessageController {
         endGuessPhase(blockGuess.getGameRoomId(), playerOrderNum);
     }
 
+    public void choiceRepeatGuess(GuessRepeat guessRepeat) {
+        Player findPlayer = gameService.findPlayerById(guessRepeat.getPlayerId());
+        GameRoom findGameRoom = gameService.findGameRoomById(guessRepeat.getGameRoomId());
+
+        if (findGameRoom.getProgressPlayer().getOrderNumber() == findPlayer.getOrderNumber()) {
+            endRepeatPhase(guessRepeat.getGameRoomId(), findPlayer.getOrderNumber(), guessRepeat.isRepeatGuess());
+        }
+    }
+
     public void disconnectWebSession(String sessionId){
         // 세션아이디에 따른 플레이어 객체를 삭제, 수정하거나 해서 게임아웃을 시키던지, 재접속의 여지를 남기던지 하면 될듯.
     }
@@ -158,9 +167,21 @@ public class GameWebSocketMessageController {
         sendWaitForSec(findGameRoom);
     }
 
-    /** send 시리즈 (JPA 쿼리 수정 또는 DB변경을 통해 파라미터가 GameRoom 오브젝트로 수정, 쿼리횟수 줄이는 효과 기대가능) */
-    // 이거 시작해볼까?
-    // 유니티 클라이언트 테스트 계속해서 하면서 버그찾기
+    public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
+        gameService.endRepeatPhase(gameRoomId, progressPlayerNum, repeatGuess);
+
+        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendGameStatusData(findGameRoom);
+        sendWaitForSec(findGameRoom);
+    }
+
+    /** send 시리즈 */
+    // Guess 성공, 실패에따른 메세지 출력 가능하다면 UX 면에서 효과가 좋을듯? 없어도 상관은없고. 우선순위 하
+    // END 페이즈 기능 만들기
+    // GameRoom 탐색기능 만들기
+    // Unity에서 Player 만드는과정에서 name 입력가능하게 하기
+    // Unity 진입과정 좀 있어보이게 만들기
 
     private void sendGameStatusData(GameRoom gameRoom) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,

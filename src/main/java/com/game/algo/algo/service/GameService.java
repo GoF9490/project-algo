@@ -43,7 +43,9 @@ public interface GameService {
 
     void endSortPhase(Long gameRoomId, int progressPlayerNum);
 
-    void guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num);
+    boolean guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num);
 
     void endGuessPhase(Long gameRoomId, int progressPlayerNum);
+
+    void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess);
 }
