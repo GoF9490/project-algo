@@ -85,7 +85,7 @@ public class Block {
     }
 
     public boolean comparePosition(Block otherBlock) {
-        if (otherBlock.isJoker()) {
+        if (otherBlock.isJoker() || this.isJoker()) {
             return false;
         }
 

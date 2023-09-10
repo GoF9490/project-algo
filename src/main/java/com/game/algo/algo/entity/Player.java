@@ -91,7 +91,7 @@ public class Player {
         blockList = new ArrayList<>(blockList);
     }
 
-    public void changeJokerNum(int index, BlockColor jokerColor) {
+    public void updateJokerIndex(int index, BlockColor jokerColor) {
         Block findDrawBlock = getDrawBlock();
         Block findJoker = findJoker(jokerColor);
         blockList.remove(findJoker);

@@ -1,9 +1,6 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.dto.DrawBlockData;
-import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.algo.dto.OwnerBlockData;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -203,7 +200,7 @@ public class GameServiceImpl implements GameService {
             throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
         }
 
-        findPlayer.changeJokerNum(newJokerIndex, blockColor);
+        findPlayer.updateJokerIndex(newJokerIndex, blockColor);
         findPlayer.updateReady(true);
     }
 
@@ -266,6 +263,17 @@ public class GameServiceImpl implements GameService {
         } else {
             findGameRoom.updatePhase(Phase.END);
         }
+    }
+
+    @Transactional
+    public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        checkGamePhaseSync(findGameRoom, Phase.END);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        findGameRoom.nextPlayer();
+        findGameRoom.updatePhase(Phase.DRAW);
     }
 
     private void validGameStart(GameRoom findGameRoom) {

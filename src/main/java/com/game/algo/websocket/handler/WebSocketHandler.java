@@ -190,6 +190,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 break;
 
             case END:
+                gameMessageController.endEndPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
                 break;
 
             case GAMEOVER:

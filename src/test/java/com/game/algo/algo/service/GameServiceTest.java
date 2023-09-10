@@ -665,6 +665,30 @@ class GameServiceTest {
         assertThat(findGameRoom.getProgressPlayer().getBlockList().get(0).isClose()).isTrue();
     }
 
+    @Test
+    public void endEndPhaseSuccess() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.END);
+
+        IntStream.range(0, 2)
+                .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
+                .forEach(gameRoom::joinPlayer);
+
+        gameRoom.playerOrderReset();
+
+        //when
+        gameService.endEndPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+
+        assertThat(findGameRoom.getProgressPlayerNumber()).isEqualTo(1);
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.DRAW);
+    }
+
     private long howManyWhiteBlock(List<Block> BlockList) {
         return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();
     }

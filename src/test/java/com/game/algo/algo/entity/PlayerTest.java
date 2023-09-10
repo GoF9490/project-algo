@@ -104,7 +104,7 @@ class PlayerTest {
         player.addBlock(jokerBlock);
 
         //when
-        player.changeJokerNum(1, BlockColor.WHITE);
+        player.updateJokerIndex(1, BlockColor.WHITE);
 
         //then
         System.out.println(player.getBlockListCode(true).toString());

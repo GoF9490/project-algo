@@ -119,61 +119,70 @@ public class GameWebSocketMessageController {
 //        gameService.updatePlayerReady(gameRoomId, true);
         gameService.endSettingPhase(gameRoomId, progressPlayerNum);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.autoDrawAtStart(gameRoomId);
         gameService.endStartPhase(gameRoomId, progressPlayerNum);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendOwnerBlockData(findGameRoom);
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
+        sendOwnerBlockData(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.autoDrawAtDrawPhase(gameRoomId);
         gameService.endDrawPhase(gameRoomId, progressPlayerNum);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendOwnerBlockData(findGameRoom);
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
-        sendDrawBlockData(findGameRoom);
+        sendOwnerBlockData(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
+        sendDrawBlockData(readOnlyGameRoom);
     }
 
     public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.endSortPhase(gameRoomId, progressPlayerNum);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendOwnerBlockData(findGameRoom);
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
+        sendOwnerBlockData(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
         gameService.endGuessPhase(gameRoomId, progressPlayerNum);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
         gameService.endRepeatPhase(gameRoomId, progressPlayerNum, repeatGuess);
 
-        GameRoom findGameRoom = gameService.findGameRoomById(gameRoomId);
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(findGameRoom);
-        sendWaitForSec(findGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
+    }
+
+    public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.endEndPhase(gameRoomId, progressPlayerNum);
+
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendGameStatusData(readOnlyGameRoom);
+        sendWaitForSec(readOnlyGameRoom);
     }
 
     /** send 시리즈 */
