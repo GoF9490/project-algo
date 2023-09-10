@@ -545,21 +545,24 @@ class GameServiceTest {
     public void endGuessPhaseSuccess() throws Exception {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
-        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+        Player targetPlayer = playerRepository.save(Player.create("foo2", "sessionId"));
+        Player otherPlayer = playerRepository.save(Player.create("foo1", "sessionId"));
 
         gameRoom.gameReset();
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
-        gameRoom.joinPlayer(player);
-        player.addBlock(Block.create(BlockColor.BLACK, 0));
-        player.updateReady(true);
+        gameRoom.joinPlayer(targetPlayer);
+        gameRoom.joinPlayer(otherPlayer);
+        targetPlayer.addBlock(Block.create(BlockColor.BLACK, 0));
+        targetPlayer.addBlock(Block.create(BlockColor.BLACK, 1));
+        targetPlayer.updateReady(true);
 
         //when
         gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
-        Player findPlayer = playerRepository.findById(player.getId()).get();
+        Player findPlayer = playerRepository.findById(targetPlayer.getId()).get();
 
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.REPEAT);
         assertThat(findPlayer.getBlockList().get(findPlayer.getDrawBlockIndexNum()).isClose()).isTrue();
