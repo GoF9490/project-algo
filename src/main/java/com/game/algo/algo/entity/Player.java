@@ -66,8 +66,11 @@ public class Player {
     }
 
     public void gameReset() {
+        ready = false;
+        retire = false;
         orderNumber = 0;
         blockList = new ArrayList<>();
+        drawBlockIndexNum = -1;
         whiteJokerRange = 12;
         blackJokerRange = 12;
     }

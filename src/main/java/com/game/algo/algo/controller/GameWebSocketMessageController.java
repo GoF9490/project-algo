@@ -185,9 +185,16 @@ public class GameWebSocketMessageController {
         sendWaitForSec(readOnlyGameRoom);
     }
 
+    public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
+        gameService.endGameOverPhase(gameRoomId, progressPlayerNum);
+
+        GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
+
+        sendGameStatusData(readOnlyGameRoom);
+    }
+
     /** send 시리즈 */
     // Guess 성공, 실패에따른 메세지 출력 가능하다면 UX 면에서 효과가 좋을듯? 없어도 상관은없고. 우선순위 하
-    // END 페이즈 기능 만들기
     // GameRoom 탐색기능 만들기
     // Unity에서 Player 만드는과정에서 name 입력가능하게 하기
     // Unity 진입과정 좀 있어보이게 만들기

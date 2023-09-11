@@ -666,6 +666,7 @@ class GameServiceTest {
     }
 
     @Test
+    @DisplayName("END 페이즈가 끝나고 진행중인 플레이어가 바뀌며 DRAW 페이즈로 돌아갑니다.")
     public void endEndPhaseSuccess() throws Exception {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
@@ -688,6 +689,43 @@ class GameServiceTest {
         assertThat(findGameRoom.getProgressPlayerNumber()).isEqualTo(1);
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.DRAW);
     }
+
+    @Test
+    @DisplayName("GAMEOVER 페이즈가 끝나면 현재 게임에 대한 정보가 초기화되고 WAIT 페이즈로 넘어갑니다.")
+    public void endGameOverPhase() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomRepository.save(GameRoom.create());
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.gameReset();
+        gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
+
+        gameRoom.joinPlayer(player);
+        player.addBlock(Block.create(BlockColor.BLACK, 0));
+        player.updateReady(true);
+        player.updateOrder(1);
+        player.guessBlock(0, 0);
+
+        //when
+        gameService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+
+        assertThat(findGameRoom.getProgressPlayerNumber()).isEqualTo(0);
+        assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.WAIT);
+
+        assertThat(findPlayer.getBlockList().size()).isEqualTo(0);
+        assertThat(findPlayer.getOrderNumber()).isEqualTo(0);
+        assertThat(findPlayer.getDrawBlockIndexNum()).isEqualTo(-1);
+        assertThat(findPlayer.isRetire()).isFalse();
+        assertThat(findPlayer.isReady()).isFalse();
+        assertThat(findPlayer.getWhiteJokerRange()).isEqualTo(12);
+        assertThat(findPlayer.getBlackJokerRange()).isEqualTo(12);
+    }
+
+
 
     private long howManyWhiteBlock(List<Block> BlockList) {
         return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();

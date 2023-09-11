@@ -50,4 +50,6 @@ public interface GameService {
     void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess);
 
     void endEndPhase(Long gameRoomId, int progressPlayerNum);
+
+    void endGameOverPhase(Long gameRoomId, int progressPlayerNum);
 }

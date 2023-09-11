@@ -276,6 +276,18 @@ public class GameServiceImpl implements GameService {
         findGameRoom.updatePhase(Phase.DRAW);
     }
 
+    @Transactional
+    public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
+        GameRoom findGameRoom = findGameRoomById(gameRoomId);
+
+        checkGamePhaseSync(findGameRoom, Phase.GAMEOVER);
+        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+
+        findGameRoom.updatePhase(Phase.WAIT);
+        findGameRoom.gameReset();
+        findGameRoom.getPlayerList().forEach(Player::gameReset);
+    }
+
     private void validGameStart(GameRoom findGameRoom) {
         if (!findGameRoom.areAllPlayersReady()) {
             throw new GameLogicException(GameExceptionCode.PLAYER_NOT_READY);
