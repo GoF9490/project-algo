@@ -1,14 +1,20 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.dto.GameRoomFind;
+import com.game.algo.algo.dto.GameRoomSimple;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import com.game.algo.algo.repository.GameRoomRepository;
+import com.game.algo.algo.repository.GameRoomJpaRepository;
 import com.game.algo.algo.repository.PlayerJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,13 +29,14 @@ import static com.game.algo.algo.entity.GameRoom.*;
  * 클라이언트와 통신해야함
  * 매 페이즈마다 클라이언트와 확인절차를 거치게끔 하는게 좋을듯?
  * 도중에 튕기면 그에 알맞는 조치를 취해야함
+ * 책임을 나누는게 좋을까?
  */
 
 @Service
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-    private final GameRoomRepository gameRoomRepository;
+    private final GameRoomJpaRepository gameRoomJPARepository;
     private final PlayerJpaRepository playerJpaRepository;
 
     public Long createPlayer(String name, String webSocketSessionId) {
@@ -44,15 +51,22 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
-    public Long createGameRoom(){
-        GameRoom gameRoom = create();
-        return gameRoomRepository.save(gameRoom).getId();
+    public Long createGameRoom(String title) {
+        GameRoom gameRoom = create(title);
+        return gameRoomJPARepository.save(gameRoom).getId();
     }
 
     @Transactional(readOnly = true)
     public GameRoom findGameRoomById(Long id) {
-        return gameRoomRepository.findById(id)
+        return gameRoomJPARepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_ROOM_NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public GameRoomFind findGameRoomsNotGameStart(int page, int size){
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<GameRoom> gameRoomPage = gameRoomJPARepository.findAllByGameStart(false, pageRequest);
+        return GameRoomFind.from(gameRoomPage);
     }
 
     @Transactional
@@ -305,12 +319,6 @@ public class GameServiceImpl implements GameService {
         IntStream.range(0, count)
                 .mapToObj(i -> gameRoom.drawRandomBlock(blockColor))
                 .forEach(player::addBlock);
-    }
-
-    private List<String> getSessionIdListInGameRoom(GameRoom gameRoom) {
-        return gameRoom.getPlayerList().stream()
-                .map(Player::getWebSocketSessionId)
-                .collect(Collectors.toList());
     }
 
     private void checkGamePhaseSync(GameRoom gameRoom, Phase phase) {

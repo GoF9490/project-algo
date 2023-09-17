@@ -11,6 +11,7 @@ public enum MessageType {
     JoinRoomSuccess,
     JoinRoomFail, // 재검토 필요
     GameRoomJoin,
+    GameRoomFind,
     PlayerReadyUpdate,
     GameStart,
     StartBlockDraw,

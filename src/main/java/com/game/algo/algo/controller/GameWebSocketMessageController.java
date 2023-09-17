@@ -1,5 +1,6 @@
 package com.game.algo.algo.controller;
 
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.dto.*;
 import com.game.algo.algo.dto.messagetype.GameRoomCreate;
 import com.game.algo.algo.dto.messagetype.GameRoomJoin;
@@ -38,7 +39,7 @@ public class GameWebSocketMessageController {
 
     public void createGameRoom(@NonNull GameRoomCreate gameRoomCreate) {
         String sessionId = gameService.findPlayerById(gameRoomCreate.getPlayerId()).getWebSocketSessionId();
-        Long gameRoomId = gameService.createGameRoom();
+        Long gameRoomId = gameService.createGameRoom(gameRoomCreate.getTitle());
 
         sendMessage(sessionId, MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
     }
@@ -51,6 +52,12 @@ public class GameWebSocketMessageController {
 
         sendGameStatusData(findGameRoom);
         sendMessage(sessionId, MessageDataResponse.create(MessageType.JoinRoomSuccess, ""));
+    }
+
+    public void findGameRoom(String sessionId, Integer page) {
+        GameRoomFind gameRoomFind = gameService.findGameRoomsNotGameStart(page, GameProperty.FIND_GAME_ROOM_SIZE);
+
+        sendMessage(sessionId, MessageDataResponse.create(MessageType.GameRoomFind, gameRoomFind));
     }
 
     public void updatePlayerReady(@NonNull PlayerReadyUpdate playerReadyUpdate) {

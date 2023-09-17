@@ -20,16 +20,17 @@ import java.util.stream.IntStream;
 
 @Getter
 @Entity
-//@RedisHash(value = "game_manager")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+//@RedisHash(value = "game_room")
 public class GameRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String title;
+
     @Enumerated(value = EnumType.STRING)
-    private Phase phase = Phase.WAIT;
+    private Phase phase = Phase.WAIT; // phase wait 이면 게임시작전
 
     @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL)
     private List<Player> playerList = new ArrayList<>();
@@ -42,14 +43,15 @@ public class GameRoom {
     @Convert(converter = BlockArrayConverter.class)
     private List<Block> blackBlockList = new ArrayList<>();
 
-//    private int turnCount = 0;
-
-//    @Convert(converter = IntegerArrayConverter.class)
-//    private List<Integer> orderList = new ArrayList<>();
+    private boolean gameStart = false;
 
 
-    public static GameRoom create() {
-        return new GameRoom();
+    public static GameRoom create(String title) {
+        return new GameRoom(title);
+    }
+
+    protected GameRoom(String title) {
+        this.title = title;
     }
 
     public void gameReset() {
@@ -121,6 +123,11 @@ public class GameRoom {
 
     public void updatePhase(Phase phase) {
         this.phase = phase;
+        if (phase == Phase.WAIT) {
+            gameStart = false;
+        } else {
+            gameStart = true;
+        }
     }
 
     public void addJoker() {
@@ -155,6 +162,10 @@ public class GameRoom {
     private void checkVacancy() {
         if (playerList.size() >= GameProperty.PLAYER_MAX_COUNT){
             throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
+        }
+
+        if (gameStart) {
+            throw new GameLogicException(GameExceptionCode.ALREADY_GAME_START);
         }
     }
 

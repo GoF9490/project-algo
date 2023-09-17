@@ -19,7 +19,7 @@ class GameRoomTest {
     @DisplayName("게임 리셋 후 페이즈는 READY 여야 한다.")
     public void checkTypeAtGameReset() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
 
         //when
         gameRoom.gameReset();
@@ -32,7 +32,7 @@ class GameRoomTest {
     @DisplayName("게임 리셋 후 흰 / 검은 블록은 1~11까지 생성되어야 한다.")
     public void checkAllBlocksNumberAtGameReset() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
 
         //when
         gameRoom.gameReset();
@@ -48,7 +48,7 @@ class GameRoomTest {
     @DisplayName("게임 리셋 후 흰 / 검은 블록은 각각 whiteBlockList / blackBlockList 에 담겨있어야 한다.")
     public void checkAllBlocksTypeAtGameReset() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
 
         //when
         gameRoom.gameReset();
@@ -64,7 +64,7 @@ class GameRoomTest {
     @DisplayName("조커 블럭을 따로 만들어 추가합니다.")
     public void addJokerTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
 
         //when
         gameRoom.addJoker();
@@ -80,7 +80,7 @@ class GameRoomTest {
     @DisplayName("뽑을 블럭이 없을때 블럭을 요청하면 익셉션이 발생합니다.")
     public void drawBlockFailTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
@@ -92,7 +92,7 @@ class GameRoomTest {
     @DisplayName("12번의 블록을 랜덤으로 뽑으면 모든 숫자들은 1~12사이의 숫자여야하며, 뽑힌 숫자는 중복되지 않고, GameRoom 의 리스트는 비어있어야 한다.")
     public void drawRandomBlockTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
         gameRoom.gameReset();
         gameRoom.addJoker();
 
@@ -122,7 +122,7 @@ class GameRoomTest {
     @DisplayName("GameRoom의 Player가 4명 이하일때 Player가 정상적으로 GameRoom에 참여되어야 합니다.")
     public void joinPlayerSuccessTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
         Player player = Player.create("foo", null);
 
         //when
@@ -136,7 +136,7 @@ class GameRoomTest {
     @DisplayName("GameRoom의 Player가 4명 이상일때 참여하려 하면 익셉션이 발생합니다.")
     public void joinPlayerFailTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
         Player player = Player.create("foo", null);
 
         IntStream.range(1, 5)
@@ -153,7 +153,7 @@ class GameRoomTest {
     @DisplayName("GameRoom 의 playerList 를 토대로 playerOrder 순서를 랜덤으로 정한다.")
     public void playerOrderResetTest() throws Exception {
         //given
-        GameRoom gameRoom = new GameRoom();
+        GameRoom gameRoom = new GameRoom("foo");
         IntStream.range(1, 5)
                 .mapToObj(i -> Player.create("player" + i, null))
                 .forEach(gameRoom::joinPlayer);

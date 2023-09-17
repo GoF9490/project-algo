@@ -20,7 +20,7 @@ public class GameController {
     @PostMapping("/create")
     public ResponseEntity gameCreate(@RequestBody GameRoomCreate gameRoomCreate){
         Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
-        Long gameRoomId = gameService.createGameRoom();
+        Long gameRoomId = gameService.createGameRoom("asdf");
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseData(200, gameRoomId));

@@ -93,6 +93,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     gameMessageController.joinGameRoom(gameRoomJoin);
                     break;
 
+                case GameRoomFind:
+                    Integer page = Integer.parseInt(requestMessage);
+
+                    gameMessageController.findGameRoom(sessionId, page);
+                    break;
+
                 case PlayerReadyUpdate:
                     PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
 

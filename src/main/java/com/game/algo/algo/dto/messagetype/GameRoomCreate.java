@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class GameRoomCreate {
 
     private Long playerId;
+
+    private String title;
 }

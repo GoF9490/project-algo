@@ -1,13 +1,9 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.dto.DrawBlockData;
-import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.algo.dto.OwnerBlockData;
+import com.game.algo.algo.dto.GameRoomFind;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
-
-import java.util.List;
 
 public interface GameService {
 
@@ -15,9 +11,11 @@ public interface GameService {
 
     Player findPlayerById(Long id);
 
-    Long createGameRoom();
+    Long createGameRoom(String title);
 
     GameRoom findGameRoomById(Long id);
+
+    GameRoomFind findGameRoomsNotGameStart(int page, int size);
 
     void updatePlayerReady(Long playerId, boolean isReady);
 

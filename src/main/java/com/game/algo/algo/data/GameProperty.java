@@ -16,4 +16,6 @@ public class GameProperty {
     public static final int ZERO_BLOCK_NUMBER = 14;
 
     public static final int PLAYER_MAX_COUNT = 4;
+
+    public static final int FIND_GAME_ROOM_SIZE = 60;
 }
