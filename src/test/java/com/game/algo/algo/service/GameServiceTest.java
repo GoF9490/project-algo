@@ -198,14 +198,14 @@ class GameServiceTest {
         //given
         GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
 
-        gameRoom.updatePhase(GameRoom.Phase.SETTING);
-
         IntStream.range(0, 2)
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(player -> {
                     player.updateReady(true);
                     gameRoom.joinPlayer(player);
                 });
+
+        gameRoom.updatePhase(GameRoom.Phase.SETTING);
 
         //when
         gameService.endSettingPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
@@ -221,11 +221,11 @@ class GameServiceTest {
         //given
         GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
 
-        gameRoom.updatePhase(GameRoom.Phase.SETTING);
-
         IntStream.range(0, 2)
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
+
+        gameRoom.updatePhase(GameRoom.Phase.SETTING);
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
@@ -319,6 +319,9 @@ class GameServiceTest {
 
         findPlayer.getBlockList()
                 .forEach(block -> System.out.println(block.getBlockCode(true)));
+
+        //after
+        gameRoomJPARepository.delete(gameRoom);
     }
 
     @Test
@@ -327,14 +330,14 @@ class GameServiceTest {
         //given
         GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
 
-        gameRoom.updatePhase(GameRoom.Phase.START);
-
         IntStream.range(0, 2)
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(player -> {
                     player.updateReady(true);
                     gameRoom.joinPlayer(player);
                 });
+
+        gameRoom.updatePhase(GameRoom.Phase.START);
 
         //when
         gameService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
@@ -351,13 +354,13 @@ class GameServiceTest {
         //given
         GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
 
-        gameRoom.updatePhase(GameRoom.Phase.START);
-
         IntStream.range(0, 2)
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
         gameRoom.playerOrderReset();
+
+        gameRoom.updatePhase(GameRoom.Phase.START);
 
         //when
         gameService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
@@ -444,10 +447,11 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.SORT);
         gameRoom.joinPlayer(player);
         IntStream.range(0, 4).forEach(i -> player.addBlock(gameRoom.drawRandomBlock(BlockColor.WHITE)));
         player.addBlock(Block.create(BlockColor.WHITE, 12));
+
+        gameRoom.updatePhase(GameRoom.Phase.SORT);
 
         //when
         gameService.updatePlayerJoker(player.getId(), 0, BlockColor.WHITE);
@@ -469,12 +473,13 @@ class GameServiceTest {
         Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(player);
 
         gameRoom.joinPlayer(targetPlayer);
         IntStream.range(0, 4).forEach(i -> targetPlayer.addBlock(Block.create(BlockColor.WHITE, i)));
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
@@ -496,12 +501,13 @@ class GameServiceTest {
         Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(player);
 
         gameRoom.joinPlayer(targetPlayer);
         IntStream.range(0, 4).forEach(i -> targetPlayer.addBlock(Block.create(BlockColor.WHITE, i)));
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 5);
@@ -523,12 +529,13 @@ class GameServiceTest {
         Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(player);
 
         gameRoom.joinPlayer(targetPlayer);
         targetPlayer.addBlock(Block.create(BlockColor.WHITE, 0));
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
@@ -549,13 +556,14 @@ class GameServiceTest {
         Player otherPlayer = playerRepository.save(Player.create("foo1", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(targetPlayer);
         gameRoom.joinPlayer(otherPlayer);
         targetPlayer.addBlock(Block.create(BlockColor.BLACK, 0));
         targetPlayer.addBlock(Block.create(BlockColor.BLACK, 1));
         targetPlayer.updateReady(true);
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
@@ -577,11 +585,12 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(player);
         player.addBlock(Block.create(BlockColor.BLACK, 0));
         player.updateReady(false);
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
@@ -603,11 +612,12 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         gameRoom.joinPlayer(player);
         player.addBlock(Block.create(BlockColor.BLACK, 0));
         player.updateReady(true);
+
+        gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
         gameService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
@@ -626,10 +636,11 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         gameRoom.joinPlayer(player);
         player.addBlock(Block.create(BlockColor.BLACK, 0));
+
+        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         //when
         gameService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), true);
@@ -650,10 +661,11 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         gameRoom.joinPlayer(player);
         player.addBlock(Block.create(BlockColor.BLACK, 0));
+
+        gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         //when
         gameService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), false);
@@ -672,13 +684,14 @@ class GameServiceTest {
         GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.END);
 
         IntStream.range(0, 2)
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
         gameRoom.playerOrderReset();
+
+        gameRoom.updatePhase(GameRoom.Phase.END);
 
         //when
         gameService.endEndPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
@@ -698,13 +711,14 @@ class GameServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         gameRoom.gameReset();
-        gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
 
         gameRoom.joinPlayer(player);
         player.addBlock(Block.create(BlockColor.BLACK, 0));
         player.updateReady(true);
         player.updateOrder(1);
         player.guessBlock(0, 0);
+
+        gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
 
         //when
         gameService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());

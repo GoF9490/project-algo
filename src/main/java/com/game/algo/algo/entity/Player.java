@@ -38,12 +38,16 @@ public class Player {
     private int orderNumber;
 
     @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> blockList = new ArrayList<>();
 
+    @Builder.Default
     private Integer drawBlockIndexNum = -1;
 
+    @Builder.Default
     private Integer whiteJokerRange = 12; // startNum * 100 + endNum
 
+    @Builder.Default
     private Integer blackJokerRange = 12; // startNum * 100 + endNum
 
 

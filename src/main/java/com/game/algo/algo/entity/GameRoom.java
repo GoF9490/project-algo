@@ -31,19 +31,25 @@ public class GameRoom {
     private String title;
 
     @Enumerated(value = EnumType.STRING)
+    @Builder.Default
     private Phase phase = Phase.WAIT; // phase wait 이면 게임시작전
 
     @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Player> playerList = new ArrayList<>();
 
+    @Builder.Default
     private Integer progressPlayerNumber = 0;
 
     @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> whiteBlockList = new ArrayList<>();
 
     @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> blackBlockList = new ArrayList<>();
 
+    @Builder.Default
     private boolean gameStart = false;
 
 
