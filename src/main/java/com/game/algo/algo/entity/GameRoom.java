@@ -5,9 +5,7 @@ import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.global.converter.BlockArrayConverter;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -21,6 +19,9 @@ import java.util.stream.IntStream;
 @Getter
 @Entity
 //@RedisHash(value = "game_room")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class GameRoom {
 
     @Id
@@ -47,11 +48,9 @@ public class GameRoom {
 
 
     public static GameRoom create(String title) {
-        return new GameRoom(title);
-    }
-
-    protected GameRoom(String title) {
-        this.title = title;
+        return GameRoom.builder()
+                .title(title)
+                .build();
     }
 
     public void gameReset() {

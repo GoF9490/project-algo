@@ -4,9 +4,7 @@ import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.global.converter.BlockArrayConverter;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -17,6 +15,8 @@ import java.util.stream.Collectors;
 //@RedisHash(value = "player")
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class Player {
 
     @Id
@@ -48,7 +48,10 @@ public class Player {
 
 
     public static Player create(String name, String webSocketSessionId) {
-        return new Player(name, webSocketSessionId);
+        return Player.builder()
+                .name(name)
+                .webSocketSessionId(webSocketSessionId)
+                .build();
     }
 
     public void joinGameRoom(GameRoom gameRoom){
@@ -136,11 +139,6 @@ public class Player {
     public void openDrawCard() {
         getDrawBlock().open();
         blockList = new ArrayList<>(blockList);
-    }
-
-    private Player(String name, String webSocketSessionId) {
-        this.name = name;
-        this.webSocketSessionId = webSocketSessionId;
     }
 
     private Block findJoker(BlockColor blockColor) {

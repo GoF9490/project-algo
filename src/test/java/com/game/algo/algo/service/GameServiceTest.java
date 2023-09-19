@@ -1,7 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.dto.GameRoomFind;
+import com.game.algo.algo.dto.response.GameRoomFind;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;

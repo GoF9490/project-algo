@@ -1,8 +1,7 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.dto.messagetype.GameRoomCreate;
-import com.game.algo.algo.dto.ResponseData;
-import com.game.algo.algo.entity.GameRoom;
+import com.game.algo.algo.dto.request.GameRoomCreate;
+import com.game.algo.global.dto.ResponseData;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
 import lombok.RequiredArgsConstructor;

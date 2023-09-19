@@ -1,6 +1,5 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.request;
 
-import com.game.algo.algo.entity.GameRoom;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,13 +7,15 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NextPhase {
+public class BlockGuess {
 
     private Long gameRoomId;
 
     private Long playerId;
 
-    private GameRoom.Phase phase;
+    private Long targetPlayerId;
 
-    private Integer progressPlayerNum;
+    private Integer blockIndex;
+
+    private Integer blockNum;
 }

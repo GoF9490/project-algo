@@ -1,8 +1,7 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.dto.GameRoomFind;
-import com.game.algo.algo.dto.GameRoomSimple;
+import com.game.algo.algo.dto.response.GameRoomFind;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -13,14 +12,11 @@ import com.game.algo.algo.repository.PlayerJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.game.algo.algo.entity.GameRoom.*;

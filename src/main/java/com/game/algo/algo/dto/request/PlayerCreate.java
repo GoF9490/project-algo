@@ -1,4 +1,4 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResponseData<T> {
+public class PlayerCreate {
 
-    private Integer code;
+    private String name;
 
-    private T data;
+    private String sessionId;
 }

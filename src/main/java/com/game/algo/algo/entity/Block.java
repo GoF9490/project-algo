@@ -2,10 +2,7 @@ package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.GameProperty;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.Embeddable;
 import javax.persistence.EnumType;
@@ -21,10 +18,10 @@ import static com.game.algo.algo.data.GameProperty.*;
  */
 
 @Getter
-//@Entity
-@Embeddable
+//@Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class Block {
 
     private BlockColor blockColor;
@@ -34,17 +31,19 @@ public class Block {
     private boolean isOpen;
 
 
-    protected Block(BlockColor blockColor, Integer num) {
-        this.blockColor = blockColor;
-        this.num = num;
-    }
-
     public static Block create(BlockColor blockColor, int num) {
-        return new Block(blockColor, num);
+        return Block.builder()
+                .blockColor(blockColor)
+                .num(num)
+                .build();
     }
 
     public static Block create(BlockColor blockColor, int num, boolean isOpen) {
-        return new Block(blockColor, num, isOpen);
+        return Block.builder()
+                .blockColor(blockColor)
+                .num(num)
+                .isOpen(isOpen)
+                .build();
     }
 
     public static int parseBlockCode(int blockCode) {

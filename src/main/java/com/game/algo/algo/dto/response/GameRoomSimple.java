@@ -1,4 +1,4 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.response;
 
 import com.game.algo.algo.entity.GameRoom;
 import lombok.*;

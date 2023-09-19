@@ -1,18 +1,15 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.response;
 
-import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.entity.Player;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class DrawBlockData { // 보내고 받아서 쓰기
 
     private String sessionId;
@@ -21,13 +18,14 @@ public class DrawBlockData { // 보내고 받아서 쓰기
 
     private Integer drawBlockCode;
 
-    public static DrawBlockData create(Player player) {
+    public static DrawBlockData from(Player player) {
         List<Integer> newBlockCodeList = player.getBlockListCode(true);
 
-        return new DrawBlockData(
-                player.getWebSocketSessionId(),
-                newBlockCodeList,
-                newBlockCodeList.get(player.getDrawBlockIndexNum()))
+        return DrawBlockData.builder()
+                .sessionId(player.getWebSocketSessionId())
+                .blockCodeList(newBlockCodeList)
+                .drawBlockCode(newBlockCodeList.get(player.getDrawBlockIndexNum()))
+                .build()
                 .filterDrawBlock();
     }
 

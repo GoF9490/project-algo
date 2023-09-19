@@ -1,4 +1,4 @@
-package com.game.algo.algo.dto;
+package com.game.algo.algo.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,15 +7,11 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BlockGuess {
+public class GuessRepeat {
 
     private Long gameRoomId;
 
     private Long playerId;
 
-    private Long targetPlayerId;
-
-    private Integer blockIndex;
-
-    private Integer blockNum;
+    private boolean repeatGuess;
 }

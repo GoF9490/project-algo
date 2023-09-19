@@ -1,8 +1,8 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.dto.messagetype.PlayerCreate;
-import com.game.algo.algo.dto.messagetype.PlayerSimple;
-import com.game.algo.algo.dto.ResponseData;
+import com.game.algo.algo.dto.request.PlayerCreate;
+import com.game.algo.algo.dto.response.PlayerSimple;
+import com.game.algo.global.dto.ResponseData;
 import com.game.algo.algo.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class PlayerController {
     @PostMapping("/create")
     public ResponseEntity create(@RequestBody PlayerCreate playerCreate) {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
-        PlayerSimple playerSimple = PlayerSimple.create(gameService.findPlayerById(playerId));
+        PlayerSimple playerSimple = PlayerSimple.from(gameService.findPlayerById(playerId));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseData(200, playerSimple));
     }

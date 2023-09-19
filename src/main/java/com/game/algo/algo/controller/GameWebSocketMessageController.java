@@ -1,11 +1,8 @@
 package com.game.algo.algo.controller;
 
 import com.game.algo.algo.data.GameProperty;
-import com.game.algo.algo.dto.*;
-import com.game.algo.algo.dto.messagetype.GameRoomCreate;
-import com.game.algo.algo.dto.messagetype.GameRoomJoin;
-import com.game.algo.algo.dto.messagetype.PlayerCreate;
-import com.game.algo.algo.dto.messagetype.PlayerSimple;
+import com.game.algo.algo.dto.request.*;
+import com.game.algo.algo.dto.response.*;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
@@ -32,7 +29,7 @@ public class GameWebSocketMessageController {
 
     public void createPlayer(@NonNull PlayerCreate playerCreate) {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
-        PlayerSimple playerSimple = PlayerSimple.create(gameService.findPlayerById(playerId));
+        PlayerSimple playerSimple = PlayerSimple.from(gameService.findPlayerById(playerId));
 
         sendMessage(playerCreate.getSessionId(), MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
     }
@@ -208,7 +205,7 @@ public class GameWebSocketMessageController {
 
     private void sendGameStatusData(GameRoom gameRoom) {
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.GameStatusData,
-                GameStatusData.create(gameRoom));
+                GameStatusData.from(gameRoom));
 
         List<String> sessionIdList = gameRoom.getPlayerList().stream()
                 .map(Player::getWebSocketSessionId)
@@ -219,7 +216,7 @@ public class GameWebSocketMessageController {
 
     private void sendOwnerBlockData(GameRoom gameRoom) {
         List<OwnerBlockData> ownerBlockDataList = gameRoom.getPlayerList().stream()
-                .map(OwnerBlockData::create)
+                .map(OwnerBlockData::from)
                 .collect(Collectors.toList());
 
         ownerBlockDataList.forEach(ownerBlockData -> sendMessage(ownerBlockData.getSessionId(),
@@ -238,7 +235,7 @@ public class GameWebSocketMessageController {
     }
 
     private void sendDrawBlockData(GameRoom gameRoom) {
-        DrawBlockData drawBlockData = DrawBlockData.create(gameRoom.getProgressPlayer());
+        DrawBlockData drawBlockData = DrawBlockData.from(gameRoom.getProgressPlayer());
         MessageDataResponse messageData = MessageDataResponse.create(MessageType.DrawBlockData, drawBlockData);
 
         sendMessage(drawBlockData.getSessionId(), messageData);
