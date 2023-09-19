@@ -96,6 +96,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     gameMessageController.findGameRoom(sessionId, page);
                     break;
 
+                case GameRoomExit:
+                    gameMessageController.exitGameRoom(sessionId);
+                    break;
+
                 case PlayerReadyUpdate:
                     PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
 

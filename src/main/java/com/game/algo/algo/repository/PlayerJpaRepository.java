@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface PlayerJpaRepository extends JpaRepository<Player, Long> {
 
     @Override
-    @EntityGraph(attributePaths = {"blockList"})
-//    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Player> findById(Long id);
+
+    Optional<Player> findByWebSocketSessionId(String webSocketSessionId);
 }

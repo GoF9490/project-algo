@@ -772,7 +772,24 @@ class GameServiceTest {
         assertThat(gameRoomFind.isLastPage()).isTrue();
     }
 
+    @Test
+    @DisplayName("Player는 GameRoom에서 정상적으로 나가지며, Player가 아무도 없으면 GameRoom을 삭제합니다.")
+    public void exitGameRoomSuccess() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
+        gameRoom.joinPlayer(player);
+
+        //when
+        gameService.exitGameRoom(player.getWebSocketSessionId());
+
+        //then
+        Player findPlayer = playerRepository.findById(player.getId()).get();
+
+        assertThat(findPlayer.getGameRoom()).isEqualTo(null);
+        assertThat(gameRoomJPARepository.findAll().size()).isEqualTo(0);
+    }
 
     private long howManyWhiteBlock(List<Block> BlockList) {
         return BlockList.stream().filter(block -> block.isColor(BlockColor.WHITE)).count();

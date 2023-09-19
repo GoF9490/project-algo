@@ -145,6 +145,13 @@ public class Player {
         blockList = new ArrayList<>(blockList);
     }
 
+    public void exit() {
+        if (gameRoom != null) {
+            gameRoom.removePlayer(this);
+            gameRoom = null;
+        }
+    }
+
     private Block findJoker(BlockColor blockColor) {
         List<Block> findJoker = blockList.stream()
                 .filter(block -> block.isColor(blockColor) && block.isJoker())

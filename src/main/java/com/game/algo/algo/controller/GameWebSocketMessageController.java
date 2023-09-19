@@ -57,6 +57,10 @@ public class GameWebSocketMessageController {
         sendMessage(sessionId, MessageDataResponse.create(MessageType.GameRoomFind, gameRoomFind));
     }
 
+    public void exitGameRoom(String sessionId) {
+        gameService.exitGameRoom(sessionId);
+    }
+
     public void updatePlayerReady(@NonNull PlayerReadyUpdate playerReadyUpdate) {
         gameService.updatePlayerReady(playerReadyUpdate.getPlayerId(), playerReadyUpdate.getReady());
 

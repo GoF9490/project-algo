@@ -21,6 +21,8 @@ public interface GameService {
 
     void joinGameRoom(Long gameRoomId, Long playerId);
 
+    void exitGameRoom(String sessionId);
+
     void gameStart(Long gameRoomId);
 
     void endSettingPhase(Long gameRoomId, int progressPlayerNum);

@@ -153,6 +153,11 @@ public class GameRoom {
         return leftPlayer == 1;
     }
 
+    public void removePlayer(Player player) {
+        playerList.remove(player);
+        playerList = new ArrayList<>(playerList);
+    }
+
     private void blockReset() {
         whiteBlockList = blockSet(BlockColor.WHITE);
         blackBlockList = blockSet(BlockColor.BLACK);

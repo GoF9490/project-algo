@@ -46,6 +46,12 @@ public class GameServiceImpl implements GameService {
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
+    public Player findPlayerByWebSocketSessionId(String webSocketSessionId) {
+        return playerJpaRepository.findByWebSocketSessionId(webSocketSessionId)
+                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
+    }
+
     @Transactional
     public Long createGameRoom(String title) {
         GameRoom gameRoom = create(title);
@@ -70,6 +76,18 @@ public class GameServiceImpl implements GameService {
         Player findPlayer = findPlayerById(playerId);
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         findGameRoom.joinPlayer(findPlayer);
+    }
+
+    @Transactional
+    public void exitGameRoom(String sessionId) {
+        Player findPlayer = findPlayerByWebSocketSessionId(sessionId);
+        GameRoom gameRoom = findPlayer.getGameRoom();
+
+        findPlayer.exit();
+
+        if (gameRoom.getPlayerList().size() == 0) {
+            gameRoomJPARepository.delete(gameRoom);
+        }
     }
 
     @Transactional
