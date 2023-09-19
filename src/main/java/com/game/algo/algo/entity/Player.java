@@ -25,8 +25,10 @@ public class Player {
 
     private String name; // or Member 객체
 
+    @Builder.Default
     private boolean ready = false;
 
+    @Builder.Default
     private boolean retire = false;
 
     private String webSocketSessionId; // 대안 필요(?)
@@ -150,6 +152,13 @@ public class Player {
             gameRoom.removePlayer(this);
             gameRoom = null;
         }
+    }
+
+    public void disconnect() {
+        webSocketSessionId = "disconnect";
+        name = "disconnect";
+        retire = true;
+        blockList.forEach(Block::open);
     }
 
     private Block findJoker(BlockColor blockColor) {

@@ -118,7 +118,7 @@ public class GameWebSocketMessageController {
     }
 
     public void disconnectWebSession(String sessionId){
-        // 세션아이디에 따른 플레이어 객체를 삭제, 수정하거나 해서 게임아웃을 시키던지, 재접속의 여지를 남기던지 하면 될듯.
+        gameService.disconnectWebSession(sessionId);
     }
 
     /** end 시리즈 */

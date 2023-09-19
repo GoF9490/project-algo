@@ -16,6 +16,7 @@ public class GameStatusData {
 
     private GameRoom.Phase phase;
 
+    @Builder.Default
     private List<PlayerGameData> playerDataList = new ArrayList<>();
 
     private Integer progressPlayerNumber;

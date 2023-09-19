@@ -18,6 +18,7 @@ import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -322,6 +323,7 @@ class GameServiceTest {
 
         //after
         gameRoomJPARepository.delete(gameRoom);
+        playerRepository.deleteAll();;
     }
 
     @Test
@@ -789,6 +791,72 @@ class GameServiceTest {
 
         assertThat(findPlayer.getGameRoom()).isEqualTo(null);
         assertThat(gameRoomJPARepository.findAll().size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("GameRoom에 혼자 참가중인 Player가 연결이 끊기면 Player와 비어있는 GameRoom을 제거합니다.")
+    public void disconnectWebSessionAtJoinGameOnlyOne() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
+        Player player = playerRepository.save(Player.create("foo", "sessionId"));
+
+        gameRoom.joinPlayer(player);
+
+        //when
+        gameService.disconnectWebSession(player.getWebSocketSessionId());
+
+        //then
+        assertThat(playerRepository.findAll().size()).isEqualTo(0);
+        assertThat(gameRoomJPARepository.findAll().size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("게임이 시작된 GameRoom안의 Player가 연결이 끊기면 패배처리를 합니다..")
+    public void disconnectWebSessionAtGameStart() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
+        Player player1 = playerRepository.save(Player.create("foo1", "sessionId1"));
+        Player player2 = playerRepository.save(Player.create("foo2", "sessionId2"));
+
+        gameRoom.joinPlayer(player1);
+        gameRoom.joinPlayer(player2);
+
+        gameRoom.updatePhase(GameRoom.Phase.START);
+
+        //when
+        gameService.disconnectWebSession(player2.getWebSocketSessionId());
+
+        //then
+        Player disconnectPlayer = playerRepository.findById(player2.getId()).get();
+
+        assertThat(disconnectPlayer.getName()).isEqualTo("disconnect");
+        assertThat(disconnectPlayer.getWebSocketSessionId()).isEqualTo("disconnect");
+        assertThat(disconnectPlayer.isRetire()).isTrue();
+    }
+
+    @Test
+    @DisplayName("GameRoom안의 Player가 연결이 끊긴 상태로 게임이 끝나면 해당 Player를 강제로 추방시키고 이후 데이터를 삭제합니다.")
+    public void disconnectWebSessionAtGameOver() throws Exception {
+        //given
+        GameRoom gameRoom = gameRoomJPARepository.save(GameRoom.create("GameRoom"));
+        Player player1 = playerRepository.save(Player.create("foo1", "sessionId1"));
+        Player player2 = playerRepository.save(Player.create("foo2", "sessionId2"));
+
+        gameRoom.joinPlayer(player1);
+        gameRoom.joinPlayer(player2);
+
+        gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
+
+        gameService.disconnectWebSession(player2.getWebSocketSessionId());
+
+        //when
+        gameService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+
+        //then
+        GameRoom findGameRoom = gameRoomJPARepository.findById(gameRoom.getId()).get();
+
+        assertThat(findGameRoom.getPlayerList().size()).isEqualTo(1);
+        assertThat(playerRepository.findAll().size()).isEqualTo(1);
     }
 
     private long howManyWhiteBlock(List<Block> BlockList) {

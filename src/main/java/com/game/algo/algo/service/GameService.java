@@ -23,6 +23,8 @@ public interface GameService {
 
     void exitGameRoom(String sessionId);
 
+    void disconnectWebSession(String sessionId);
+
     void gameStart(Long gameRoomId);
 
     void endSettingPhase(Long gameRoomId, int progressPlayerNum);

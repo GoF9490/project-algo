@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.game.algo.algo.entity.GameRoom.*;
@@ -85,8 +87,26 @@ public class GameServiceImpl implements GameService {
 
         findPlayer.exit();
 
-        if (gameRoom.getPlayerList().size() == 0) {
-            gameRoomJPARepository.delete(gameRoom);
+        deleteEmptyGameRoom(gameRoom);
+    }
+
+    @Transactional
+    public void disconnectWebSession(String sessionId) {
+        Player findPlayer = findPlayerByWebSocketSessionId(sessionId);
+
+        if (findPlayer.getGameRoom() == null) {
+            playerJpaRepository.delete(findPlayer);
+        } else {
+            GameRoom gameRoom = findPlayer.getGameRoom();
+
+            if (gameRoom.isGameStart()) {
+                findPlayer.disconnect();
+            } else {
+                findPlayer.exit();
+                playerJpaRepository.delete(findPlayer);
+            }
+
+            deleteEmptyGameRoom(gameRoom);
         }
     }
 
@@ -314,6 +334,8 @@ public class GameServiceImpl implements GameService {
         findGameRoom.updatePhase(Phase.WAIT);
         findGameRoom.gameReset();
         findGameRoom.getPlayerList().forEach(Player::gameReset);
+
+        deleteDisconnectPlayer(findGameRoom);
     }
 
     private void validGameStart(GameRoom findGameRoom) {
@@ -344,6 +366,24 @@ public class GameServiceImpl implements GameService {
     private void checkPlayerOrderSync(GameRoom gameRoom, int playerOrderNum) {
         if (gameRoom.getProgressPlayerNumber() != playerOrderNum) {
             throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+        }
+    }
+
+    private void deleteDisconnectPlayer(GameRoom gameRoom) {
+        List<Player> disconnectPlayer = gameRoom.getPlayerList().stream()
+                .filter(player -> player.getWebSocketSessionId().equals("disconnect"))
+                .collect(Collectors.toList());
+
+        disconnectPlayer.forEach(Player::exit);
+
+        playerJpaRepository.deleteAll(disconnectPlayer);
+
+        deleteEmptyGameRoom(gameRoom);
+    }
+
+    private void deleteEmptyGameRoom(GameRoom gameRoom) {
+        if (gameRoom.getPlayerList().stream().allMatch(player -> player.getWebSocketSessionId().equals("disconnect"))) {
+            gameRoomJPARepository.delete(gameRoom);
         }
     }
 }
