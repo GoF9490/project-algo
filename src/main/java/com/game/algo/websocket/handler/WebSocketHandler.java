@@ -1,33 +1,32 @@
 package com.game.algo.websocket.handler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.game.algo.algo.controller.GameWebSocketHandler;
-import com.game.algo.algo.dto.PlayerBlockDraw;
-import com.game.algo.algo.dto.PlayerReadyUpdate;
-import com.game.algo.algo.dto.messagetype.GameRoomCreate;
-import com.game.algo.algo.dto.messagetype.GameRoomJoin;
-import com.game.algo.algo.dto.messagetype.PlayerCreate;
-import com.game.algo.algo.dto.messagetype.PlayerSimple;
+import com.game.algo.algo.controller.GameWebSocketMessageController;
+import com.game.algo.algo.data.GameProperty;
+import com.game.algo.algo.dto.request.*;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.algo.exception.StopMethodException;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataRequest;
 import com.game.algo.websocket.dto.MessageDataResponse;
 import com.game.algo.websocket.service.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.io.IOException;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketHandler extends TextWebSocketHandler {
 
-    private final GameWebSocketHandler gameWebSocketHandler;
+    private final GameWebSocketMessageController gameMessageController;
     private final WebSocketService webSocketService;
     private final ObjectMapper objectMapper;
 
@@ -35,15 +34,14 @@ public class WebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = session.getId();
-        webSocketService.addClient(sessionId, session);
 
-        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
-        webSocketService.sendMessageData(sessionId, messageDataResponse);
+        webSocketService.addClient(sessionId, session);
+        sendGameVersion(sessionId);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        gameWebSocketHandler.disconnectWebSession(session.getId());
+        gameMessageController.disconnectWebSession(session.getId());
         webSocketService.removeClient(session.getId());
     }
 
@@ -64,52 +62,147 @@ public class WebSocketHandler extends TextWebSocketHandler {
         // 메서드로 뺄 가능성 있음
         try {
             switch (type) {
+                case SessionId:
+                    sendSessionId(sessionId);
+                    break;
+
+                case NextPhase:
+                    NextPhase nextPhase = objectMapper.readValue(requestMessage, NextPhase.class);
+
+                    nextPhase(nextPhase);
+                    break;
+
                 case PlayerCreate:
                     PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
-                    MessageDataResponse createPlayer = gameWebSocketHandler.createPlayer(playerCreate);
-                    webSocketService.sendMessageData(sessionId, createPlayer);
+                    gameMessageController.createPlayer(playerCreate);
                     break;
 
                 case GameRoomCreate:
                     GameRoomCreate gameRoomCreate = objectMapper.readValue(requestMessage, GameRoomCreate.class);
 
-                    MessageDataResponse createGameRoom = gameWebSocketHandler.createGameRoom(gameRoomCreate);
-                    webSocketService.sendMessageData(sessionId, createGameRoom);
+                    gameMessageController.createGameRoom(gameRoomCreate);
                     break;
 
                 case GameRoomJoin:
                     GameRoomJoin gameRoomJoin = objectMapper.readValue(requestMessage, GameRoomJoin.class);
 
-                    MessageDataResponse joinGameRoom = gameWebSocketHandler.joinGameRoom(gameRoomJoin);
-                    webSocketService.sendMessageData(sessionId, joinGameRoom);
+                    gameMessageController.joinGameRoom(gameRoomJoin);
+                    break;
+
+                case GameRoomFind:
+                    Integer page = Integer.parseInt(requestMessage);
+
+                    gameMessageController.findGameRoom(sessionId, page);
+                    break;
+
+                case GameRoomExit:
+                    gameMessageController.exitGameRoom(sessionId);
                     break;
 
                 case PlayerReadyUpdate:
                     PlayerReadyUpdate playerReadyUpdate = objectMapper.readValue(requestMessage, PlayerReadyUpdate.class);
 
-                    gameWebSocketHandler.updatePlayerReady(playerReadyUpdate);
+                    gameMessageController.updatePlayerReady(playerReadyUpdate);
                     break;
 
-                case PlayerBlockDraw:
-                    PlayerBlockDraw playerBlockDraw = objectMapper.readValue(requestMessage, PlayerBlockDraw.class);
+                case GameStart:
+                    GameStart gameStart = objectMapper.readValue(requestMessage, GameStart.class);
 
-                    gameWebSocketHandler.drawBlock(playerBlockDraw);
+                    gameMessageController.gameStart(gameStart);
                     break;
 
+                case StartBlockDraw:
+                    StartBlockDraw startBlockDraw = objectMapper.readValue(requestMessage, StartBlockDraw.class);
 
+                    gameMessageController.drawBlockAtStart(startBlockDraw);
+                    break;
+
+                case BlockDraw:
+                    BlockDraw blockDraw = objectMapper.readValue(requestMessage, BlockDraw.class);
+
+                    gameMessageController.drawBlockAtDrawPhase(blockDraw);
+                    break;
+
+                case JokerUpdate:
+                    JokerUpdate jokerUpdate = objectMapper.readValue(requestMessage, JokerUpdate.class);
+
+                    gameMessageController.updateJoker(jokerUpdate);
+                    break;
+
+                case BlockGuess:
+                    BlockGuess blockGuess = objectMapper.readValue(requestMessage, BlockGuess.class);
+
+                    gameMessageController.guessBlock(blockGuess);
+                    break;
+
+                case GuessRepeat:
+                    GuessRepeat guessRepeat = objectMapper.readValue(requestMessage, GuessRepeat.class);
+
+                    gameMessageController.choiceRepeatGuess(guessRepeat);
+                    break;
             }
         } catch (GameLogicException gameLogicException) {
             log.error("game logic exception : " + gameLogicException.getMessage());
-            webSocketService.sendMessageData(sessionId,
+            webSocketService.sendMessage(sessionId,
                     MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
+
+        } catch (StopMethodException e) {
+            log.info("stop method by session id : " + sessionId);
+
+        } catch (CannotAcquireLockException e) {
+            log.info("CannotAcquireLockException by session id : " + sessionId);
+
         } catch (Exception e) {
             log.error(e.getMessage());
+            webSocketService.sendMessage(sessionId, MessageDataResponse.create(MessageType.Exception, e.getMessage()));
         }
 
     }
 
-    private String toJson(PlayerSimple playerSimple) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(playerSimple);
+    private void sendGameVersion(String sessionId) throws IOException {
+        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.Version, GameProperty.VERSION);
+        webSocketService.sendMessage(sessionId, messageDataResponse);
+    }
+
+    private void sendSessionId(String sessionId) throws Exception {
+        MessageDataResponse messageDataResponse = new MessageDataResponse(MessageType.SessionId, sessionId);
+        webSocketService.sendMessage(sessionId, messageDataResponse);
+    }
+
+    private void nextPhase(NextPhase nextPhase) {
+        switch (nextPhase.getPhase()) {
+            case SETTING:
+                gameMessageController.endSettingPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case START:
+                gameMessageController.endStartPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case DRAW:
+                gameMessageController.endDrawPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case SORT:
+                gameMessageController.endSortPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case GUESS:
+                gameMessageController.endGuessPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case REPEAT:
+                gameMessageController.endRepeatPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum(), false);
+                break;
+
+            case END:
+                gameMessageController.endEndPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+
+            case GAMEOVER:
+                gameMessageController.endGameOverPhase(nextPhase.getGameRoomId(), nextPhase.getProgressPlayerNum());
+                break;
+        }
     }
 }

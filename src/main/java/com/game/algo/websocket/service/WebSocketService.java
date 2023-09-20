@@ -1,16 +1,14 @@
 package com.game.algo.websocket.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.game.algo.algo.dto.GameStatusData;
-import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,20 +24,19 @@ public class WebSocketService {
         CLIENTS.put(sessionId, session);
     }
 
-    public void sendMessageToSessionIdList(List<String> sessionIdList, MessageDataResponse message) {
-        sessionIdList.forEach(sessionId -> {
-            try {
-                sendMessageData(sessionId, message);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-    }
+    public void sendMessage(@NonNull String sessionId, @NonNull MessageDataResponse messageData) throws IOException {
+        MessageDataResponse convertMessageData = MessageDataResponse.create(
+                messageData.getType(),
+                objectMapper.writeValueAsString(messageData.getMessage()));
 
-    public void sendMessageData(String sessionId, MessageDataResponse messageDataResponse) throws IOException {
-        String json = objectMapper.writeValueAsString(messageDataResponse);
+        String json = objectMapper.writeValueAsString(convertMessageData);
         CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
     }
+
+//    public void sendMessageData(String sessionId, MessageDataResponse messageDataResponse) throws IOException {
+//        String json = objectMapper.writeValueAsString(messageDataResponse);
+//        CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
+//    }
 
     public void removeClient(String sessionId){
         CLIENTS.remove(sessionId);

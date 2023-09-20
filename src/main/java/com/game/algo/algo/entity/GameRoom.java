@@ -1,11 +1,11 @@
 package com.game.algo.algo.entity;
 
 import com.game.algo.algo.data.BlockColor;
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.game.algo.global.converter.BlockArrayConverter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -14,34 +14,49 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static com.game.algo.algo.data.GameServiceConst.*;
+
 
 @Getter
 @Entity
-//@RedisHash(value = "game_manager")
+//@RedisHash(value = "game_room")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class GameRoom {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Phase phase = Phase.WAIT;
+    private String title;
+
+    @Enumerated(value = EnumType.STRING)
+    @Builder.Default
+    private Phase phase = Phase.WAIT; // phase wait 이면 게임시작전
 
     @OneToMany(mappedBy = "gameRoom", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Player> playerList = new ArrayList<>();
 
+    @Builder.Default
     private Integer progressPlayerNumber = 0;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> whiteBlockList = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> blackBlockList = new ArrayList<>();
 
+    @Builder.Default
+    private boolean gameStart = false;
 
-    public static GameRoom create() {
-        return new GameRoom();
+
+    public static GameRoom create(String title) {
+        return GameRoom.builder()
+                .title(title)
+                .build();
     }
 
     public void gameReset() {
@@ -67,13 +82,23 @@ public class GameRoom {
     }
 
     public void nextPlayer() {
-        if (++progressPlayerNumber == playerList.size()) {
-            progressPlayerNumber = 0;
+        for (int i=0; i<playerList.size(); i++) {
+            progressPlayerNumberUp();
+            if (!getProgressPlayer().isRetire()){
+                return;
+            }
         }
     }
 
+    public void progressZero() {
+        progressPlayerNumber = 0;
+    }
+
     public Player getProgressPlayer() {
-        return playerList.get(progressPlayerNumber);
+        return playerList.stream() // 플레이어 뜯어 찾는 방법
+                .filter(player -> player.getOrderNumber() == progressPlayerNumber)
+                .findFirst()
+                .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     public void playerOrderReset() {
@@ -82,7 +107,9 @@ public class GameRoom {
                 .collect(Collectors.toList());
 
         IntStream.range(0, playerOrderList.size())
-                .forEach(i -> playerOrderList.get(i).updateOrder(i+1));
+                .forEach(i -> {
+                    playerOrderList.get(i).updateOrder(i);
+                });
     }
 
     public Block drawRandomBlock(BlockColor blockColor) {
@@ -101,11 +128,34 @@ public class GameRoom {
 
     public void updatePhase(Phase phase) {
         this.phase = phase;
+        if (phase == Phase.WAIT) {
+            gameStart = false;
+        } else {
+            gameStart = true;
+        }
     }
 
     public void addJoker() {
-        whiteBlockList.add(Block.createBlock(BlockColor.WHITE, 12));
-        blackBlockList.add(Block.createBlock(BlockColor.BLACK, 12));
+        if (whiteBlockList.stream().noneMatch(Block::isJoker)) {
+            whiteBlockList.add(Block.create(BlockColor.WHITE, 12));
+            whiteBlockList = new ArrayList<>(whiteBlockList);
+
+            blackBlockList.add(Block.create(BlockColor.BLACK, 12));
+            blackBlockList = new ArrayList<>(blackBlockList);
+        }
+    }
+
+    public boolean isGameOver() {
+        int leftPlayer = (int) playerList.stream()
+                .filter(player -> !player.isRetire())
+                .count();
+
+        return leftPlayer == 1;
+    }
+
+    public void removePlayer(Player player) {
+        playerList.remove(player);
+        playerList = new ArrayList<>(playerList);
     }
 
     private void blockReset() {
@@ -115,26 +165,46 @@ public class GameRoom {
 
     private List<Block> blockSet(BlockColor blockColor) {
         return IntStream.range(0, 12)
-                .mapToObj(num -> Block.createBlock(blockColor, num))
+                .mapToObj(num -> Block.create(blockColor, num))
                 .collect(Collectors.toList());
     }
 
     private void checkVacancy() {
-        if (playerList.size() >= PLAYER_MAX_COUNT){
+        if (playerList.size() >= GameProperty.PLAYER_MAX_COUNT){
             throw new GameLogicException(GameExceptionCode.GAME_ROOM_IS_FULL);
+        }
+
+        if (gameStart) {
+            throw new GameLogicException(GameExceptionCode.ALREADY_GAME_START);
+        }
+    }
+
+    private void progressPlayerNumberUp() {
+        if (++progressPlayerNumber == playerList.size()) {
+            progressPlayerNumber = 0;
         }
     }
 
 
     public enum Phase {
-        WAIT, // 게임 시작 전
-        SETTING, // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
-        START, // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
-        CONTROL, // 플레이어의 차례를 순서대로 바꿈
-        DRAW, // 블록을 하나 선택함
-        SORT, // 뽑은 블록을 정렬함 ( 조커 고려 )
-        GUESS, // 뽑은 블록을 두고 추리함
-        REPEAT, // 추리 성공 여부에따라 더할지 결정함
-        END;
+        WAIT(0), // 게임 시작 전
+        SETTING(5), // 게임 세팅 (블럭 리셋, 플레이어 순서 지정)
+        START(20), // 시작, 진행순서대로 블록을 뽑고 이후 게임 시작
+        DRAW(10), // 블록을 하나 선택함
+        SORT(10), // 뽑은 블록을 정렬함 ( 조커 고려 )
+        GUESS(30), // 뽑은 블록을 두고 추리함
+        REPEAT(30), // 추리 성공 여부에따라 더할지 결정함
+        END(5), // 현재 플레이어의 차례를 끝내고 다음 플레이어의 차례로 바꿈
+        GAMEOVER(10);
+
+        private int waitTime;
+
+        Phase(int waitTime) {
+            this.waitTime = waitTime;
+        }
+
+        public int getWaitTime() {
+            return waitTime;
+        }
     }
 }

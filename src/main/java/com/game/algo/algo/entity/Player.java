@@ -1,26 +1,22 @@
 package com.game.algo.algo.entity;
 
-import com.game.algo.algo.data.BlackJokerRange;
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.data.JokerRange;
-import com.game.algo.algo.data.WhiteJokerRange;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.game.algo.global.converter.BlockArrayConverter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
 //@RedisHash(value = "player")
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class Player {
 
     @Id
@@ -29,8 +25,10 @@ public class Player {
 
     private String name; // or Member 객체
 
+    @Builder.Default
     private boolean ready = false;
 
+    @Builder.Default
     private boolean retire = false;
 
     private String webSocketSessionId; // 대안 필요(?)
@@ -41,38 +39,34 @@ public class Player {
 
     private int orderNumber;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @Convert(converter = BlockArrayConverter.class)
+    @Builder.Default
     private List<Block> blockList = new ArrayList<>();
 
-    @Embedded
-    private WhiteJokerRange whiteJokerRange;
+    @Builder.Default
+    private Integer drawBlockIndexNum = -1;
 
-    @Embedded
-    private BlackJokerRange blackJokerRange;
+    @Builder.Default
+    private Integer whiteJokerRange = 12; // startNum * 100 + endNum
 
-    private boolean needWhiteJokerRelocation = false;
+    @Builder.Default
+    private Integer blackJokerRange = 12; // startNum * 100 + endNum
 
-    private boolean needBlackJokerRelocation = false;
-    
-    // 조커 재배치 메서드 만들기
-
-
-//    @Builder
-//    public Player(String name) {
-//        this.name = name;
-//    }
 
     public static Player create(String name, String webSocketSessionId) {
-        return new Player(name, webSocketSessionId);
+        return Player.builder()
+                .name(name)
+                .webSocketSessionId(webSocketSessionId)
+                .build();
     }
 
     public void joinGameRoom(GameRoom gameRoom){
         this.gameRoom = gameRoom;
     }
 
-    public List<Integer> getBlockListCode(boolean isMaster) {
+    public List<Integer> getBlockListCode(boolean isOwner) {
         return blockList.stream()
-                .map(block -> block.getBlockCode(isMaster))
+                .map(block -> block.getBlockCode(isOwner))
                 .collect(Collectors.toList());
     }
 
@@ -81,75 +75,95 @@ public class Player {
     }
 
     public void gameReset() {
+        ready = false;
+        retire = false;
         orderNumber = 0;
         blockList = new ArrayList<>();
-        whiteJokerRange = null;
-        blackJokerRange = null;
+        drawBlockIndexNum = -1;
+        whiteJokerRange = 12;
+        blackJokerRange = 12;
     }
 
-    public void sortBlock() {
-        blockList =  blockList.stream()
-                .sorted((a, b) -> {
-                    if(Objects.equals(a.getNum(), b.getNum())) {
-                        return a.getTypeNumber() - b.getTypeNumber();
-                    } else {
-                        return a.getNum() - b.getNum();
-                    }
-                })
-                .collect(Collectors.toList());
-    }
+    public int findPosition(Block drawBlock) {
+        Block findBlock = blockList.stream()
+                .filter(block -> block.comparePosition(drawBlock))
+                .findFirst()
+                .orElse(null);
 
-    public void addBlocks(Block... blocks) {
-        Arrays.stream(blocks).forEach(this::addBlock);
+        if (findBlock == null) {
+            return blockList.size();
+        }
+        return blockList.indexOf(findBlock);
     }
 
     public void addBlock(Block block) {
-        distinguishJoker(block);
-        exploreJokerRange(block);
-
-        blockList.add(block);
-        sortBlock();
+        int indexNum = findPosition(block);
+        blockList.add(indexNum, block);
+        setDrawBlockIndexNum(block);
+        blockList = new ArrayList<>(blockList);
     }
 
-    public void updateJoker(int frontNum, int backNum, BlockColor jokerColor) {
-        Block findJoker = findJoker(backNum, jokerColor);
+    public void updateJokerIndex(int index, BlockColor jokerColor) {
+        Block findDrawBlock = getDrawBlock();
+        Block findJoker = findJoker(jokerColor);
+        blockList.remove(findJoker);
 
-        if (jokerColor == BlockColor.WHITE && needWhiteJokerRelocation) {
-            findJoker.setNum(backNum);
-            whiteJokerRange = new WhiteJokerRange(frontNum, backNum);
-            needWhiteJokerRelocation = false;
-        } else if (jokerColor == BlockColor.BLACK && needBlackJokerRelocation) {
-            findJoker.setNum(backNum);
-            blackJokerRange = new BlackJokerRange(frontNum, backNum);
-            needBlackJokerRelocation = false;
-        } else {
-            throw new GameLogicException(GameExceptionCode.JOKER_ALREADY_CHANGED);
+        if (!betweenRange(findDrawBlock, findDrawBlock.isColor(BlockColor.WHITE) ? whiteJokerRange : blackJokerRange)) {
+            throw new GameLogicException(GameExceptionCode.JOKER_NOT_MATCH);
         }
 
+        int frontNum = (index == 0) ? 0 : blockList.get(index - 1).getNum();
+        int backNum = (index >= blockList.size()) ? 12 : blockList.get(index).getNum();
+
+        if (jokerColor == BlockColor.WHITE) {
+            whiteJokerRange = frontNum * 100 + backNum;
+        } else if (jokerColor == BlockColor.BLACK) {
+            blackJokerRange = frontNum * 100 + backNum;
+        }
+
+        blockList.add(index, findJoker);
+
         blockList = new ArrayList<>(blockList);
-        sortBlock();
+        setDrawBlockIndexNum(findDrawBlock);
     }
 
     public void updateOrder(int order) {
         this.orderNumber = order;
     }
 
-    public void completeWhiteJokerRelocation() {
-        needWhiteJokerRelocation = false;
+    public boolean guessBlock(int index, int num) {
+        Block findBlock = blockList.get(index);
+        if (findBlock.getNum() == num) {
+            findBlock.open();
+            blockList = new ArrayList<>(blockList);
+            checkRetire();
+            return true;
+        }
+        return false;
     }
 
-    public void completeBlackJokerRelocation() {
-        needBlackJokerRelocation = false;
+    public void openDrawCard() {
+        getDrawBlock().open();
+        blockList = new ArrayList<>(blockList);
     }
 
-    private Player(String name, String webSocketSessionId) {
-        this.name = name;
-        this.webSocketSessionId = webSocketSessionId;
+    public void exit() {
+        if (gameRoom != null) {
+            gameRoom.removePlayer(this);
+            gameRoom = null;
+        }
     }
 
-    private Block findJoker(int backNum, BlockColor jokerColor) {
+    public void disconnect() {
+        webSocketSessionId = "disconnect";
+        name = "disconnect";
+        retire = true;
+        blockList.forEach(Block::open);
+    }
+
+    private Block findJoker(BlockColor blockColor) {
         List<Block> findJoker = blockList.stream()
-                .filter(block -> block.isJoker(jokerColor))
+                .filter(block -> block.isColor(blockColor) && block.isJoker())
                 .collect(Collectors.toList());
 
         if (findJoker.size() != 1) {
@@ -159,27 +173,24 @@ public class Player {
         return findJoker.get(0);
     }
 
-    private void exploreJokerRange(Block block) {
-        if (whiteJokerRange != null && block.isWhite() && betweenRange(block, whiteJokerRange)) {
-            needWhiteJokerRelocation = true;
-        } else if (blackJokerRange != null && block.isBlack() && betweenRange(block, blackJokerRange)) {
-            needBlackJokerRelocation = true;
-        }
-    }
-
-    private boolean betweenRange(Block block, JokerRange jokerRange) {
-        return jokerRange.getFrontNum() <= block.getNum() && block.getNum() < jokerRange.getBackNum();
-    }
-
-    private void distinguishJoker(Block block) {
+    private boolean betweenRange(Block block, int jokerRange) {
         if (block.isJoker()) {
-            if (block.isWhite()) {
-                whiteJokerRange = new WhiteJokerRange(0, 12);
-                needWhiteJokerRelocation = true;
-            } else {
-                blackJokerRange = new BlackJokerRange(0, 12);
-                needBlackJokerRelocation = true;
-            }
+            return true;
+        }
+        return jokerRange / 100 <= block.getNum() && block.getNum() <= jokerRange % 100;
+    }
+
+    private void setDrawBlockIndexNum(Block block) {
+        drawBlockIndexNum = blockList.indexOf(block);
+    }
+
+    private Block getDrawBlock() {
+        return blockList.get(drawBlockIndexNum);
+    }
+
+    private void checkRetire() {
+        if (blockList.stream().noneMatch(Block::isClose)) {
+            retire = true;
         }
     }
 }

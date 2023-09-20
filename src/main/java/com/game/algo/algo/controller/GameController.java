@@ -1,8 +1,7 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.dto.messagetype.GameRoomCreate;
-import com.game.algo.algo.dto.ResponseData;
-import com.game.algo.algo.entity.GameRoom;
+import com.game.algo.algo.dto.request.GameRoomCreate;
+import com.game.algo.global.dto.ResponseData;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ public class GameController {
     @PostMapping("/create")
     public ResponseEntity gameCreate(@RequestBody GameRoomCreate gameRoomCreate){
         Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
-        Long gameRoomId = gameService.createGameRoom();
+        Long gameRoomId = gameService.createGameRoom("asdf");
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ResponseData(200, gameRoomId));
