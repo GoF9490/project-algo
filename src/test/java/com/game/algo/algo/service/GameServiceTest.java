@@ -18,7 +18,6 @@ import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -360,7 +359,7 @@ class GameServiceTest {
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
-        gameRoom.playerOrderReset();
+        gameRoom.randomSetPlayerOrder();
 
         gameRoom.updatePhase(GameRoom.Phase.START);
 
@@ -691,7 +690,7 @@ class GameServiceTest {
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
-        gameRoom.playerOrderReset();
+        gameRoom.randomSetPlayerOrder();
 
         gameRoom.updatePhase(GameRoom.Phase.END);
 
