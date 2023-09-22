@@ -62,6 +62,7 @@ public class GameRoom {
     public void gameReset() {
         progressPlayerNumber = 0;
         blockReset();
+        playerList.forEach(Player::gameReset);
     }
 
     public void joinPlayer(Player player) {
@@ -101,7 +102,7 @@ public class GameRoom {
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
-    public void playerOrderReset() {
+    public void randomSetPlayerOrder() {
         List<Player> playerOrderList = playerList.stream()
                 .sorted(Comparator.comparing(player -> Math.random()))
                 .collect(Collectors.toList());

@@ -125,9 +125,8 @@ public class GameServiceImpl implements GameService {
 
 //        validGameStart(findGameRoom);
 
-        findGameRoom.allPlayerReadyOff();
         findGameRoom.gameReset();
-        findGameRoom.playerOrderReset();
+        findGameRoom.randomSetPlayerOrder();
         findGameRoom.updatePhase(Phase.SETTING);
     }
 

@@ -159,7 +159,7 @@ class GameRoomTest {
                 .forEach(gameRoom::joinPlayer);
 
         //when
-        gameRoom.playerOrderReset();
+        gameRoom.randomSetPlayerOrder();
 
         //then
 //        gameManager.getPlayerList().stream()
