@@ -1,9 +1,11 @@
 package com.game.algo.algo.dto.response;
 
 import com.game.algo.algo.entity.GameRoom;
+import com.game.algo.algo.entity.Player;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,7 @@ public class GameStatusData {
                 .phase(gameRoom.getPhase())
                 .playerDataList(gameRoom.getPlayerList().stream()
                         .map(PlayerGameData::from)
+                        .sorted(Comparator.comparing(PlayerGameData::getOrderNumber))
                         .collect(Collectors.toList()))
                 .progressPlayerNumber(gameRoom.getProgressPlayerNumber())
                 .whiteBlockCount(gameRoom.getWhiteBlockList().size())

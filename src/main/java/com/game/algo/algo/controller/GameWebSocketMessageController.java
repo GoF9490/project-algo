@@ -58,7 +58,10 @@ public class GameWebSocketMessageController {
     }
 
     public void exitGameRoom(String sessionId) {
+        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
         gameService.exitGameRoom(sessionId);
+
+        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
     }
 
     public void updatePlayerReady(@NonNull PlayerReadyUpdate playerReadyUpdate) {
@@ -118,7 +121,10 @@ public class GameWebSocketMessageController {
     }
 
     public void disconnectWebSession(String sessionId){
+        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
         gameService.disconnectWebSession(sessionId);
+
+        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
     }
 
     /** end 시리즈 */

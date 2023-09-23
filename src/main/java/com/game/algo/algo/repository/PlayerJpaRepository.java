@@ -16,5 +16,6 @@ public interface PlayerJpaRepository extends JpaRepository<Player, Long> {
     @Override
     Optional<Player> findById(Long id);
 
+    @EntityGraph(attributePaths = {"gameRoom"})
     Optional<Player> findByWebSocketSessionId(String webSocketSessionId);
 }

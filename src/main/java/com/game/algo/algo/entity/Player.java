@@ -62,6 +62,7 @@ public class Player {
 
     public void joinGameRoom(GameRoom gameRoom){
         this.gameRoom = gameRoom;
+        orderNumber = gameRoom.getPlayerList().size() - 1;
     }
 
     public List<Integer> getBlockListCode(boolean isOwner) {
@@ -77,7 +78,7 @@ public class Player {
     public void gameReset() {
         ready = false;
         retire = false;
-        orderNumber = 0;
+        // orderNumber = 0;
         blockList = new ArrayList<>();
         drawBlockIndexNum = -1;
         whiteJokerRange = 12;
