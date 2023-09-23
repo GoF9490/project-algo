@@ -101,6 +101,7 @@ public class GameServiceImpl implements GameService {
 
             if (gameRoom.isGameStart()) {
                 findPlayer.disconnect();
+                gameRoom.updatePhase(Phase.GUESS);
             } else {
                 findPlayer.exit();
                 playerJpaRepository.delete(findPlayer);
@@ -123,7 +124,7 @@ public class GameServiceImpl implements GameService {
     public void gameStart(Long gameRoomId) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
-//        validGameStart(findGameRoom);
+        validGameStart(findGameRoom);
 
         findGameRoom.gameReset();
         findGameRoom.randomSetPlayerOrder();
@@ -164,6 +165,7 @@ public class GameServiceImpl implements GameService {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         Player findPlayer = findGameRoom.getProgressPlayer();
 
+        checkGamePhaseSync(findGameRoom, Phase.START);
         if (findPlayer.isReady()) {
             return;
         }
@@ -181,7 +183,7 @@ public class GameServiceImpl implements GameService {
         addRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -213,6 +215,7 @@ public class GameServiceImpl implements GameService {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         Player findPlayer = findGameRoom.getProgressPlayer();
 
+        checkGamePhaseSync(findGameRoom, Phase.DRAW);
         if (findPlayer.isReady()) {
             return;
         }
@@ -225,7 +228,7 @@ public class GameServiceImpl implements GameService {
         findPlayer.updateReady(true);
     }
     
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
         
@@ -251,7 +254,7 @@ public class GameServiceImpl implements GameService {
         findPlayer.updateReady(true);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -275,7 +278,7 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -285,20 +288,18 @@ public class GameServiceImpl implements GameService {
         Player progressPlayer = findGameRoom.getProgressPlayer();
 
         if (progressPlayer.isReady()) {
-            if (findGameRoom.isGameOver()) {
-                findGameRoom.updatePhase(Phase.GAMEOVER);
-            } else {
-                findGameRoom.updatePhase(Phase.REPEAT);
-            }
+            findGameRoom.updatePhase(Phase.REPEAT);
         } else {
             findGameRoom.getProgressPlayer().openDrawCard();
             findGameRoom.updatePhase(Phase.END);
         }
 
+        checkGameOver(findGameRoom);
+
         progressPlayer.updateReady(false);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -312,7 +313,7 @@ public class GameServiceImpl implements GameService {
         }
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -323,7 +324,7 @@ public class GameServiceImpl implements GameService {
         findGameRoom.updatePhase(Phase.DRAW);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findGameRoomById(gameRoomId);
 
@@ -383,6 +384,12 @@ public class GameServiceImpl implements GameService {
     private void deleteEmptyGameRoom(GameRoom gameRoom) {
         if (gameRoom.getPlayerList().stream().allMatch(player -> player.getWebSocketSessionId().equals("disconnect"))) {
             gameRoomJPARepository.delete(gameRoom);
+        }
+    }
+
+    private static void checkGameOver(GameRoom gameRoom) {
+        if (gameRoom.isGameOver()) {
+            gameRoom.updatePhase(Phase.GAMEOVER);
         }
     }
 }

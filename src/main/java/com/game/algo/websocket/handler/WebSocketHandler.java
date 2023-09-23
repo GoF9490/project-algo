@@ -41,8 +41,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        gameMessageController.disconnectWebSession(session.getId());
-        webSocketService.removeClient(session.getId());
+        try {
+            gameMessageController.disconnectWebSession(session.getId());
+            webSocketService.removeClient(session.getId());
+        } catch (GameLogicException ignored) {
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     @Override

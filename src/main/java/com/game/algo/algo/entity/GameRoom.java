@@ -68,10 +68,9 @@ public class GameRoom {
     public void joinPlayer(Player player) {
         checkVacancy();
 
-        List<Player> playerListEdit = new ArrayList<>(playerList);
-        playerListEdit.add(player);
+        playerList.add(player);
         player.joinGameRoom(this);
-        playerList = playerListEdit;
+        playerList = new ArrayList<>(playerList);
     }
 
     public boolean areAllPlayersReady() {
@@ -151,7 +150,7 @@ public class GameRoom {
                 .filter(player -> !player.isRetire())
                 .count();
 
-        return leftPlayer == 1;
+        return leftPlayer <= 1;
     }
 
     public void removePlayer(Player player) {

@@ -11,6 +11,8 @@ public interface GameService {
 
     Player findPlayerById(Long id);
 
+    Player findPlayerByWebSocketSessionId(String webSocketSessionId);
+
     Long createGameRoom(String title);
 
     GameRoom findGameRoomById(Long id);
