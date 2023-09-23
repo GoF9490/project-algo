@@ -129,8 +129,8 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(readOnlyGameRoom);
         sendWaitForSec(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
     }
 
     public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
@@ -139,9 +139,9 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
+        sendWaitForSec(readOnlyGameRoom);
         sendOwnerBlockData(readOnlyGameRoom);
         sendGameStatusData(readOnlyGameRoom);
-        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
@@ -150,9 +150,9 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
+        sendWaitForSec(readOnlyGameRoom);
         sendOwnerBlockData(readOnlyGameRoom);
         sendGameStatusData(readOnlyGameRoom);
-        sendWaitForSec(readOnlyGameRoom);
         sendDrawBlockData(readOnlyGameRoom);
     }
 
@@ -161,9 +161,9 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
+        sendWaitForSec(readOnlyGameRoom);
         sendOwnerBlockData(readOnlyGameRoom);
         sendGameStatusData(readOnlyGameRoom);
-        sendWaitForSec(readOnlyGameRoom);
     }
 
     public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
@@ -171,8 +171,8 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(readOnlyGameRoom);
         sendWaitForSec(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
     }
 
     public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
@@ -180,8 +180,8 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(readOnlyGameRoom);
         sendWaitForSec(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
     }
 
     public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
@@ -189,8 +189,8 @@ public class GameWebSocketMessageController {
 
         GameRoom readOnlyGameRoom = gameService.findGameRoomById(gameRoomId);
 
-        sendGameStatusData(readOnlyGameRoom);
         sendWaitForSec(readOnlyGameRoom);
+        sendGameStatusData(readOnlyGameRoom);
     }
 
     public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
