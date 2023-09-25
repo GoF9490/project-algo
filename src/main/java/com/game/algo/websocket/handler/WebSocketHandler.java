@@ -5,7 +5,6 @@ import com.game.algo.algo.controller.GameWebSocketMessageController;
 import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.dto.request.*;
 import com.game.algo.algo.exception.GameLogicException;
-import com.game.algo.algo.exception.StopMethodException;
 import com.game.algo.websocket.data.MessageType;
 import com.game.algo.websocket.dto.MessageDataRequest;
 import com.game.algo.websocket.dto.MessageDataResponse;
@@ -151,9 +150,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
             log.error("game logic exception : " + gameLogicException.getMessage());
             webSocketService.sendMessage(sessionId,
                     MessageDataResponse.create(MessageType.Exception, gameLogicException.getMessage()));
-
-        } catch (StopMethodException e) {
-            log.info("stop method by session id : " + sessionId);
 
         } catch (CannotAcquireLockException e) {
             log.info("CannotAcquireLockException by session id : " + sessionId);
