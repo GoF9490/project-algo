@@ -1,8 +1,10 @@
 
 
-project algo
+# project algo
 
 보드게임 다빈치코드(Algo) 를 간단히 구현하기 위한 프로젝트
+
+클라이언트 & 서버 개발 : GoF9490
 
 프론트 기술스택 : Unity 3D, WebSocket Sharp \
 백 기술스택 : java 11, spring 2.7.10, spring data jpa, spring websocket
