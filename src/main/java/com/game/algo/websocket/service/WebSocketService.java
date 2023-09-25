@@ -33,11 +33,6 @@ public class WebSocketService {
         CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
     }
 
-//    public void sendMessageData(String sessionId, MessageDataResponse messageDataResponse) throws IOException {
-//        String json = objectMapper.writeValueAsString(messageDataResponse);
-//        CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
-//    }
-
     public void removeClient(String sessionId){
         CLIENTS.remove(sessionId);
     }
