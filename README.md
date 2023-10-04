@@ -80,12 +80,10 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
     C# 기반의 WebSocket 라이브러리인 WebSocket Sharp를 채용해 WebSocket 방식으로 정하였습니다.
     (추후에 SSE 방식을 추가하거나 변경할 가능성도 있습니다.)
 
-    DB는 JAVA ORM 기술 표준인 spring data JPA를 사용하기 위해 가볍게 사용 가능한 h2 DB를 인메모리에서 돌아가게끔 해서
-    AWS EC2에 서버와 같이 올라가있는 상태입니다만, Redis DB를 채용하여 리팩토링을 할 의향이 있습니다.
-    Redis를 채용하려는 이유는 해당 프로젝트의 핵심 기능인 게임 도메인에 사용되는 
-    Player 엔티티와 GameRoom 엔티티를 휘발성으로 계획하고 있기 때문입니다.
+    DB는 테스트코드를 동일한 환경에서 돌리게끔 Embedded 모드를 지원하고, SQL DB와 호환성이 좋으며, 
+    가볍게 사용 가능한 H2 DB를 채택하였습니다.
 
-    플레이어가 누구나 접근하기 쉽도록 가볍게 만들 생각이며, 개인정보 또한 필요없고 플레이어의 상태를 보관하지 않을 생각이기에,
+    플레이어가 누구나 접근하기 쉽도록 가볍게 만들 생각이며, 개인정보 또한 필요없고 플레이어의 중요한 정보를 보관하지 않을 생각이기에,
     Spring Security가 없어도 될거같다는 생각이 들어 채용하지 않았습니다.
 
 ## ERD
@@ -163,8 +161,6 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
     웹소켓 방식을 유지하면서 클라이언트를 교체(Node.js, React 등등)할 의향이 있습니다.
 
 # 추가 작업 (예정)
-
-    * DB를 Redis로 바꿔서 사용해보기(AWS에서 그에 맞게끔 설정하기).
     
     * GameService 클래스 책임 분리.
 
