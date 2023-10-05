@@ -9,6 +9,9 @@
 프론트 기술스택 : Unity 3D, WebSocket Sharp \
 백 기술스택 : java 11, spring 2.7.10, spring data jpa, spring websocket
 
+# 시연 영상
+[![Video Label](http://img/youtube.com/vi/ut38YT0HRRI/0.jpg)](https://youtu.be/ut38YT0HRRI)
+
 # 클라이언트 다운로드 링크
 
 PC : https://drive.google.com/file/d/1BUQDARsqtjmtEBa0YSYTpcMgbOrhl05c/view?usp=sharing
