@@ -10,7 +10,7 @@
 백 기술스택 : java 11, spring 2.7.10, spring data jpa, spring websocket
 
 # 시연 영상
-[![Video Label](http://img/youtube.com/vi/ut38YT0HRRI/0.jpg)](https://youtu.be/ut38YT0HRRI)
+[![Video Label](https://img.youtube.com/vi/ut38YT0HRRI/0.jpg)](https://youtu.be/ut38YT0HRRI)
 
 # 클라이언트 다운로드 링크
 
