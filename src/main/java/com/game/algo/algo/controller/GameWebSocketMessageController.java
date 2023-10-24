@@ -31,14 +31,16 @@ public class GameWebSocketMessageController {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
         PlayerSimple playerSimple = PlayerSimple.from(gameService.findPlayerById(playerId));
 
-        sendMessage(playerCreate.getSessionId(), MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
+        sendMessage(playerCreate.getSessionId(),
+                MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
     }
 
     public void createGameRoom(@NonNull GameRoomCreate gameRoomCreate) {
         String sessionId = gameService.findPlayerById(gameRoomCreate.getPlayerId()).getWebSocketSessionId();
         Long gameRoomId = gameService.createGameRoom(gameRoomCreate.getTitle());
 
-        sendMessage(sessionId, MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
+        sendMessage(sessionId,
+                MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
     }
 
     public void joinGameRoom(@NonNull GameRoomJoin gameRoomJoin) {

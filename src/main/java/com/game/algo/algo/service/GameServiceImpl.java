@@ -7,7 +7,7 @@ import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import com.game.algo.algo.repository.GameRoomJpaRepository;
+import com.game.algo.algo.repository.GameRoomRepository;
 import com.game.algo.algo.repository.PlayerJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -34,7 +34,7 @@ import static com.game.algo.algo.entity.GameRoom.*;
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-    private final GameRoomJpaRepository gameRoomJPARepository;
+    private final GameRoomRepository gameRoomRepository;
     private final PlayerJpaRepository playerJpaRepository;
 
     public Long createPlayer(String name, String webSocketSessionId) {
@@ -57,19 +57,19 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public Long createGameRoom(String title) {
         GameRoom gameRoom = create(title);
-        return gameRoomJPARepository.save(gameRoom).getId();
+        return gameRoomRepository.save(gameRoom).getId();
     }
 
     @Transactional(readOnly = true)
     public GameRoom findGameRoomById(Long id) {
-        return gameRoomJPARepository.findById(id)
+        return gameRoomRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_ROOM_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     public GameRoomFind findGameRoomsNotGameStart(int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<GameRoom> gameRoomPage = gameRoomJPARepository.findAllByGameStart(false, pageRequest);
+        Page<GameRoom> gameRoomPage = gameRoomRepository.findAllByGameStart(false, pageRequest);
         return GameRoomFind.from(gameRoomPage);
     }
 
@@ -383,7 +383,7 @@ public class GameServiceImpl implements GameService {
 
     private void deleteEmptyGameRoom(GameRoom gameRoom) {
         if (gameRoom.getPlayerList().stream().allMatch(player -> player.getWebSocketSessionId().equals("disconnect"))) {
-            gameRoomJPARepository.delete(gameRoom);
+            gameRoomRepository.delete(gameRoom);
         }
     }
 

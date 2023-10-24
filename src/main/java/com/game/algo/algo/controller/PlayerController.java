@@ -24,6 +24,6 @@ public class PlayerController {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
         PlayerSimple playerSimple = PlayerSimple.from(gameService.findPlayerById(playerId));
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseData(200, playerSimple));
+                .body(ResponseData.create(200, playerSimple));
     }
 }

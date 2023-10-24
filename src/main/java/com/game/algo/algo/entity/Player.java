@@ -4,6 +4,7 @@ import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.global.converter.BlockArrayConverter;
+import com.querydsl.core.annotations.QueryEntity;
 import lombok.*;
 
 import javax.persistence.*;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 public class Player {
 
     @Id

@@ -6,7 +6,7 @@ import lombok.*;
 import java.util.List;
 
 @Getter
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class OwnerBlockData {
 

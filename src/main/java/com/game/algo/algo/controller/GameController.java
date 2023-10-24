@@ -1,6 +1,8 @@
 package com.game.algo.algo.controller;
 
+import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.dto.request.GameRoomCreate;
+import com.game.algo.algo.dto.response.GameRoomFind;
 import com.game.algo.global.dto.ResponseData;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
@@ -16,22 +18,30 @@ public class GameController {
 
     private final GameService gameService;
 
-    @PostMapping("/create")
-    public ResponseEntity gameCreate(@RequestBody GameRoomCreate gameRoomCreate){
+    @PostMapping("/")
+    public ResponseEntity createGameRoom(@RequestBody GameRoomCreate gameRoomCreate){
+
         Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
         Long gameRoomId = gameService.createGameRoom("asdf");
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ResponseData(200, gameRoomId));
+                .body(ResponseData.create(200, gameRoomId));
     }
 
     @PatchMapping("/join/{gameRoomId}")
-    public ResponseEntity joinGame(@PathVariable Long gameRoomId,
+    public ResponseEntity joinGameRoom(@PathVariable Long gameRoomId,
                                    @RequestBody Long playerId) {
 
         gameService.joinGameRoom(gameRoomId, playerId);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .build();
+    }
+
+    @GetMapping("/")
+    public ResponseEntity findGameRooms(@RequestParam int page,
+                                        @RequestParam boolean start) {
+        GameRoomFind gameRoomFind = gameService.findGameRoomsNotGameStart(page, GameProperty.FIND_GAME_ROOM_SIZE);
+        return null;
     }
 }

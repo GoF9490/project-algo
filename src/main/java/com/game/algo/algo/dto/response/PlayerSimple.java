@@ -4,7 +4,7 @@ import com.game.algo.algo.entity.Player;
 import lombok.*;
 
 @Getter
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class PlayerSimple {
 
