@@ -8,7 +8,7 @@ import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.GameRoomRepository;
-import com.game.algo.algo.repository.PlayerJpaRepository;
+import com.game.algo.algo.repository.PlayerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class GameServiceTest {
 
     @Autowired private GameRoomRepository gameRoomRepository;
 
-    @Autowired private PlayerJpaRepository playerRepository;
+    @Autowired private PlayerRepository playerRepository;
 
     @Test
     @DisplayName("존재하지 않는 Player의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")

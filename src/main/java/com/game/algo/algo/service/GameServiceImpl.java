@@ -8,7 +8,7 @@ import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.GameRoomRepository;
-import com.game.algo.algo.repository.PlayerJpaRepository;
+import com.game.algo.algo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,22 +35,22 @@ import static com.game.algo.algo.entity.GameRoom.*;
 public class GameServiceImpl implements GameService {
 
     private final GameRoomRepository gameRoomRepository;
-    private final PlayerJpaRepository playerJpaRepository;
+    private final PlayerRepository playerRepository;
 
     public Long createPlayer(String name, String webSocketSessionId) {
         Player player = Player.create(name, webSocketSessionId);
-        return playerJpaRepository.save(player).getId();
+        return playerRepository.save(player).getId();
     }
 
     @Transactional(readOnly = true)
     public Player findPlayerById(Long id) {
-        return playerJpaRepository.findById(id)
+        return playerRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     public Player findPlayerByWebSocketSessionId(String webSocketSessionId) {
-        return playerJpaRepository.findByWebSocketSessionId(webSocketSessionId)
+        return playerRepository.findByWebSocketSessionId(webSocketSessionId)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
@@ -95,7 +95,7 @@ public class GameServiceImpl implements GameService {
         Player findPlayer = findPlayerByWebSocketSessionId(sessionId);
 
         if (findPlayer.getGameRoom() == null) {
-            playerJpaRepository.delete(findPlayer);
+            playerRepository.delete(findPlayer);
         } else {
             GameRoom gameRoom = findPlayer.getGameRoom();
 
@@ -104,7 +104,7 @@ public class GameServiceImpl implements GameService {
                 gameRoom.updatePhase(Phase.GUESS);
             } else {
                 findPlayer.exit();
-                playerJpaRepository.delete(findPlayer);
+                playerRepository.delete(findPlayer);
             }
 
             deleteEmptyGameRoom(gameRoom);
@@ -376,7 +376,7 @@ public class GameServiceImpl implements GameService {
 
         disconnectPlayer.forEach(Player::exit);
 
-        playerJpaRepository.deleteAll(disconnectPlayer);
+        playerRepository.deleteAll(disconnectPlayer);
 
         deleteEmptyGameRoom(gameRoom);
     }

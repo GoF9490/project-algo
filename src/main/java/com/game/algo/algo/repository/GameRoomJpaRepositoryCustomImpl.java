@@ -17,7 +17,8 @@ public class GameRoomJpaRepositoryCustomImpl implements GameRoomJpaRepositoryCus
 
     private final JPAQueryFactory jpaQueryFactory;
 
-    public List<GameRoomSimple> findGameRoomSimples(int page, boolean start) {
+    @Override
+    public List<GameRoomSimple> findGameRoomSimples(int page, int size, boolean start) {
         QGameRoom gameRoom = QGameRoom.gameRoom;
         QPlayer player = QPlayer.player;
 
@@ -27,8 +28,8 @@ public class GameRoomJpaRepositoryCustomImpl implements GameRoomJpaRepositoryCus
                 .leftJoin(player).on(player.gameRoom.id.eq(gameRoom.id))
                 .where(gameRoom.gameStart.eq(start))
                 .groupBy(gameRoom.id)
-                .offset((long) page * GameProperty.FIND_GAME_ROOM_SIZE)
-                .limit(GameProperty.FIND_GAME_ROOM_SIZE)
+                .offset((long) page * size)
+                .limit(size)
                 .stream()
                 .map(tuple -> GameRoomSimple.create(
                         tuple.get(gameRoom.id),

@@ -1,5 +1,7 @@
 package com.game.algo.algo.data;
 
+import com.game.algo.algo.entity.GameRoom;
+
 /**
  * BlockCode
  * 0 ~ 11 숫자블록, 12 = 조커, 13 = Status.CLOSE
@@ -18,4 +20,8 @@ public class GameProperty {
     public static final int PLAYER_MAX_COUNT = 4;
 
     public static final int FIND_GAME_ROOM_SIZE = 60;
+
+    public static int numberOfBlockAtStart(int playerCount) {
+        return (playerCount < 4) ? 4 : 3;
+    }
 }
