@@ -13,17 +13,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class WebSocketHandler extends TextWebSocketHandler {
+public class WebSocketHandler extends BinaryWebSocketHandler {
 
     private final GameWebSocketMessageController gameMessageController;
     private final WebSocketService webSocketService;
@@ -34,6 +37,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = session.getId();
 
+        System.out.println("connect : " + sessionId);
         webSocketService.addClient(sessionId, session);
         sendGameVersion(sessionId);
     }
@@ -50,10 +54,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
         String sessionId = session.getId();
 
-        String input = message.getPayload();
+        String input = new String(message.getPayload().array(), StandardCharsets.UTF_8);
 
         MessageDataRequest messageDataRequest = objectMapper.readValue(input, MessageDataRequest.class);
 

@@ -5,10 +5,12 @@ import com.game.algo.websocket.dto.MessageDataResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,7 +32,7 @@ public class WebSocketService {
                 objectMapper.writeValueAsString(messageData.getMessage()));
 
         String json = objectMapper.writeValueAsString(convertMessageData);
-        CLIENTS.get(sessionId).sendMessage(new TextMessage(json));
+        CLIENTS.get(sessionId).sendMessage(new BinaryMessage(json.getBytes(StandardCharsets.UTF_8)));
     }
 
     public void removeClient(String sessionId){
