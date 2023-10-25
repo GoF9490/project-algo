@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,11 +60,15 @@ class GameRoomServiceTest {
     @DisplayName("시작한 것과 아닌것이 각각 5개씩 있을 때 시작하지 않은 GameRoom만 5개 가져옵니다.")
     public void findSimpleListByStart() throws Exception {
         //given
-        IntStream.range(0, 5)
-                .forEach(i -> gameRoomRepository.save(GameRoom.create("foo" + i)));
+        List<GameRoom> gameRoomList = IntStream.range(0, 10)
+                .mapToObj(i -> GameRoom.create("foo" + i))
+                .toList();
 
-        IntStream.range(0, 5)
-                .forEach(i -> gameRoomRepository.save(GameRoom.create("foo" + i)).updatePhase(GameRoom.Phase.START));
+        for (int i=0; i<5; i++) {
+            gameRoomList.get(i).updatePhase(GameRoom.Phase.START);
+        }
+
+        gameRoomRepository.saveAll(gameRoomList);
 
         //when
         List<GameRoomSimple> simpleList = gameRoomService.findSimpleListByStart(0, false);

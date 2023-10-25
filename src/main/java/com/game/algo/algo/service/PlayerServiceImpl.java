@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class PlayerServiceImpl implements PlayerService {
@@ -42,8 +44,8 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void joinGameRoom(Long gameRoomId, Long playerId) {
-        Player findPlayer = findById(playerId);
+    public void joinGameRoom(String sessionId, Long gameRoomId) {
+        Player findPlayer = findByWebSocketSessionId(sessionId);
         GameRoom findGameRoom = gameRoomService.findById(gameRoomId);
         findGameRoom.joinPlayer(findPlayer);
     }
@@ -84,8 +86,8 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void updatePlayerReady(Long playerId, boolean isReady) {
-        Player findPlayer = findById(playerId);
+    public void updatePlayerReady(String SessionId, boolean isReady) {
+        Player findPlayer = findByWebSocketSessionId(SessionId);
 
         if (findPlayer.getGameRoom().getPhase() != GameRoom.Phase.WAIT) {
             throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
@@ -159,6 +161,14 @@ public class PlayerServiceImpl implements PlayerService {
     public void repeatGuess(Long playerId) {
         Player findPlayer = findById(playerId);
         gameRoomService.endRepeatPhase(findPlayer.getGameRoom().getId(), findPlayer.getOrderNumber(), true);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validSessionIdInGameRoom(String sessionId, Long gameRoomId) {
+        if (!Objects.equals(findByWebSocketSessionId(sessionId).getGameRoom().getId(), gameRoomId)) {
+            throw new GameLogicException(GameExceptionCode.INVALID_REQUEST);
+        }
     }
 
     private void deleteEmptyGameRoom(GameRoom gameRoom) {

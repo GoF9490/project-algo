@@ -3,6 +3,7 @@ package com.game.algo.algo.entity;
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.global.audit.Auditable;
 import com.game.algo.global.converter.BlockArrayConverter;
 import com.querydsl.core.annotations.QueryEntity;
 import lombok.*;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PROTECTED)
-public class Player {
+public class Player extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

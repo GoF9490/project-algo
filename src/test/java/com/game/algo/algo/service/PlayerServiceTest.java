@@ -72,7 +72,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.WAIT);
 
         //when
-        playerService.updatePlayerReady(player.getId(), true);
+        playerService.updatePlayerReady(player.getWebSocketSessionId(), true);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();
@@ -87,7 +87,7 @@ class PlayerServiceTest {
         Player player = playerRepository.save(Player.create("foo", "sessionId"));
 
         //when
-        playerService.joinGameRoom(gameRoom.getId(), player.getId());
+        playerService.joinGameRoom(player.getWebSocketSessionId(), gameRoom.getId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -102,13 +102,13 @@ class PlayerServiceTest {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create("GameRoom"));
         LongStream.range(0, 4)
-                .map(l -> playerRepository.save(Player.create("foo" + l, "sessionId" + l)).getId())
-                .forEach(playerId -> playerService.joinGameRoom(gameRoom.getId(), playerId));
-        Long latePlayerId = playerRepository.save(Player.create("lastPlayer", "sessionId")).getId();
+                .mapToObj(l -> playerRepository.save(Player.create("foo" + l, "sessionId" + l)).getWebSocketSessionId())
+                .forEach(sessionId -> playerService.joinGameRoom(sessionId, gameRoom.getId()));
+        String latePlayerId = playerRepository.save(Player.create("lastPlayer", "sessionId")).getWebSocketSessionId();
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> playerService.joinGameRoom(gameRoom.getId(), latePlayerId))
+                .isThrownBy(() -> playerService.joinGameRoom(latePlayerId, gameRoom.getId()))
                 .withMessageMatching(GameExceptionCode.GAME_ROOM_IS_FULL.getMessage());
     }
 

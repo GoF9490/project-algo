@@ -15,7 +15,7 @@ public interface PlayerService {
     Player findByWebSocketSessionId(String webSocketSessionId);
 
     @Transactional
-    void joinGameRoom(Long gameRoomId, Long playerId);
+    void joinGameRoom(String sessionId, Long gameRoomId);
 
     @Transactional
     void exitGameRoom(String sessionId);
@@ -24,7 +24,7 @@ public interface PlayerService {
     void disconnectWebSession(String sessionId);
 
     @Transactional
-    void updatePlayerReady(Long playerId, boolean isReady);
+    void updatePlayerReady(String sessionId, boolean isReady);
 
     @Transactional
     void drawBlockAtStart(Long playerId, int whiteBlockCount, int blackBlockCount);
@@ -40,4 +40,7 @@ public interface PlayerService {
 
     @Transactional
     void repeatGuess(Long playerId);
+
+    @Transactional(readOnly = true)
+    void validSessionIdInGameRoom(String sessionId, Long gameRoomId);
 }

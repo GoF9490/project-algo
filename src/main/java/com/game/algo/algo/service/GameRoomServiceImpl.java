@@ -2,6 +2,7 @@ package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.GameProperty;
+import com.game.algo.algo.data.GameStatusUpdateCommand;
 import com.game.algo.algo.dto.response.GameRoomSimple;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
@@ -11,6 +12,7 @@ import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.GameRoomRepository;
 import com.game.algo.algo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GameRoomServiceImpl implements GameRoomService {
 
+    private final ApplicationEventPublisher eventPublisher;
     private final GameRoomRepository gameRoomRepository;
     private final PlayerRepository playerRepository; // 임시방편
 
@@ -227,6 +230,13 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.getPlayerList().forEach(Player::gameReset);
 
         banDisconnectPlayer(findGameRoom);
+    }
+
+    public void sendGameStatusUpdateCommand(GameRoom gameRoom) {
+        List<String> sessionIdList = gameRoom.getPlayerList().stream()
+                .map(Player::getWebSocketSessionId)
+                .toList();
+        eventPublisher.publishEvent(GameStatusUpdateCommand.create(sessionIdList));
     }
 
     private void validGameStart(GameRoom findGameRoom) {
