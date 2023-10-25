@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface GameRoomJpaRepository extends JpaRepository<GameRoom, Long>, GameRoomJpaRepositoryCustom {
+public interface GameRoomJpaRepository extends JpaRepository<GameRoom, Long> {
 
     @Override
     @EntityGraph(attributePaths = {"playerList"})

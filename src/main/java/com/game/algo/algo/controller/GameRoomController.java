@@ -3,6 +3,9 @@ package com.game.algo.algo.controller;
 import com.game.algo.algo.data.GameProperty;
 import com.game.algo.algo.dto.request.GameRoomCreate;
 import com.game.algo.algo.dto.response.GameRoomFind;
+import com.game.algo.algo.dto.response.GameRoomSimple;
+import com.game.algo.algo.service.GameRoomService;
+import com.game.algo.algo.service.PlayerService;
 import com.game.algo.global.dto.ResponseData;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameService;
@@ -11,18 +14,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/game")
-public class GameController {
+public class GameRoomController {
 
-    private final GameService gameService;
+    private final PlayerService playerService;
+    private final GameRoomService gameRoomService;
 
     @PostMapping("/")
     public ResponseEntity createGameRoom(@RequestBody GameRoomCreate gameRoomCreate){
 
-        Player findPlayer = gameService.findPlayerById(gameRoomCreate.getPlayerId());
-        Long gameRoomId = gameService.createGameRoom("asdf");
+        Long gameRoomId = gameRoomService.create(gameRoomCreate.getTitle());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponseData.create(200, gameRoomId));
@@ -32,7 +37,7 @@ public class GameController {
     public ResponseEntity joinGameRoom(@PathVariable Long gameRoomId,
                                    @RequestBody Long playerId) {
 
-        gameService.joinGameRoom(gameRoomId, playerId);
+        playerService.joinGameRoom(gameRoomId, playerId);
 
         return ResponseEntity.status(HttpStatus.OK)
                 .build();
@@ -41,7 +46,8 @@ public class GameController {
     @GetMapping("/")
     public ResponseEntity findGameRooms(@RequestParam int page,
                                         @RequestParam boolean start) {
-        GameRoomFind gameRoomFind = gameService.findGameRoomsNotGameStart(page, GameProperty.FIND_GAME_ROOM_SIZE);
-        return null;
+        List<GameRoomSimple> simpleListByStart = gameRoomService.findSimpleListByStart(page, start);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(simpleListByStart);
     }
 }

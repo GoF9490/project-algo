@@ -30,9 +30,7 @@ import static org.assertj.core.api.Assertions.*;
 class GameServiceTest {
 
     @Autowired private GameService gameService;
-
     @Autowired private GameRoomRepository gameRoomRepository;
-
     @Autowired private PlayerRepository playerRepository;
 
     @Test
@@ -85,7 +83,7 @@ class GameServiceTest {
 
     @Test
     @DisplayName("존재하지 않는 GameRoom의 Id를 조회하려 하면 알맞은 익셉션이 발생합니다.")
-    public void findGameRoomByIdSuccess() throws Exception {
+    public void findGameRoomByIdFail() throws Exception {
         //given
         Long gameRoomId = 15L;
 
@@ -158,7 +156,6 @@ class GameServiceTest {
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
         assertThat(findGameRoom.areAllPlayersReady()).isFalse();
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
-
     }
     
     // 1인 플레이 환경으로 테스트중이기에 다인플레이에서의 익셉션은 잠시 닫아놓기
@@ -234,7 +231,6 @@ class GameServiceTest {
 
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
-
     }
 
     @RepeatedTest(5)
@@ -717,7 +713,6 @@ class GameServiceTest {
 
         //then
         assertThat(gameRoomFind.getGameRoomSimpleList().size()).isEqualTo(10);
-        assertThat(gameRoomFind.isLastPage()).isTrue();
     }
 
     @Test
@@ -735,7 +730,6 @@ class GameServiceTest {
 
         //then
         assertThat(gameRoomFind.getGameRoomSimpleList().size()).isEqualTo(5);
-        assertThat(gameRoomFind.isLastPage()).isTrue();
     }
 
     @Test

@@ -19,23 +19,28 @@ public class PlayerServiceImpl implements PlayerService {
     private final GameRoomServiceImpl gameRoomService;
     private final PlayerRepository playerRepository;
 
+    @Override
+    @Transactional
     public Long create(String name, String webSocketSessionId) {
         Player player = Player.create(name, webSocketSessionId);
         return playerRepository.save(player).getId();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Player findById(Long id) {
         return playerRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Player findByWebSocketSessionId(String webSocketSessionId) {
         return playerRepository.findByWebSocketSessionId(webSocketSessionId)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
+    @Override
     @Transactional
     public void joinGameRoom(Long gameRoomId, Long playerId) {
         Player findPlayer = findById(playerId);
@@ -43,6 +48,7 @@ public class PlayerServiceImpl implements PlayerService {
         findGameRoom.joinPlayer(findPlayer);
     }
 
+    @Override
     @Transactional
     public void exitGameRoom(String sessionId) {
         Player findPlayer = findByWebSocketSessionId(sessionId);
@@ -53,6 +59,7 @@ public class PlayerServiceImpl implements PlayerService {
         deleteEmptyGameRoom(gameRoom);
     }
 
+    @Override
     @Transactional
     public void disconnectWebSession(String sessionId) {
         Player findPlayer = findByWebSocketSessionId(sessionId);
@@ -75,6 +82,7 @@ public class PlayerServiceImpl implements PlayerService {
         deleteEmptyGameRoom(gameRoom);
     }
 
+    @Override
     @Transactional
     public void updatePlayerReady(Long playerId, boolean isReady) {
         Player findPlayer = findById(playerId);
@@ -86,6 +94,7 @@ public class PlayerServiceImpl implements PlayerService {
         findPlayer.updateReady(isReady);
     }
 
+    @Override
     @Transactional
     public void drawBlockAtStart(Long playerId, int whiteBlockCount, int blackBlockCount) {
         Player findPlayer = findById(playerId);
@@ -104,8 +113,9 @@ public class PlayerServiceImpl implements PlayerService {
         findPlayer.updateReady(true);
     }
 
+    @Override
     @Transactional
-    public void drawBlockAtDrawPhase(Long gameRoomId, Long playerId, BlockColor blockColor) {
+    public void drawBlockAtDrawPhase(Long playerId, BlockColor blockColor) {
         Player findPlayer = findById(playerId);
         GameRoom gameRoom = findPlayer.getGameRoom();
 
@@ -114,8 +124,9 @@ public class PlayerServiceImpl implements PlayerService {
         findPlayer.updateReady(true);
     }
 
+    @Override
     @Transactional
-    public void updatePlayerJoker(Long playerId,int newJokerIndex, BlockColor blockColor) {
+    public void updatePlayerJoker(Long playerId, int newJokerIndex, BlockColor blockColor) {
         Player findPlayer = findById(playerId);
 
         if (findPlayer.getGameRoom().getPhase() != GameRoom.Phase.SORT) {
@@ -129,6 +140,7 @@ public class PlayerServiceImpl implements PlayerService {
         findPlayer.updateReady(true);
     }
 
+    @Override
     @Transactional
     public boolean guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num) {
         Player targetPlayer = findById(targetPlayerId);
@@ -142,6 +154,7 @@ public class PlayerServiceImpl implements PlayerService {
         }
     }
 
+    @Override
     @Transactional
     public void repeatGuess(Long playerId) {
         Player findPlayer = findById(playerId);

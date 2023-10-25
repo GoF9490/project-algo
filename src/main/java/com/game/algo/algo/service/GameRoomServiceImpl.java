@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -26,28 +25,33 @@ public class GameRoomServiceImpl implements GameRoomService {
     private final GameRoomRepository gameRoomRepository;
     private final PlayerRepository playerRepository; // 임시방편
 
+    @Override
     @Transactional
     public Long create(String title) {
         GameRoom gameRoom = GameRoom.create(title);
         return gameRoomRepository.save(gameRoom).getId();
     }
 
+    @Override
     @Transactional(readOnly = true)
     public GameRoom findById(Long id) {
         return gameRoomRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_ROOM_NOT_FOUND));
     }
 
+    @Override
     @Transactional(readOnly = true)
-    public List<GameRoomSimple> findSimpleListByStart(int page, boolean start){
-        return gameRoomRepository.findGameRoomSimples(page, GameProperty.FIND_GAME_ROOM_SIZE, start);
+    public List<GameRoomSimple> findSimpleListByStart(int page, boolean gameStart){
+        return gameRoomRepository.getGameRoomSimpleListByGameStart(page, GameProperty.FIND_GAME_ROOM_SIZE, gameStart);
     }
 
+    @Override
     @Transactional
     public void deleteById(Long id) {
         gameRoomRepository.deleteById(id);
     }
 
+    @Override
     @Transactional
     public void gameStart(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -59,6 +63,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
     }
 
+    @Override
     @Transactional
     public void endSettingPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -70,6 +75,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.updatePhase(GameRoom.Phase.START);
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void autoProgressAtStartPhase(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -83,7 +89,6 @@ public class GameRoomServiceImpl implements GameRoomService {
         findPlayer.updateReady(true);
 
         int count = GameProperty.numberOfBlockAtStart(findGameRoom.getPlayerList().size());
-
         double randomValue = Math.random();
 
         int whiteBlockCount = (int) (randomValue * (count + 1));
@@ -93,11 +98,13 @@ public class GameRoomServiceImpl implements GameRoomService {
         serveRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
     }
 
+    @Override
     @Transactional
     public void serveRandomBlocks(GameRoom gameRoom, Player player, BlockColor blockColor, int count) {
         while (count-- > 0) player.addBlock(gameRoom.drawRandomBlock(blockColor));
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -115,8 +122,9 @@ public class GameRoomServiceImpl implements GameRoomService {
         }
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void autoDrawAtDrawPhase(Long gameRoomId) {
+    public void autoProgressAtDrawPhase(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
         Player findPlayer = findGameRoom.getProgressPlayer();
 
@@ -133,6 +141,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findPlayer.updateReady(true);
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -144,6 +153,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.allPlayerReadyOff();
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -155,6 +165,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.allPlayerReadyOff();
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -176,6 +187,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         progressPlayer.updateReady(false);
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -190,6 +202,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         }
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -201,6 +214,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.updatePhase(GameRoom.Phase.DRAW);
     }
 
+    @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
         GameRoom findGameRoom = findById(gameRoomId);
@@ -248,9 +262,7 @@ public class GameRoomServiceImpl implements GameRoomService {
                 .collect(Collectors.toList());
 
         disconnectPlayer.forEach(Player::exit);
-
         playerRepository.deleteAll(disconnectPlayer); // gameRoom에서 exit 시킨다음 batch 돌려서 삭제하는 편이 나을듯
-
         deleteEmptyGameRoom(gameRoom);
     }
 
