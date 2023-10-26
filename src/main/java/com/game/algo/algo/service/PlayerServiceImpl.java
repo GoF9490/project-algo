@@ -9,6 +9,7 @@ import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
 import com.game.algo.algo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ public class PlayerServiceImpl implements PlayerService {
 
     private final GameRoomServiceImpl gameRoomService;
     private final PlayerRepository playerRepository;
+//    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -48,6 +50,7 @@ public class PlayerServiceImpl implements PlayerService {
         Player findPlayer = findByWebSocketSessionId(sessionId);
         GameRoom findGameRoom = gameRoomService.findById(gameRoomId);
         findGameRoom.joinPlayer(findPlayer);
+        gameRoomService.sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -57,8 +60,9 @@ public class PlayerServiceImpl implements PlayerService {
         GameRoom gameRoom = findPlayer.getGameRoom();
 
         findPlayer.exit();
-
         deleteEmptyGameRoom(gameRoom);
+
+        gameRoomService.sendGameStatusUpdateCommand(gameRoom);
     }
 
     @Override
@@ -94,6 +98,8 @@ public class PlayerServiceImpl implements PlayerService {
         }
 
         findPlayer.updateReady(isReady);
+
+        gameRoomService.sendGameStatusUpdateCommand(findPlayer.getGameRoom());
     }
 
     @Override

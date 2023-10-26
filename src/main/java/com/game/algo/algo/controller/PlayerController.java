@@ -55,8 +55,6 @@ public class PlayerController {
 
         playerService.exitGameRoom(sessionId);
         return ResponseEntity.ok().build();
-
-//        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
     }
 
     @PostMapping("/ready")
@@ -65,8 +63,6 @@ public class PlayerController {
 
         playerService.updatePlayerReady(sessionId, ready);
         return ResponseEntity.ok().build();
-
-//        sendGameStatusData(findGameRoom);
     }
 
     // GameLogic를 따로 만드는 편이 좋을까

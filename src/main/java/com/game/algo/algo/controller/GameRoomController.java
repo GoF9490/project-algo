@@ -33,7 +33,6 @@ public class GameRoomController {
 
     private final PlayerService playerService;
     private final GameRoomService gameRoomService;
-    private final WebSocketService webSocketService;
 
     @PostMapping("/")
     public ResponseEntity createGameRoom(@RequestBody GameRoomCreate gameRoomCreate){
@@ -59,8 +58,6 @@ public class GameRoomController {
         playerService.validSessionIdInGameRoom(sessionId, gameRoomId);
         gameRoomService.gameStart(gameRoomId);
         return ResponseEntity.status(HttpStatus.OK).build();
-//        sendGameStatusData(findGameRoom);
-//        sendWaitForSec(findGameRoom);
     }
 
     @PostMapping("/{id}/over/setting")
@@ -70,38 +67,26 @@ public class GameRoomController {
         gameRoomService.endSettingPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/start")
     public ResponseEntity overStartPhase(@RequestHeader("session-id") String sessionId,
                                          @PathVariable("id") Long gameRoomId) {
 
-        gameRoomService.autoProgressAtStartPhase(gameRoomId);
         gameRoomService.endStartPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendOwnerBlockData(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/draw")
     public ResponseEntity overDrawPhase(@RequestHeader("session-id") String sessionId,
                               @PathVariable("id") Long gameRoomId) {
 
-        gameRoomService.autoProgressAtDrawPhase(gameRoomId);
         gameRoomService.endDrawPhase(gameRoomId, sessionId);
+        DrawBlockData drawBlockData = DrawBlockData.from(playerService.findByWebSocketSessionId(sessionId));
 
-        return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendOwnerBlockData(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
-//        sendDrawBlockData(readOnlyGameRoom);
+        return ResponseEntity.ok()
+                .body(ResponseData.create(200, drawBlockData));
     }
 
     @PostMapping("/{id}/over/sort")
@@ -111,10 +96,6 @@ public class GameRoomController {
         gameRoomService.endSortPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendOwnerBlockData(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/guess")
@@ -124,9 +105,6 @@ public class GameRoomController {
         gameRoomService.endGuessPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/repeat")
@@ -136,9 +114,6 @@ public class GameRoomController {
         gameRoomService.endRepeatPhase(gameRoomId, sessionId, false);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/end")
@@ -148,9 +123,6 @@ public class GameRoomController {
         gameRoomService.endEndPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendWaitForSec(readOnlyGameRoom);
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     @PostMapping("/{id}/over/over")
@@ -160,8 +132,6 @@ public class GameRoomController {
         gameRoomService.endGameOverPhase(gameRoomId, sessionId);
 
         return ResponseEntity.ok().build();
-
-//        sendGameStatusData(readOnlyGameRoom);
     }
 
     // getData

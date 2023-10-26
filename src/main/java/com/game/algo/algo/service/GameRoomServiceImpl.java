@@ -64,6 +64,8 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.gameReset();
         findGameRoom.randomSetPlayerOrder();
         findGameRoom.updatePhase(GameRoom.Phase.SETTING);
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -76,6 +78,8 @@ public class GameRoomServiceImpl implements GameRoomService {
 
         findGameRoom.allPlayerReadyOff();
         findGameRoom.updatePhase(GameRoom.Phase.START);
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -89,8 +93,6 @@ public class GameRoomServiceImpl implements GameRoomService {
             return;
         }
 
-        findPlayer.updateReady(true);
-
         int count = GameProperty.numberOfBlockAtStart(findGameRoom.getPlayerList().size());
         double randomValue = Math.random();
 
@@ -99,6 +101,8 @@ public class GameRoomServiceImpl implements GameRoomService {
 
         serveRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
         serveRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
+
+        findPlayer.updateReady(true);
     }
 
     @Override
@@ -121,8 +125,13 @@ public class GameRoomServiceImpl implements GameRoomService {
             findGameRoom.addJoker();
             findGameRoom.progressZero();
         } else {
+            if (!findGameRoom.getProgressPlayer().isReady()) {
+                autoProgressAtStartPhase(gameRoomId);
+            }
             findGameRoom.nextPlayer();
         }
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -152,8 +161,14 @@ public class GameRoomServiceImpl implements GameRoomService {
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.DRAW);
         validProgressPlayer(findGameRoom, sessionId);
 
+        if (!findGameRoom.getProgressPlayer().isReady()) {
+            autoProgressAtDrawPhase(gameRoomId);
+        }
+
         findGameRoom.updatePhase(GameRoom.Phase.SORT);
         findGameRoom.allPlayerReadyOff();
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -166,6 +181,8 @@ public class GameRoomServiceImpl implements GameRoomService {
 
         findGameRoom.updatePhase(GameRoom.Phase.GUESS);
         findGameRoom.allPlayerReadyOff();
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -184,10 +201,10 @@ public class GameRoomServiceImpl implements GameRoomService {
             findGameRoom.getProgressPlayer().openDrawCard();
             findGameRoom.updatePhase(GameRoom.Phase.END);
         }
-
         checkGameOver(findGameRoom);
-
         progressPlayer.updateReady(false);
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -203,6 +220,8 @@ public class GameRoomServiceImpl implements GameRoomService {
         } else {
             findGameRoom.updatePhase(GameRoom.Phase.END);
         }
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -215,6 +234,8 @@ public class GameRoomServiceImpl implements GameRoomService {
 
         findGameRoom.nextPlayer();
         findGameRoom.updatePhase(GameRoom.Phase.DRAW);
+
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     @Override
@@ -230,6 +251,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         findGameRoom.getPlayerList().forEach(Player::gameReset);
 
         banDisconnectPlayer(findGameRoom);
+        sendGameStatusUpdateCommand(findGameRoom);
     }
 
     public void sendGameStatusUpdateCommand(GameRoom gameRoom) {
