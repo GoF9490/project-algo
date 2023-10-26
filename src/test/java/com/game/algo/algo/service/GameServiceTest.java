@@ -227,7 +227,7 @@ class GameServiceTest {
         //expect
         assertThatExceptionOfType(GameLogicException.class)
                 .isThrownBy(() -> gameService.endSettingPhase(gameRoom.getId(), 10))
-                .withMessageMatching(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE.getMessage());
+                .withMessageMatching(GameExceptionCode.INVALID_PLAYER.getMessage());
 
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);

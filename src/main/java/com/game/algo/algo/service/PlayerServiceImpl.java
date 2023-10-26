@@ -90,7 +90,7 @@ public class PlayerServiceImpl implements PlayerService {
         Player findPlayer = findByWebSocketSessionId(SessionId);
 
         if (findPlayer.getGameRoom().getPhase() != GameRoom.Phase.WAIT) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
 
         findPlayer.updateReady(isReady);
@@ -98,8 +98,8 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void drawBlockAtStart(Long playerId, int whiteBlockCount, int blackBlockCount) {
-        Player findPlayer = findById(playerId);
+    public void drawBlockAtStart(String sessionId, int whiteBlockCount, int blackBlockCount) {
+        Player findPlayer = findByWebSocketSessionId(sessionId);
         GameRoom gameRoom = findPlayer.getGameRoom();
 
         int maxBlockCount = GameProperty.numberOfBlockAtStart(gameRoom.getPlayerList().size());
@@ -117,8 +117,8 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void drawBlockAtDrawPhase(Long playerId, BlockColor blockColor) {
-        Player findPlayer = findById(playerId);
+    public void drawBlockAtDrawPhase(String sessionId, BlockColor blockColor) {
+        Player findPlayer = findByWebSocketSessionId(sessionId);
         GameRoom gameRoom = findPlayer.getGameRoom();
 
         Block drawBlock = gameRoom.drawRandomBlock(blockColor);
@@ -128,11 +128,11 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void updatePlayerJoker(Long playerId, int newJokerIndex, BlockColor blockColor) {
-        Player findPlayer = findById(playerId);
+    public void updatePlayerJoker(String sessionId, int newJokerIndex, BlockColor blockColor) {
+        Player findPlayer = findByWebSocketSessionId(sessionId);
 
         if (findPlayer.getGameRoom().getPhase() != GameRoom.Phase.SORT) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
         if (findPlayer.isReady()) {
             throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
@@ -144,11 +144,11 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public boolean guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num) {
+    public boolean guessBlock(String sessionId, Long targetPlayerId, int index, int num) {
         Player targetPlayer = findById(targetPlayerId);
 
         if (targetPlayer.guessBlock(index, num)) {
-            Player guessPlayer = findById(guessPlayerId);
+            Player guessPlayer = findByWebSocketSessionId(sessionId);
             guessPlayer.updateReady(true);
             return true;
         } else {
@@ -160,7 +160,7 @@ public class PlayerServiceImpl implements PlayerService {
     @Transactional
     public void repeatGuess(Long playerId) {
         Player findPlayer = findById(playerId);
-        gameRoomService.endRepeatPhase(findPlayer.getGameRoom().getId(), findPlayer.getOrderNumber(), true);
+        gameRoomService.endRepeatPhase(findPlayer.getGameRoom().getId(), findPlayer.getWebSocketSessionId(), true);
     }
 
     @Override

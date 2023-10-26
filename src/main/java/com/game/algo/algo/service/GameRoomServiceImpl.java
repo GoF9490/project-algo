@@ -68,11 +68,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional
-    public void endSettingPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endSettingPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         findGameRoom.allPlayerReadyOff();
         findGameRoom.updatePhase(GameRoom.Phase.START);
@@ -109,11 +109,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endStartPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endStartPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.START);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         if (findGameRoom.areAllPlayersReady()) {
             findGameRoom.allPlayerReadyOff();
@@ -146,11 +146,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endDrawPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endDrawPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.DRAW);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         findGameRoom.updatePhase(GameRoom.Phase.SORT);
         findGameRoom.allPlayerReadyOff();
@@ -158,11 +158,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endSortPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endSortPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.SORT);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         findGameRoom.updatePhase(GameRoom.Phase.GUESS);
         findGameRoom.allPlayerReadyOff();
@@ -170,11 +170,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endGuessPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endGuessPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.GUESS);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         Player progressPlayer = findGameRoom.getProgressPlayer();
 
@@ -192,11 +192,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess) {
+    public void endRepeatPhase(Long gameRoomId, String sessionId, boolean repeatGuess) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.REPEAT);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         if (repeatGuess) {
             findGameRoom.updatePhase(GameRoom.Phase.GUESS);
@@ -207,11 +207,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endEndPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endEndPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.END);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         findGameRoom.nextPlayer();
         findGameRoom.updatePhase(GameRoom.Phase.DRAW);
@@ -219,11 +219,11 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public void endGameOverPhase(Long gameRoomId, int progressPlayerNum) {
+    public void endGameOverPhase(Long gameRoomId, String sessionId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.GAMEOVER);
-        checkPlayerOrderSync(findGameRoom, progressPlayerNum);
+        validProgressPlayer(findGameRoom, sessionId);
 
         findGameRoom.updatePhase(GameRoom.Phase.WAIT);
         findGameRoom.gameReset();
@@ -248,15 +248,15 @@ public class GameRoomServiceImpl implements GameRoomService {
         }
     }
 
-    private void checkPlayerOrderSync(GameRoom gameRoom, int playerOrderNum) {
-        if (gameRoom.getProgressPlayerNumber() != playerOrderNum) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+    private void validProgressPlayer(GameRoom gameRoom, String sessionId) {
+        if (!gameRoom.getProgressPlayer().getWebSocketSessionId().equals(sessionId)) {
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 
     private void checkGamePhaseSync(GameRoom gameRoom, GameRoom.Phase phase) {
         if (gameRoom.getPhase() != phase) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 

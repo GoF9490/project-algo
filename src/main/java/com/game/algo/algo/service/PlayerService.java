@@ -27,16 +27,16 @@ public interface PlayerService {
     void updatePlayerReady(String sessionId, boolean isReady);
 
     @Transactional
-    void drawBlockAtStart(Long playerId, int whiteBlockCount, int blackBlockCount);
+    void drawBlockAtStart(String sessionId, int whiteBlockCount, int blackBlockCount);
 
     @Transactional
-    void drawBlockAtDrawPhase(Long playerId, BlockColor blockColor);
+    void drawBlockAtDrawPhase(String sessionId, BlockColor blockColor);
 
     @Transactional
-    void updatePlayerJoker(Long playerId, int newJokerIndex, BlockColor blockColor);
+    void updatePlayerJoker(String sessionId, int newJokerIndex, BlockColor blockColor);
 
     @Transactional
-    boolean guessBlock(Long guessPlayerId, Long targetPlayerId, int index, int num);
+    boolean guessBlock(String sessionId, Long targetPlayerId, int index, int num);
 
     @Transactional
     void repeatGuess(Long playerId);

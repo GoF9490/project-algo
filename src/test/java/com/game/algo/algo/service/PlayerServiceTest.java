@@ -188,7 +188,7 @@ class PlayerServiceTest {
         player.joinGameRoom(gameRoom);
 
         //when
-        playerService.drawBlockAtStart(player.getId(), whiteBlockCount, blackBlockCount);
+        playerService.drawBlockAtStart(player.getWebSocketSessionId(), whiteBlockCount, blackBlockCount);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();
@@ -222,7 +222,7 @@ class PlayerServiceTest {
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> playerService.drawBlockAtStart(player.getId(), whiteBlockCount, blackBlockCount))
+                .isThrownBy(() -> playerService.drawBlockAtStart(player.getWebSocketSessionId(), whiteBlockCount, blackBlockCount))
                 .withMessageMatching(GameExceptionCode.INVALID_NUMBER_OF_BLOCKS.getMessage());
     }
 
@@ -239,7 +239,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.DRAW);
 
         //when
-        playerService.drawBlockAtDrawPhase(player.getId(), BlockColor.WHITE);
+        playerService.drawBlockAtDrawPhase(player.getWebSocketSessionId(), BlockColor.WHITE);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();
@@ -265,7 +265,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.SORT);
 
         //when
-        playerService.updatePlayerJoker(player.getId(), 0, BlockColor.WHITE);
+        playerService.updatePlayerJoker(player.getWebSocketSessionId(), 0, BlockColor.WHITE);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();

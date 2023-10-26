@@ -244,7 +244,7 @@ public class GameServiceImpl implements GameService {
         Player findPlayer = findPlayerById(playerId);
 
         if (findPlayer.getGameRoom().getPhase() != Phase.SORT) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
         if (findPlayer.isReady()) {
             throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
@@ -359,13 +359,13 @@ public class GameServiceImpl implements GameService {
 
     private void checkGamePhaseSync(GameRoom gameRoom, Phase phase) {
         if (gameRoom.getPhase() != phase) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 
     private void checkPlayerOrderSync(GameRoom gameRoom, int playerOrderNum) {
         if (gameRoom.getProgressPlayerNumber() != playerOrderNum) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 

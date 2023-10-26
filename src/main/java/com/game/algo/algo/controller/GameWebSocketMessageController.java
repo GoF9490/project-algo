@@ -26,6 +26,13 @@ public class GameWebSocketMessageController {
     private final GameService gameService;
     private final WebSocketService webSocketService;
 
+    // 특별취급
+    public void disconnectWebSession(String sessionId){
+        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
+        gameService.disconnectWebSession(sessionId);
+
+        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
+    }
 
     public void createPlayer(@NonNull PlayerCreate playerCreate) {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
@@ -120,13 +127,6 @@ public class GameWebSocketMessageController {
         if (findGameRoom.getProgressPlayer().getOrderNumber() == findPlayer.getOrderNumber()) {
             endRepeatPhase(guessRepeat.getGameRoomId(), findPlayer.getOrderNumber(), guessRepeat.isRepeatGuess());
         }
-    }
-
-    public void disconnectWebSession(String sessionId){
-        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
-        gameService.disconnectWebSession(sessionId);
-
-        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
     }
 
     /** end 시리즈 */

@@ -26,7 +26,7 @@ public interface GameRoomService {
     void gameStart(Long gameRoomId);
 
     @Transactional
-    void endSettingPhase(Long gameRoomId, int progressPlayerNum);
+    void endSettingPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     void autoProgressAtStartPhase(Long gameRoomId);
@@ -35,26 +35,26 @@ public interface GameRoomService {
     void serveRandomBlocks(GameRoom gameRoom, Player player, BlockColor blockColor, int count);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endStartPhase(Long gameRoomId, int progressPlayerNum);
+    void endStartPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     void autoProgressAtDrawPhase(Long gameRoomId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endDrawPhase(Long gameRoomId, int progressPlayerNum);
+    void endDrawPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endSortPhase(Long gameRoomId, int progressPlayerNum);
+    void endSortPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endGuessPhase(Long gameRoomId, int progressPlayerNum);
+    void endGuessPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endRepeatPhase(Long gameRoomId, int progressPlayerNum, boolean repeatGuess);
+    void endRepeatPhase(Long gameRoomId, String sessionId, boolean repeatGuess);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endEndPhase(Long gameRoomId, int progressPlayerNum);
+    void endEndPhase(Long gameRoomId, String sessionId);
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    void endGameOverPhase(Long gameRoomId, int progressPlayerNum);
+    void endGameOverPhase(Long gameRoomId, String sessionId);
 }

@@ -1,7 +1,6 @@
 package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
-import com.game.algo.algo.dto.response.GameRoomFind;
 import com.game.algo.algo.dto.response.GameRoomSimple;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
@@ -19,7 +18,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -157,7 +155,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.SETTING);
 
         //when
-        gameRoomService.endSettingPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endSettingPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -178,8 +176,8 @@ class GameRoomServiceTest {
 
         //expect
         assertThatExceptionOfType(GameLogicException.class)
-                .isThrownBy(() -> gameRoomService.endSettingPhase(gameRoom.getId(), 10))
-                .withMessageMatching(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE.getMessage());
+                .isThrownBy(() -> gameRoomService.endSettingPhase(gameRoom.getId(), "asdf"))
+                .withMessageMatching(GameExceptionCode.INVALID_PLAYER.getMessage());
 
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
         assertThat(findGameRoom.getPhase()).isEqualTo(GameRoom.Phase.SETTING);
@@ -242,7 +240,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.START);
 
         //when
-        gameRoomService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -265,7 +263,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.START);
 
         //when
-        gameRoomService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endStartPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -308,7 +306,7 @@ class GameRoomServiceTest {
         player.updateReady(true);
 
         //when
-        gameRoomService.endDrawPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endDrawPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -340,7 +338,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        gameRoomService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+        gameRoomService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -369,7 +367,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        gameRoomService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+        gameRoomService.endGuessPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -396,7 +394,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        gameRoomService.endGuessPhase(gameRoom.getId(),gameRoom.getProgressPlayerNumber());
+        gameRoomService.endGuessPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -419,7 +417,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         //when
-        gameRoomService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), true);
+        gameRoomService.endRepeatPhase(gameRoom.getId(), player.getWebSocketSessionId(), true);
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -444,7 +442,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.REPEAT);
 
         //when
-        gameRoomService.endRepeatPhase(gameRoom.getId(), player.getOrderNumber(), false);
+        gameRoomService.endRepeatPhase(gameRoom.getId(), player.getWebSocketSessionId(), false);
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -470,7 +468,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.END);
 
         //when
-        gameRoomService.endEndPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endEndPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -497,7 +495,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
 
         //when
-        gameRoomService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();
@@ -530,7 +528,7 @@ class GameRoomServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
 
         //when
-        gameRoomService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayerNumber());
+        gameRoomService.endGameOverPhase(gameRoom.getId(), gameRoom.getProgressPlayer().getWebSocketSessionId());
 
         //then
         GameRoom findGameRoom = gameRoomRepository.findById(gameRoom.getId()).get();

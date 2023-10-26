@@ -63,6 +63,107 @@ public class GameRoomController {
 //        sendWaitForSec(findGameRoom);
     }
 
+    @PostMapping("/{id}/over/setting")
+    public ResponseEntity overSettingPhase(@RequestHeader("session-id") String sessionId,
+                                           @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endSettingPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/start")
+    public ResponseEntity overStartPhase(@RequestHeader("session-id") String sessionId,
+                                         @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.autoProgressAtStartPhase(gameRoomId);
+        gameRoomService.endStartPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendOwnerBlockData(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/draw")
+    public ResponseEntity overDrawPhase(@RequestHeader("session-id") String sessionId,
+                              @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.autoProgressAtDrawPhase(gameRoomId);
+        gameRoomService.endDrawPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendOwnerBlockData(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+//        sendDrawBlockData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/sort")
+    public ResponseEntity overSortPhase(@RequestHeader("session-id") String sessionId,
+                                        @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endSortPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendOwnerBlockData(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/guess")
+    public ResponseEntity overGuessPhase(@RequestHeader("session-id") String sessionId,
+                                        @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endGuessPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/repeat")
+    public ResponseEntity overRepeatPhase(@RequestHeader("session-id") String sessionId,
+                                         @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endRepeatPhase(gameRoomId, sessionId, false);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/end")
+    public ResponseEntity overEndPhase(@RequestHeader("session-id") String sessionId,
+                             @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endEndPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendWaitForSec(readOnlyGameRoom);
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
+    @PostMapping("/{id}/over/over")
+    public ResponseEntity overGameOverPhase(@RequestHeader("session-id") String sessionId,
+                                            @PathVariable("id") Long gameRoomId) {
+
+        gameRoomService.endGameOverPhase(gameRoomId, sessionId);
+
+        return ResponseEntity.ok().build();
+
+//        sendGameStatusData(readOnlyGameRoom);
+    }
+
     // getData
 
     @GetMapping("/data")

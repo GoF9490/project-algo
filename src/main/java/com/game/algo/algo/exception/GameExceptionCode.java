@@ -12,7 +12,7 @@ public enum GameExceptionCode {
     PLAYER_NOT_JOIN_ROOM(400, "player not join room"),
     LACK_OF_PLAYER(400, "lack of player"),
     INVALID_NUMBER_OF_BLOCKS(400, "invalid number of blocks"),
-    OUT_OF_SYNC_GAME_PHASE(400, "out of sync game phase"),
+    INVALID_PLAYER(400, "invalid player"),
     OUT_OF_SYNC_PLAYER_ORDER(400, "out of sync player order"),
     BLOCK_IS_DEPLETED(400, "block is depleted"),
     JOKER_NOT_MATCH(400, "joker not match"),
