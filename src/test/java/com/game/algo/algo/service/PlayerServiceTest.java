@@ -280,8 +280,8 @@ class PlayerServiceTest {
     public void guessBlockSuccess() throws Exception {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create("GameRoom"));
-        Player player = playerRepository.save(Player.create("foo", "sessionId"));
-        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+        Player player = playerRepository.save(Player.create("foo", "sessionId1"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId2"));
 
         gameRoom.gameReset();
 
@@ -293,7 +293,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        playerService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
+        playerService.guessBlock(player.getWebSocketSessionId(), targetPlayer.getId(), 0, 0);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();
@@ -308,8 +308,8 @@ class PlayerServiceTest {
     public void guessBlockFail() throws Exception {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create("GameRoom"));
-        Player player = playerRepository.save(Player.create("foo", "sessionId"));
-        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+        Player player = playerRepository.save(Player.create("foo", "sessionId1"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId2"));
 
         gameRoom.gameReset();
 
@@ -321,7 +321,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        playerService.guessBlock(player.getId(), targetPlayer.getId(), 0, 5);
+        playerService.guessBlock(player.getWebSocketSessionId(), targetPlayer.getId(), 0, 5);
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();
@@ -336,8 +336,8 @@ class PlayerServiceTest {
     public void RetireTargetPlayer() throws Exception {
         //given
         GameRoom gameRoom = gameRoomRepository.save(GameRoom.create("GameRoom"));
-        Player player = playerRepository.save(Player.create("foo", "sessionId"));
-        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId"));
+        Player player = playerRepository.save(Player.create("foo", "sessionId1"));
+        Player targetPlayer = playerRepository.save(Player.create("bar", "sessionId2"));
 
         gameRoom.gameReset();
 
@@ -349,7 +349,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.GUESS);
 
         //when
-        playerService.guessBlock(player.getId(), targetPlayer.getId(), 0, 0);
+        playerService.guessBlock(player.getWebSocketSessionId(), targetPlayer.getId(), 0, 0);
 
         //then
         Player findTargetPlayer = playerRepository.findById(targetPlayer.getId()).get();

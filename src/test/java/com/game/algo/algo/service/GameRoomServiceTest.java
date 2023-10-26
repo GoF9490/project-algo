@@ -258,8 +258,8 @@ class GameRoomServiceTest {
                 .mapToObj(i -> playerRepository.save(Player.create("foo" + i, "sessionId")))
                 .forEach(gameRoom::joinPlayer);
 
+        gameRoom.gameReset();
         gameRoom.randomSetPlayerOrder();
-
         gameRoom.updatePhase(GameRoom.Phase.START);
 
         //when
@@ -492,6 +492,7 @@ class GameRoomServiceTest {
         player.updateOrder(1);
         player.guessBlock(0, 0);
 
+        gameRoom.randomSetPlayerOrder();
         gameRoom.updatePhase(GameRoom.Phase.GAMEOVER);
 
         //when
