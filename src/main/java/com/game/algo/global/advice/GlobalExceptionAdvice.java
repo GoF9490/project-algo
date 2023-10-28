@@ -20,7 +20,7 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler
     public ResponseEntity handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(e.getMessage()));
+                .body(ErrorResponse.of(e.getBindingResult()));
     }
 
     @ExceptionHandler

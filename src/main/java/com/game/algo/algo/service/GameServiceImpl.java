@@ -117,6 +117,11 @@ public class GameServiceImpl implements GameService {
     }
 
     @Transactional
+    public void deletePlayer(Long playerId) {
+        playerRepository.deleteById(playerId);
+    }
+
+    @Transactional
     public void updatePlayerReady(Long playerId, boolean isReady) {
         Player findPlayer = findPlayerById(playerId);
 

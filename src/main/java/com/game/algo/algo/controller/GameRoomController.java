@@ -26,6 +26,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+@CrossOrigin(origins = {"http://localhost", "http://project-algo.s3-website.ap-northeast-2.amazonaws.com",
+        "http://codestates-prac-stackoverflow.s3-website.ap-northeast-2.amazonaws.com"},
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/algo/gameroom")
@@ -34,18 +38,22 @@ public class GameRoomController {
     private final PlayerService playerService;
     private final GameRoomService gameRoomService;
 
-    @PostMapping("/")
-    public ResponseEntity createGameRoom(@RequestBody GameRoomCreate gameRoomCreate){
+    @PostMapping("")
+    public ResponseEntity createAndJoinGameRoom(@RequestHeader("Session-Id") String sessionId,
+                                                @RequestBody GameRoomCreate gameRoomCreate){
 
+        playerService.findByWebSocketSessionId(sessionId); // 검증절차. 따로 구성하는게 좋을수도.
         Long gameRoomId = gameRoomService.create(gameRoomCreate.getTitle());
+        playerService.joinGameRoom(sessionId, gameRoomId);
+
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ResponseData.create(200, gameRoomId));
     }
 
-    @GetMapping("/")
-    public ResponseEntity findGameRooms(@RequestParam int page,
-                                        @RequestParam boolean start) {
+    @GetMapping("")
+    public ResponseEntity findGameRooms(@RequestParam("p") int page,
+                                        @RequestParam("start") boolean start) {
         List<GameRoomSimple> simpleList = gameRoomService.findSimpleListByStart(page, start);
         return ResponseEntity.ok()
                 .body(ResponseData.create(200, simpleList));
@@ -53,7 +61,7 @@ public class GameRoomController {
 
     @PostMapping("/{id}/start")
     public ResponseEntity gameStart(@RequestHeader("Session-Id") String sessionId,
-                          @PathVariable("id") Long gameRoomId) {
+                                    @PathVariable("id") Long gameRoomId) {
 
         playerService.validSessionIdInGameRoom(sessionId, gameRoomId);
         gameRoomService.gameStart(gameRoomId);

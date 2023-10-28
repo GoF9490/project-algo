@@ -10,8 +10,6 @@ import javax.validation.ConstraintViolation;
 import java.util.ArrayList;
 import java.util.Set;
 
-import static jdk.internal.org.jline.reader.impl.LineReaderImpl.CompletionType.List;
-
 @Getter
 @AllArgsConstructor
 public class ErrorResponse {
@@ -20,7 +18,7 @@ public class ErrorResponse {
     private String message;
 
     public static ErrorResponse of(BindingResult bindingResult) {
-        return new ErrorResponse(400, "br : " + bindingResult.toString());
+        return new ErrorResponse(400, bindingResult.getFieldError().getDefaultMessage());
     }
 
     public static ErrorResponse of(Set<ConstraintViolation<?>> violations) {

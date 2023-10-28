@@ -156,6 +156,7 @@ public class Player extends Auditable {
             gameRoom.removePlayer(this);
             gameRoom = null;
         }
+        gameReset();
     }
 
     public void disconnect() {

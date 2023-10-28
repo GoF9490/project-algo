@@ -20,9 +20,12 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.net.URI;
 
+@CrossOrigin(origins = {"http://localhost", "http://project-algo.s3-website.ap-northeast-2.amazonaws.com",
+        "http://codestates-prac-stackoverflow.s3-website.ap-northeast-2.amazonaws.com"},
+        allowedHeaders = "*",
+        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
 @RequestMapping("/api/algo/player")
 public class PlayerController {
 
@@ -68,8 +71,6 @@ public class PlayerController {
 
         playerService.joinGameRoom(sessionId, join.getGameRoomId());
         return ResponseEntity.ok().build();
-
-//        sendGameStatusData(findGameRoom);
     }
 
     @PostMapping("/exit")

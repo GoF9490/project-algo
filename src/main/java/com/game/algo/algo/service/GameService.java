@@ -31,6 +31,8 @@ public interface GameService {
 
     void disconnectWebSession(String sessionId);
 
+    void deletePlayer(Long playerId);
+
     void gameStart(Long gameRoomId);
 
     void endSettingPhase(Long gameRoomId, int progressPlayerNum);
