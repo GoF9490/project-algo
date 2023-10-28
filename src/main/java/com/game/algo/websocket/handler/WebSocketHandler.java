@@ -39,7 +39,7 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
 
         System.out.println("connect : " + sessionId);
         webSocketService.addClient(sessionId, session);
-        sendGameVersion(sessionId);
+        sendSessionId(sessionId);
     }
 
     @Override
@@ -84,6 +84,12 @@ public class WebSocketHandler extends BinaryWebSocketHandler {
                     PlayerCreate playerCreate = objectMapper.readValue(requestMessage, PlayerCreate.class);
 
                     gameMessageController.createPlayer(playerCreate);
+                    break;
+
+                case SetSessionId:
+                    Long playerId = Long.parseLong(requestMessage);
+
+                    gameMessageController.setSessionIdForPlayer(playerId, sessionId);
                     break;
 
                 case GameRoomCreate:

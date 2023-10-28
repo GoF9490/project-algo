@@ -42,6 +42,11 @@ public class GameServiceImpl implements GameService {
         return playerRepository.save(player).getId();
     }
 
+    @Transactional
+    public void setSessionIdForPlayer(Long playerId, String sessionId) {
+        findPlayerById(playerId).setWebSocketSessionId(sessionId);
+    }
+
     @Transactional(readOnly = true)
     public Player findPlayerById(Long id) {
         return playerRepository.findById(id)

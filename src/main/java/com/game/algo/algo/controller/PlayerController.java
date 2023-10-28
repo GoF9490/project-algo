@@ -15,33 +15,55 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 import java.net.URI;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PATCH})
 @RequestMapping("/api/algo/player")
 public class PlayerController {
 
     private final PlayerService playerService;
     private final GameRoomService gameRoomService;
 
-    @PostMapping("/")
-    public ResponseEntity create(@RequestHeader("session-id") String sessionId,
-                                 @RequestBody String name) {
+    @PostMapping("")
+    public ResponseEntity create(@RequestHeader("Session-Id") String sessionId,
+                                 @RequestBody @Valid PlayerCreate playerCreate) {
 
-        Long playerId = playerService.create(name, sessionId);
-        return ResponseEntity.created(URI.create(GlobalProperty.URI + "/simple")).build();
+        Long playerId = playerService.create(playerCreate.getName(), sessionId);
+
+        return ResponseEntity.created(URI.create(GlobalProperty.URI + "/simple"))
+                .body(ResponseData.create(200, playerId));
+    }
+
+    /**
+     * 보안이 취약함. 추후에 SessionId 와 WebSocketSessionId 를 분리해 사용해야 할듯.
+     * 방안 1
+     *   플레이어를 만들때 별도의 SessionId를 생성 후, WebSocket 커넥션 할때 SessionId - WebSocketSessionId 를 키 벨류로 묶기.
+     *
+     * 방안 2
+     *   플레이어를 만들때 일회용 패스워드를 생성, WebSocketSessionId 세팅 후 해당 메서드를 호출할 때,
+     *   쿼리파라미터로 패스워드를 같이 받아서 알맞은 플레이어의 SessionId를 불러오도록 함. 이후 패스워드 폐기.
+     */
+    @GetMapping("/{id}/session")
+    public ResponseEntity getWebSessionId(@PathVariable("id") long id) {
+
+        return ResponseEntity.ok()
+                .body(ResponseData.create(200, playerService.findById(id).getWebSocketSessionId()));
     }
 
     @GetMapping("/simple")
-    public ResponseEntity getSimple(@RequestHeader("session-id") String sessionId) {
+    public ResponseEntity getSimple(@RequestHeader("Session-Id") String sessionId) {
 
         PlayerSimple simple = PlayerSimple.from(playerService.findByWebSocketSessionId(sessionId));
         return ResponseEntity.ok().body(ResponseData.create(200, simple));
     }
 
     @PostMapping("/join")
-    public ResponseEntity joinGameRoom(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity joinGameRoom(@RequestHeader("Session-Id") String sessionId,
                                        @RequestBody GameRoomJoin join) {
 
         playerService.joinGameRoom(sessionId, join.getGameRoomId());
@@ -51,14 +73,14 @@ public class PlayerController {
     }
 
     @PostMapping("/exit")
-    public ResponseEntity exitGameRoom(@RequestHeader("session-id") String sessionId) {
+    public ResponseEntity exitGameRoom(@RequestHeader("Session-Id") String sessionId) {
 
         playerService.exitGameRoom(sessionId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/ready")
-    public ResponseEntity updatePlayerReady(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity updatePlayerReady(@RequestHeader("Session-Id") String sessionId,
                                             @RequestBody Boolean ready) {
 
         playerService.updatePlayerReady(sessionId, ready);
@@ -67,7 +89,7 @@ public class PlayerController {
 
     // GameLogic를 따로 만드는 편이 좋을까
     @PostMapping("/draw/start")
-    public ResponseEntity drawBlockAtStart(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity drawBlockAtStart(@RequestHeader("Session-Id") String sessionId,
                                            @RequestBody StartBlockDraw blockDraw) {
 
         playerService.drawBlockAtStart(sessionId, blockDraw.getWhiteBlockCount(), blockDraw.getBlackBlockCount());
@@ -79,7 +101,7 @@ public class PlayerController {
     }
 
     @PostMapping("/draw")
-    public ResponseEntity drawBlockAtDrawPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity drawBlockAtDrawPhase(@RequestHeader("Session-Id") String sessionId,
                                                @RequestBody BlockDraw blockDraw) {
 
         playerService.drawBlockAtDrawPhase(sessionId, blockDraw.getBlockColor());
@@ -91,7 +113,7 @@ public class PlayerController {
     }
 
     @PostMapping("/joker")
-    public ResponseEntity updateJoker(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity updateJoker(@RequestHeader("Session-Id") String sessionId,
                                       @RequestBody JokerUpdate jokerUpdate) {
 
         playerService.updatePlayerJoker(sessionId, jokerUpdate.getIndex(), jokerUpdate.getBlockColor());
@@ -99,7 +121,7 @@ public class PlayerController {
     }
 
     @PostMapping("/guess")
-    public ResponseEntity guessBlock(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity guessBlock(@RequestHeader("Session-Id") String sessionId,
                                      @RequestBody BlockGuess blockGuess) {
 
         playerService.guessBlock(sessionId, blockGuess.getTargetPlayerId(), blockGuess.getBlockIndex(), blockGuess.getBlockNum());
@@ -111,7 +133,7 @@ public class PlayerController {
     }
 
     @PostMapping("/repeat")
-    public ResponseEntity choiceRepeatGuess(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity choiceRepeatGuess(@RequestHeader("Session-Id") String sessionId,
                                             @RequestBody GuessRepeat guessRepeat) {
 
         gameRoomService.endRepeatPhase(guessRepeat.getGameRoomId(), sessionId, guessRepeat.isRepeatGuess());

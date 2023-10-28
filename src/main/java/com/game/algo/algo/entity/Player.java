@@ -33,6 +33,7 @@ public class Player extends Auditable {
     @Builder.Default
     private boolean retire = false;
 
+    @Setter
     private String webSocketSessionId; // 대안 필요(?)
 
     @ManyToOne

@@ -47,21 +47,21 @@ public class GameRoomController {
     public ResponseEntity findGameRooms(@RequestParam int page,
                                         @RequestParam boolean start) {
         List<GameRoomSimple> simpleList = gameRoomService.findSimpleListByStart(page, start);
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity.ok()
                 .body(ResponseData.create(200, simpleList));
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity gameStart(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity gameStart(@RequestHeader("Session-Id") String sessionId,
                           @PathVariable("id") Long gameRoomId) {
 
         playerService.validSessionIdInGameRoom(sessionId, gameRoomId);
         gameRoomService.gameStart(gameRoomId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/over/setting")
-    public ResponseEntity overSettingPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overSettingPhase(@RequestHeader("Session-Id") String sessionId,
                                            @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endSettingPhase(gameRoomId, sessionId);
@@ -70,7 +70,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/start")
-    public ResponseEntity overStartPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overStartPhase(@RequestHeader("Session-Id") String sessionId,
                                          @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endStartPhase(gameRoomId, sessionId);
@@ -79,7 +79,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/draw")
-    public ResponseEntity overDrawPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overDrawPhase(@RequestHeader("Session-Id") String sessionId,
                               @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endDrawPhase(gameRoomId, sessionId);
@@ -90,7 +90,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/sort")
-    public ResponseEntity overSortPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overSortPhase(@RequestHeader("Session-Id") String sessionId,
                                         @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endSortPhase(gameRoomId, sessionId);
@@ -99,7 +99,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/guess")
-    public ResponseEntity overGuessPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overGuessPhase(@RequestHeader("Session-Id") String sessionId,
                                         @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endGuessPhase(gameRoomId, sessionId);
@@ -108,7 +108,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/repeat")
-    public ResponseEntity overRepeatPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overRepeatPhase(@RequestHeader("Session-Id") String sessionId,
                                          @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endRepeatPhase(gameRoomId, sessionId, false);
@@ -117,7 +117,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/end")
-    public ResponseEntity overEndPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overEndPhase(@RequestHeader("Session-Id") String sessionId,
                              @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endEndPhase(gameRoomId, sessionId);
@@ -126,7 +126,7 @@ public class GameRoomController {
     }
 
     @PostMapping("/{id}/over/over")
-    public ResponseEntity overGameOverPhase(@RequestHeader("session-id") String sessionId,
+    public ResponseEntity overGameOverPhase(@RequestHeader("Session-Id") String sessionId,
                                             @PathVariable("id") Long gameRoomId) {
 
         gameRoomService.endGameOverPhase(gameRoomId, sessionId);
@@ -137,7 +137,7 @@ public class GameRoomController {
     // getData
 
     @GetMapping("/data")
-    public ResponseEntity getGameStatusData(@RequestHeader("session-id") String sessionId) {
+    public ResponseEntity getGameStatusData(@RequestHeader("Session-Id") String sessionId) {
         Player findPlayer = playerService.findByWebSocketSessionId(sessionId);
 
         return ResponseEntity.status(HttpStatus.OK)

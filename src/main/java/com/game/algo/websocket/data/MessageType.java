@@ -5,6 +5,7 @@ public enum MessageType {
     Version,
     SessionId,
     PlayerCreate,
+    SetSessionId,
     PlayerSimple,
     GameRoomCreate,
     CreateRoomSuccess,

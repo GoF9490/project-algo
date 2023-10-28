@@ -42,6 +42,12 @@ public class GameWebSocketMessageController {
                 MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
     }
 
+    public void setSessionIdForPlayer(Long playerId, String sessionId) {
+        gameService.setSessionIdForPlayer(playerId, sessionId);
+
+        sendMessage(sessionId, MessageDataResponse.create(MessageType.SessionId, sessionId));
+    }
+
     public void createGameRoom(@NonNull GameRoomCreate gameRoomCreate) {
         String sessionId = gameService.findPlayerById(gameRoomCreate.getPlayerId()).getWebSocketSessionId();
         Long gameRoomId = gameService.createGameRoom(gameRoomCreate.getTitle());
