@@ -4,7 +4,7 @@ import com.game.algo.algo.entity.GameRoom;
 import lombok.*;
 
 @Getter
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class GameRoomSimple {
 
@@ -19,6 +19,17 @@ public class GameRoomSimple {
                 .gameRoomId(gameRoom.getId())
                 .gameRoomTitle(gameRoom.getTitle())
                 .playerCount(gameRoom.getPlayerList().size())
+                .build();
+    }
+
+    public static GameRoomSimple create(Long gameRoomId,
+                                        String gameRoomTitle,
+                                        Integer playerCount) {
+
+        return GameRoomSimple.builder()
+                .gameRoomId(gameRoomId)
+                .gameRoomTitle(gameRoomTitle)
+                .playerCount(playerCount)
                 .build();
     }
 }

@@ -7,8 +7,8 @@ import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
-import com.game.algo.algo.repository.GameRoomJpaRepository;
-import com.game.algo.algo.repository.PlayerJpaRepository;
+import com.game.algo.algo.repository.GameRoomRepository;
+import com.game.algo.algo.repository.PlayerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,42 +34,47 @@ import static com.game.algo.algo.entity.GameRoom.*;
 @RequiredArgsConstructor
 public class GameServiceImpl implements GameService {
 
-    private final GameRoomJpaRepository gameRoomJPARepository;
-    private final PlayerJpaRepository playerJpaRepository;
+    private final GameRoomRepository gameRoomRepository;
+    private final PlayerRepository playerRepository;
 
     public Long createPlayer(String name, String webSocketSessionId) {
         Player player = Player.create(name, webSocketSessionId);
-        return playerJpaRepository.save(player).getId();
+        return playerRepository.save(player).getId();
+    }
+
+    @Transactional
+    public void setSessionIdForPlayer(Long playerId, String sessionId) {
+        findPlayerById(playerId).setWebSocketSessionId(sessionId);
     }
 
     @Transactional(readOnly = true)
     public Player findPlayerById(Long id) {
-        return playerJpaRepository.findById(id)
+        return playerRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     public Player findPlayerByWebSocketSessionId(String webSocketSessionId) {
-        return playerJpaRepository.findByWebSocketSessionId(webSocketSessionId)
+        return playerRepository.findByWebSocketSessionId(webSocketSessionId)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.PLAYER_NOT_FOUND));
     }
 
     @Transactional
     public Long createGameRoom(String title) {
         GameRoom gameRoom = create(title);
-        return gameRoomJPARepository.save(gameRoom).getId();
+        return gameRoomRepository.save(gameRoom).getId();
     }
 
     @Transactional(readOnly = true)
     public GameRoom findGameRoomById(Long id) {
-        return gameRoomJPARepository.findById(id)
+        return gameRoomRepository.findById(id)
                 .orElseThrow(() -> new GameLogicException(GameExceptionCode.GAME_ROOM_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
     public GameRoomFind findGameRoomsNotGameStart(int page, int size){
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<GameRoom> gameRoomPage = gameRoomJPARepository.findAllByGameStart(false, pageRequest);
+        Page<GameRoom> gameRoomPage = gameRoomRepository.findAllByGameStart(false, pageRequest);
         return GameRoomFind.from(gameRoomPage);
     }
 
@@ -95,7 +100,7 @@ public class GameServiceImpl implements GameService {
         Player findPlayer = findPlayerByWebSocketSessionId(sessionId);
 
         if (findPlayer.getGameRoom() == null) {
-            playerJpaRepository.delete(findPlayer);
+            playerRepository.delete(findPlayer);
         } else {
             GameRoom gameRoom = findPlayer.getGameRoom();
 
@@ -104,11 +109,16 @@ public class GameServiceImpl implements GameService {
                 gameRoom.updatePhase(Phase.GUESS);
             } else {
                 findPlayer.exit();
-                playerJpaRepository.delete(findPlayer);
+                playerRepository.delete(findPlayer);
             }
 
             deleteEmptyGameRoom(gameRoom);
         }
+    }
+
+    @Transactional
+    public void deletePlayer(Long playerId) {
+        playerRepository.deleteById(playerId);
     }
 
     @Transactional
@@ -244,7 +254,7 @@ public class GameServiceImpl implements GameService {
         Player findPlayer = findPlayerById(playerId);
 
         if (findPlayer.getGameRoom().getPhase() != Phase.SORT) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
         if (findPlayer.isReady()) {
             throw new GameLogicException(GameExceptionCode.ALREADY_EXECUTED);
@@ -359,13 +369,13 @@ public class GameServiceImpl implements GameService {
 
     private void checkGamePhaseSync(GameRoom gameRoom, Phase phase) {
         if (gameRoom.getPhase() != phase) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 
     private void checkPlayerOrderSync(GameRoom gameRoom, int playerOrderNum) {
         if (gameRoom.getProgressPlayerNumber() != playerOrderNum) {
-            throw new GameLogicException(GameExceptionCode.OUT_OF_SYNC_GAME_PHASE);
+            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
 
@@ -376,14 +386,14 @@ public class GameServiceImpl implements GameService {
 
         disconnectPlayer.forEach(Player::exit);
 
-        playerJpaRepository.deleteAll(disconnectPlayer);
+        playerRepository.deleteAll(disconnectPlayer);
 
         deleteEmptyGameRoom(gameRoom);
     }
 
     private void deleteEmptyGameRoom(GameRoom gameRoom) {
         if (gameRoom.getPlayerList().stream().allMatch(player -> player.getWebSocketSessionId().equals("disconnect"))) {
-            gameRoomJPARepository.delete(gameRoom);
+            gameRoomRepository.delete(gameRoom);
         }
     }
 

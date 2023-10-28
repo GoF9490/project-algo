@@ -4,10 +4,14 @@ import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.response.GameRoomFind;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface GameService {
 
     Long createPlayer(String name, String webSocketSessionId);
+
+    @Transactional
+    void setSessionIdForPlayer(Long playerId, String sessionId);
 
     Player findPlayerById(Long id);
 
@@ -26,6 +30,8 @@ public interface GameService {
     void exitGameRoom(String sessionId);
 
     void disconnectWebSession(String sessionId);
+
+    void deletePlayer(Long playerId);
 
     void gameStart(Long gameRoomId);
 

@@ -21,12 +21,12 @@ import static com.game.algo.algo.data.GameProperty.*;
 //@Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
+@Builder(access = AccessLevel.PROTECTED)
 public class Block {
 
     private BlockColor blockColor;
 
-    private Integer num = 0;
+    private Integer num;
 
     private boolean isOpen;
 

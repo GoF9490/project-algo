@@ -26,19 +26,34 @@ public class GameWebSocketMessageController {
     private final GameService gameService;
     private final WebSocketService webSocketService;
 
+    // 특별취급
+    public void disconnectWebSession(String sessionId){
+        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
+        gameService.disconnectWebSession(sessionId);
+
+        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
+    }
 
     public void createPlayer(@NonNull PlayerCreate playerCreate) {
         Long playerId = gameService.createPlayer(playerCreate.getName(), playerCreate.getSessionId());
         PlayerSimple playerSimple = PlayerSimple.from(gameService.findPlayerById(playerId));
 
-        sendMessage(playerCreate.getSessionId(), MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
+        sendMessage(playerCreate.getSessionId(),
+                MessageDataResponse.create(MessageType.PlayerSimple, playerSimple));
+    }
+
+    public void setSessionIdForPlayer(Long playerId, String sessionId) {
+        gameService.setSessionIdForPlayer(playerId, sessionId);
+
+        sendMessage(sessionId, MessageDataResponse.create(MessageType.SessionId, sessionId));
     }
 
     public void createGameRoom(@NonNull GameRoomCreate gameRoomCreate) {
         String sessionId = gameService.findPlayerById(gameRoomCreate.getPlayerId()).getWebSocketSessionId();
         Long gameRoomId = gameService.createGameRoom(gameRoomCreate.getTitle());
 
-        sendMessage(sessionId, MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
+        sendMessage(sessionId,
+                MessageDataResponse.create(MessageType.CreateRoomSuccess, gameRoomId));
     }
 
     public void joinGameRoom(@NonNull GameRoomJoin gameRoomJoin) {
@@ -118,13 +133,6 @@ public class GameWebSocketMessageController {
         if (findGameRoom.getProgressPlayer().getOrderNumber() == findPlayer.getOrderNumber()) {
             endRepeatPhase(guessRepeat.getGameRoomId(), findPlayer.getOrderNumber(), guessRepeat.isRepeatGuess());
         }
-    }
-
-    public void disconnectWebSession(String sessionId){
-        Long gameRoomId = gameService.findPlayerByWebSocketSessionId(sessionId).getGameRoom().getId();
-        gameService.disconnectWebSession(sessionId);
-
-        sendGameStatusData(gameService.findGameRoomById(gameRoomId));
     }
 
     /** end 시리즈 */

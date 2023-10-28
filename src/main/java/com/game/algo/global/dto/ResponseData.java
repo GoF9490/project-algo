@@ -1,15 +1,16 @@
 package com.game.algo.global.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ResponseData<T> {
 
     private Integer code;
 
     private T data;
+
+    public static <T> ResponseData<T> create(int code, T data) {
+        return new ResponseData<>(code, data);
+    }
 }

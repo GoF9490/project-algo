@@ -3,7 +3,9 @@ package com.game.algo.algo.entity;
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.exception.GameExceptionCode;
 import com.game.algo.algo.exception.GameLogicException;
+import com.game.algo.global.audit.Auditable;
 import com.game.algo.global.converter.BlockArrayConverter;
+import com.querydsl.core.annotations.QueryEntity;
 import lombok.*;
 
 import javax.persistence.*;
@@ -16,8 +18,8 @@ import java.util.stream.Collectors;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Builder
-public class Player {
+@Builder(access = AccessLevel.PROTECTED)
+public class Player extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +33,7 @@ public class Player {
     @Builder.Default
     private boolean retire = false;
 
+    @Setter
     private String webSocketSessionId; // 대안 필요(?)
 
     @ManyToOne
@@ -153,6 +156,7 @@ public class Player {
             gameRoom.removePlayer(this);
             gameRoom = null;
         }
+        gameReset();
     }
 
     public void disconnect() {
