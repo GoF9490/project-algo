@@ -2,6 +2,7 @@ package com.game.algo.algo.service;
 
 import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.data.GameProperty;
+import com.game.algo.algo.data.GameStatusUpdateCommand;
 import com.game.algo.algo.entity.Block;
 import com.game.algo.algo.entity.GameRoom;
 import com.game.algo.algo.entity.Player;
@@ -13,15 +14,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class PlayerServiceImpl implements PlayerService {
 
-    private final GameRoomServiceImpl gameRoomService;
+    private final ApplicationEventPublisher eventPublisher;
+    private final GameRoomService gameRoomService;
     private final PlayerRepository playerRepository;
-//    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -50,6 +52,7 @@ public class PlayerServiceImpl implements PlayerService {
         Player findPlayer = findByWebSocketSessionId(sessionId);
         GameRoom findGameRoom = gameRoomService.findById(gameRoomId);
         findGameRoom.joinPlayer(findPlayer);
+
         gameRoomService.sendGameStatusUpdateCommand(findGameRoom);
     }
 
@@ -90,14 +93,14 @@ public class PlayerServiceImpl implements PlayerService {
 
     @Override
     @Transactional
-    public void updatePlayerReady(String SessionId, boolean isReady) {
+    public void reversePlayerReady(String SessionId) {
         Player findPlayer = findByWebSocketSessionId(SessionId);
 
         if (findPlayer.getGameRoom().getPhase() != GameRoom.Phase.WAIT) {
             throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
 
-        findPlayer.updateReady(isReady);
+        findPlayer.updateReady(!findPlayer.isReady());
 
         gameRoomService.sendGameStatusUpdateCommand(findPlayer.getGameRoom());
     }

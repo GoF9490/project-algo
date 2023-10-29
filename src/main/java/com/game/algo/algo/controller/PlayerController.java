@@ -1,23 +1,20 @@
 package com.game.algo.algo.controller;
 
-import com.game.algo.algo.data.BlockColor;
 import com.game.algo.algo.dto.request.*;
+import com.game.algo.algo.dto.response.DrawBlockData;
+import com.game.algo.algo.dto.response.GameStatusData;
 import com.game.algo.algo.dto.response.PlayerSimple;
-import com.game.algo.algo.entity.GameRoom;
-import com.game.algo.algo.entity.Player;
 import com.game.algo.algo.service.GameRoomService;
 import com.game.algo.algo.service.PlayerService;
 import com.game.algo.global.dto.ResponseData;
-import com.game.algo.algo.service.GameService;
 import com.game.algo.global.property.GlobalProperty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.net.URI;
 
 @CrossOrigin(origins = {"http://localhost", "http://project-algo.s3-website.ap-northeast-2.amazonaws.com",
@@ -54,7 +51,7 @@ public class PlayerController {
     @GetMapping("/{id}/session")
     public ResponseEntity getWebSessionId(@PathVariable("id") long id) {
 
-        return ResponseEntity.ok()
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseData.create(200, playerService.findById(id).getWebSocketSessionId()));
     }
 
@@ -62,7 +59,8 @@ public class PlayerController {
     public ResponseEntity getSimple(@RequestHeader("Session-Id") String sessionId) {
 
         PlayerSimple simple = PlayerSimple.from(playerService.findByWebSocketSessionId(sessionId));
-        return ResponseEntity.ok().body(ResponseData.create(200, simple));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseData.create(200, simple));
     }
 
     @PostMapping("/join")
@@ -70,25 +68,30 @@ public class PlayerController {
                                        @RequestBody GameRoomJoin join) {
 
         playerService.joinGameRoom(sessionId, join.getGameRoomId());
-        return ResponseEntity.ok().build();
+        GameStatusData gameStatusData = GameStatusData.from(gameRoomService.findById(join.getGameRoomId()));
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseData.create(200, gameStatusData));
     }
 
     @PostMapping("/exit")
     public ResponseEntity exitGameRoom(@RequestHeader("Session-Id") String sessionId) {
 
         playerService.exitGameRoom(sessionId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/ready")
-    public ResponseEntity updatePlayerReady(@RequestHeader("Session-Id") String sessionId,
-                                            @RequestBody Boolean ready) {
+    public ResponseEntity updatePlayerReady(@RequestHeader("Session-Id") String sessionId) {
 
-        playerService.updatePlayerReady(sessionId, ready);
-        return ResponseEntity.ok().build();
+        playerService.reversePlayerReady(sessionId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .build();
     }
 
-    // GameLogic를 따로 만드는 편이 좋을까
+    /**
+     * drawBlock 로직 두개를 하나로 묶는 방안 검토하기.
+     */
     @PostMapping("/draw/start")
     public ResponseEntity drawBlockAtStart(@RequestHeader("Session-Id") String sessionId,
                                            @RequestBody StartBlockDraw blockDraw) {
@@ -96,7 +99,7 @@ public class PlayerController {
         playerService.drawBlockAtStart(sessionId, blockDraw.getWhiteBlockCount(), blockDraw.getBlackBlockCount());
         gameRoomService.endStartPhase(blockDraw.getGameRoomId(), sessionId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
 
         // endStartPhase(startBlockDraw.getGameRoomId(), playerOrderNum);
     }
@@ -107,8 +110,10 @@ public class PlayerController {
 
         playerService.drawBlockAtDrawPhase(sessionId, blockDraw.getBlockColor());
         gameRoomService.endDrawPhase(blockDraw.getGameRoomId(), sessionId);
+        DrawBlockData drawBlockData = DrawBlockData.from(playerService.findByWebSocketSessionId(sessionId));
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseData.create(200, drawBlockData));
 
         // endDrawPhase(blockDraw.getGameRoomId(), playerOrderNum);
     }
@@ -118,7 +123,7 @@ public class PlayerController {
                                       @RequestBody JokerUpdate jokerUpdate) {
 
         playerService.updatePlayerJoker(sessionId, jokerUpdate.getIndex(), jokerUpdate.getBlockColor());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @PostMapping("/guess")
@@ -128,7 +133,7 @@ public class PlayerController {
         playerService.guessBlock(sessionId, blockGuess.getTargetPlayerId(), blockGuess.getBlockIndex(), blockGuess.getBlockNum());
         gameRoomService.endGuessPhase(blockGuess.getGameRoomId(), sessionId);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
 
         // endGuessPhase(blockGuess.getGameRoomId(), playerOrderNum);
     }
@@ -138,7 +143,7 @@ public class PlayerController {
                                             @RequestBody GuessRepeat guessRepeat) {
 
         gameRoomService.endRepeatPhase(guessRepeat.getGameRoomId(), sessionId, guessRepeat.isRepeatGuess());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).build();
 
         // endRepeatPhase(guessRepeat.getGameRoomId(), findPlayer.getOrderNumber(), guessRepeat.isRepeatGuess());
     }

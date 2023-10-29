@@ -24,7 +24,7 @@ public interface PlayerService {
     void disconnectWebSession(String sessionId);
 
     @Transactional
-    void updatePlayerReady(String sessionId, boolean isReady);
+    void reversePlayerReady(String sessionId);
 
     @Transactional
     void drawBlockAtStart(String sessionId, int whiteBlockCount, int blackBlockCount);

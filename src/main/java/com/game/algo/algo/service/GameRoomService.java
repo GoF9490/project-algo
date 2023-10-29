@@ -57,4 +57,6 @@ public interface GameRoomService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     void endGameOverPhase(Long gameRoomId, String sessionId);
+
+    void sendGameStatusUpdateCommand(GameRoom gameRoom);
 }

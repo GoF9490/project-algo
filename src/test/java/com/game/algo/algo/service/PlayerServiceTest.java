@@ -22,7 +22,6 @@ import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -72,7 +71,7 @@ class PlayerServiceTest {
         gameRoom.updatePhase(GameRoom.Phase.WAIT);
 
         //when
-        playerService.updatePlayerReady(player.getWebSocketSessionId(), true);
+        playerService.reversePlayerReady(player.getWebSocketSessionId());
 
         //then
         Player findPlayer = playerRepository.findById(player.getId()).get();

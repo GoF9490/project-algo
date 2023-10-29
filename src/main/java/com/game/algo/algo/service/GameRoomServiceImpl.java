@@ -59,7 +59,7 @@ public class GameRoomServiceImpl implements GameRoomService {
     public void gameStart(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
-        validGameStart(findGameRoom);
+         validGameStart(findGameRoom);
 
         findGameRoom.gameReset();
         findGameRoom.randomSetPlayerOrder();
@@ -74,7 +74,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.SETTING);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         findGameRoom.allPlayerReadyOff();
         findGameRoom.updatePhase(GameRoom.Phase.START);
@@ -86,10 +86,10 @@ public class GameRoomServiceImpl implements GameRoomService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void autoProgressAtStartPhase(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
-        Player findPlayer = findGameRoom.getProgressPlayer();
+        Player player = findGameRoom.getProgressPlayer();
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.START);
-        if (findPlayer.isReady()) {
+        if (player.isReady()) {
             return;
         }
 
@@ -99,10 +99,10 @@ public class GameRoomServiceImpl implements GameRoomService {
         int whiteBlockCount = (int) (randomValue * (count + 1));
         int blackBlockCount = count - whiteBlockCount;
 
-        serveRandomBlocks(findGameRoom, findPlayer, BlockColor.WHITE, whiteBlockCount);
-        serveRandomBlocks(findGameRoom, findPlayer, BlockColor.BLACK, blackBlockCount);
+        serveRandomBlocks(findGameRoom, player, BlockColor.WHITE, whiteBlockCount);
+        serveRandomBlocks(findGameRoom, player, BlockColor.BLACK, blackBlockCount);
 
-        findPlayer.updateReady(true);
+        player.updateReady(true);
     }
 
     @Override
@@ -117,7 +117,11 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.START);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
+
+        if (!findGameRoom.getProgressPlayer().isReady()) {
+            autoProgressAtStartPhase(gameRoomId);
+        }
 
         if (findGameRoom.areAllPlayersReady()) {
             findGameRoom.allPlayerReadyOff();
@@ -125,9 +129,6 @@ public class GameRoomServiceImpl implements GameRoomService {
             findGameRoom.addJoker();
             findGameRoom.progressZero();
         } else {
-            if (!findGameRoom.getProgressPlayer().isReady()) {
-                autoProgressAtStartPhase(gameRoomId);
-            }
             findGameRoom.nextPlayer();
         }
 
@@ -159,7 +160,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.DRAW);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         if (!findGameRoom.getProgressPlayer().isReady()) {
             autoProgressAtDrawPhase(gameRoomId);
@@ -177,7 +178,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.SORT);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         findGameRoom.updatePhase(GameRoom.Phase.GUESS);
         findGameRoom.allPlayerReadyOff();
@@ -191,7 +192,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.GUESS);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         Player progressPlayer = findGameRoom.getProgressPlayer();
 
@@ -213,7 +214,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.REPEAT);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         if (repeatGuess) {
             findGameRoom.updatePhase(GameRoom.Phase.GUESS);
@@ -230,7 +231,7 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.END);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         findGameRoom.nextPlayer();
         findGameRoom.updatePhase(GameRoom.Phase.DRAW);
@@ -244,16 +245,18 @@ public class GameRoomServiceImpl implements GameRoomService {
         GameRoom findGameRoom = findById(gameRoomId);
 
         checkGamePhaseSync(findGameRoom, GameRoom.Phase.GAMEOVER);
-        validProgressPlayer(findGameRoom, sessionId);
+        validJoinPlayer(findGameRoom, sessionId);
 
         findGameRoom.updatePhase(GameRoom.Phase.WAIT);
         findGameRoom.gameReset();
         findGameRoom.getPlayerList().forEach(Player::gameReset);
 
         banDisconnectPlayer(findGameRoom);
+
         sendGameStatusUpdateCommand(findGameRoom);
     }
 
+    @Override
     public void sendGameStatusUpdateCommand(GameRoom gameRoom) {
         List<String> sessionIdList = gameRoom.getPlayerList().stream()
                 .map(Player::getWebSocketSessionId)
@@ -270,8 +273,8 @@ public class GameRoomServiceImpl implements GameRoomService {
         }
     }
 
-    private void validProgressPlayer(GameRoom gameRoom, String sessionId) {
-        if (!gameRoom.getProgressPlayer().getWebSocketSessionId().equals(sessionId)) {
+    private void validJoinPlayer(GameRoom gameRoom, String sessionId) {
+        if (gameRoom.getPlayerList().stream().map(Player::getWebSocketSessionId).noneMatch(s -> s.equals(sessionId))) {
             throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
         }
     }
