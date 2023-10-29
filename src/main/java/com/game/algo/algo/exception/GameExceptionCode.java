@@ -19,6 +19,7 @@ public enum GameExceptionCode {
     JOKER_NOT_MATCH(400, "joker not match"),
     ALREADY_GAME_START(400, "already game start"),
     ALREADY_EXECUTED(400, "already executed"),
+    ALREADY_JOIN(400, "already join"),
     INVALID_REQUEST(400, "invalid request");
 
     private int status;

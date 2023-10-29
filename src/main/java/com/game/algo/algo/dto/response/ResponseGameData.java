@@ -19,6 +19,8 @@ public class ResponseGameData {
 
     private OwnerBlockData ownerBlockData;
 
+    private DrawBlockData drawBlockData;
+
     public static ResponseGameData from(Player player) {
         if (player.getGameRoom() == null) {
             throw new GameLogicException(GameExceptionCode.PLAYER_NOT_JOIN_ROOM);
@@ -28,6 +30,7 @@ public class ResponseGameData {
                 .gameStatusData(GameStatusData.from(player.getGameRoom()))
                 .waitForSecond(player.getGameRoom().getPhase().getWaitTime())
                 .ownerBlockData(OwnerBlockData.from(player))
+                .drawBlockData(player.getDrawBlockIndexNum() != -1 ? DrawBlockData.from(player) : null)
                 .build();
     }
 }

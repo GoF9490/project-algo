@@ -19,3 +19,8 @@ spring:
         default_batch_fetch_size: 500
         format_sql: true
     show-sql: false
+
+decorator:
+  datasource:
+    p6spy:
+      enable-logging: false
