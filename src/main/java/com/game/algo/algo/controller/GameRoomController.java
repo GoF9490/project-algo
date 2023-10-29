@@ -124,7 +124,7 @@ public class GameRoomController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @PostMapping("/{id}/over/over")
+    @PostMapping("/{id}/over/gameover")
     public ResponseEntity overGameOverPhase(@RequestHeader("Session-Id") String sessionId,
                                             @PathVariable("id") Long gameRoomId) {
 
