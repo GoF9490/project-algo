@@ -59,7 +59,7 @@ public class GameRoomServiceImpl implements GameRoomService {
     public void gameStart(Long gameRoomId) {
         GameRoom findGameRoom = findById(gameRoomId);
 
-        // validGameStart(findGameRoom);
+         validGameStart(findGameRoom);
 
         findGameRoom.gameReset();
         findGameRoom.randomSetPlayerOrder();
