@@ -17,11 +17,12 @@ public class GameEventHandler {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
     public void sendUpdateCommand(GameStatusUpdateCommand gameStatusUpdateCommand) {
-        try {
-            for (String s : gameStatusUpdateCommand.getSessionIdList())
-                webSocketService.updateCommand(s);
-        } catch (Exception e) {
-            log.error("GameEventHandler : {}", e.getMessage());
-        }
+        gameStatusUpdateCommand.getSessionIdList().forEach(sessionId -> {
+            try {
+                webSocketService.updateCommand(sessionId);
+            } catch (Exception e) {
+                
+            }
+        });
     }
 }
