@@ -13,6 +13,7 @@ public enum GameExceptionCode {
     LACK_OF_PLAYER(400, "lack of player"),
     INVALID_NUMBER_OF_BLOCKS(400, "invalid number of blocks"),
     INVALID_PLAYER(400, "invalid player"),
+    PHASE_NOT_SYNC(400, "phase not sync"),
     INVALID_VERSION(400, "invalid version"),
     OUT_OF_SYNC_PLAYER_ORDER(400, "out of sync player order"),
     BLOCK_IS_DEPLETED(400, "block is depleted"),
