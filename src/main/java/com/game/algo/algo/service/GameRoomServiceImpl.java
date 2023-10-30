@@ -281,7 +281,7 @@ public class GameRoomServiceImpl implements GameRoomService {
 
     private void checkGamePhaseSync(GameRoom gameRoom, GameRoom.Phase phase) {
         if (gameRoom.getPhase() != phase) {
-            throw new GameLogicException(GameExceptionCode.INVALID_PLAYER);
+            throw new GameLogicException(GameExceptionCode.PHASE_NOT_SYNC);
         }
     }
 
