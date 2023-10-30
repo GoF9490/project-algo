@@ -1,32 +1,34 @@
 
 
-# project algo
+# project algo 0.2
 
 보드게임 다빈치코드(Algo) 를 간단히 구현하기 위한 프로젝트
+
+웹사이트 : http://project-algo.s3-website.ap-northeast-2.amazonaws.com
 
 클라이언트 & 서버 개발 : GoF9490
 
 프론트 기술스택 : Unity 3D, WebSocket Sharp \
-백 기술스택 : java 11, spring 2.7.10, spring data jpa, spring websocket
+백 기술스택 : java 17, spring 2.7.10, spring data jpa, spring websocket
 
 # 시연 영상
 [![Video Label](https://img.youtube.com/vi/ut38YT0HRRI/0.jpg)](https://youtu.be/ut38YT0HRRI)
 
 # 클라이언트 다운로드 링크
 
-PC : https://drive.google.com/file/d/1BUQDARsqtjmtEBa0YSYTpcMgbOrhl05c/view?usp=sharing
+PC : 웹사이트로 대체
 
-Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/view?usp=sharing
+Android APK : 개선중 ( 기간 미정 )
 
 # 사용방법
 
-    1. 클라이언트를 플랫폼에 알맞게 다운로드 후 실행합니다.
+    1. 웹사이트에 접속하거나 클라이언트를 플랫폼에 알맞게 다운로드 후 실행합니다.
 
-    2. 게임이 정상적으로 실행되면 터치를 해서 웹서버와 웹소켓을 연결합니다.
+    2. 게임이 정상적으로 실행되면 게임에서 일회용으로 사용할 닉네임을 작성하고 로그인합니다.
 
-    3. 연결이 정상적으로 완료되었으면 게임에서 일회용으로 사용할 닉네임을 작성하고 로그인합니다.
+    3. 이후 게임 방을 만들지 찾을지 선택해서 참여 후 게임을 진행하시면 됩니다.
 
-    4. 이후 게임 방을 만들지 찾을지 선택해서 참여 후 게임을 진행하시면 됩니다.
+    * 모바일로도 웹사이트는 정상적으로 접속이 되나 일부 기능들이 정상작동하지 않을수 있습니다. (Unity WebGL 모바일 환경 미지원 문제)
 
 # 진행방식
 
@@ -39,7 +41,7 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
         * 게임 시작 후 순서가 랜덤으로 정해집니다.
 
     [Phase : START]
-        * 정해진 순서대로 2~3인 게임은 4개, 4인 게임은 3개의 블록을 색깔에 관계없이 가져옵니다.
+        * 정해진 순서대로 2~3인 게임은 4개, 4인 게임은 3개의 블록을 색상에 관계없이 가져옵니다.
         * 패는 오름차순 순서대로, 숫자가 같으면 검은색이 왼쪽에 오도록 정렬합니다.
         * 각자 패가 세팅이 되면 '-' 형태를 가진 조커블럭을 흰색 검은색 블럭 각각에 배치합니다.
         * 이후 플레이어는 순서대로 아래의 과정을 진행하게 됩니다.
@@ -49,9 +51,10 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
 
     [Phase : SORT]
         * 뽑은 블록을 알맞은 위치에 자동으로 정렬합니다.
+        * 조커 블록을 뽑았다면 원하는 위치에 지정해서 그 자리에 배치할 수 있습니다.
 
     [Phase : GUESS]
-        * 뽑았던 블록을 티가 나게 배치하고 상대방의 블록중 하나를 선택 후 그 블록의 숫자를 추리합니다.
+        * 뽑았던 블록을 티가 나게 배치하고(위로 살짝 올림) 상대방의 블록중 하나를 선택 후 그 블록의 숫자를 추리합니다.
         * 맞출시 REPEAT 페이즈로, 틀릴 시 뽑았던 카드를 오픈하고 END 페이즈로 넘어갑니다.
         * 만약 이번 추리로 자신 이외에 모든 플레이어가 아웃되었다면 GAMEOVER 페이즈로 넘어갑니다.
 
@@ -78,8 +81,6 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
     제 경험을 활용함과 동시에 'Unity3D 클라이언트 + spring 게임서버' 라는 나름 유니크한 기술스택에 도전해보고 싶었습니다.
 
     게임서버의 특성상 클라이언트가 요청하지 않아도 다른 플레이어에 의해 데이터가 갱신되야하는 경우가 많기에,
-    WebSocket 방식과 SSE 방식 사이에서 고민을 했었습니다.
-    이 부분에서 제가 사용한 Unity3D 엔진은 C# 언어 기반이고, C# 언어에 대응하는 SSE 라이브러리를 마땅히 찾지 못하여
     C# 기반의 WebSocket 라이브러리인 WebSocket Sharp를 채용해 WebSocket 방식으로 정하였습니다.
     (추후에 SSE 방식을 추가하거나 변경할 가능성도 있습니다.)
 
@@ -104,7 +105,24 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
 
 ## 코드 & 로직 리뷰
 
-### WebSocketHandler
+### 리팩토링 ( ver 0.2 )
+
+    아래에 설명되어있는 WebSocketHandler의 기능들을 http 프로토콜을 사용해 동작하도록 전체적인 기능을 리팩토링하였습니다.
+    WebSocket의 연결은 필연적이라 (GameStatusData 갱신 등의) 일부 기능을 살려두어,
+    http 요청에 대해 기능을 수행하고 참여자 전체적으로 정보갱신이 필요할 경우 
+    Event Listner를 활용해 WebSocket을 이용하도록 설계했습니다.
+
+    게임 로직이 단순한 CRUD로만 이루기로는 어렵고 상황에 맞는 Update가 자주 이루어져야 했기에,
+    Post 메서드를 사용한 컨트롤 URI를 적극 활용하였습니다.
+
+    직접적인 URL 접근으로 무분별한 create를 방지하기 위해 
+    Header에 "Session-Id" 값을 보내고 검증하게끔 로직을 구성하였습니다.
+
+    Java 버전을 11에서 17로 올렸습니다.
+
+    결과적으로 애플리케이션에서 벗어나 웹 클라이언트 환경에서 통산히여 기능이 가능해졌습니다.
+
+### WebSocketHandler ( ver 0.1 )
 
     MessageDataRequest 클래스를 만들어 요청에대한 형식을 정의했습니다.
     MessageDataRequest는 MessageType 라는 enum형식의 type 이란 변수와 String형식의 message 변수로 이루어져있습니다.
@@ -157,18 +175,41 @@ Android APK : https://drive.google.com/file/d/1gcZIOrDUJdty4rkmmF6rnF6wD69omHLn/
     이 과정에서 Unity3D엔진을 채택한 이유도 Unity3D엔진에서 WebGL로 포팅을 해주는 기능이 있었기 때문입니다.
 
     해당 기술을 검토하면서 WebGL로 포팅 이후 AWS S3에 올리면 정상적으로 실행이 되는것도 확인을 했으나,
-    Unity3D 엔진이 WebGL 에서는 웹소켓을 지원하지 않는다는 것을 뒤늦게 파악하여,
-    일단은 웹소켓을 지원하는 앱 형태로 노선을 바꾸어 완성하게 되었습니다.
+    Unity3D 엔진이 WebGL 에서는 웹소켓을 지원하지 않는다는 것(정확히는 .Net 환경의 웹소켓)을 뒤늦게 파악하여,
+    일단은 웹소켓을 지원하는 앱 형태로 노선을 바꾸어 완성하게 되었습니다. ( ver 0.1 )
 
-    이 부분에서는 충분한 기술검토 후 웹소켓이 아닌 방식(SSE 유력)을 사용해 WebGL로 포팅하거나,
-    웹소켓 방식을 유지하면서 클라이언트를 교체(Node.js, React 등등)할 의향이 있습니다.
+    이후 해당 문제를 해결학 위해 JavaScript로 작성된 jslib 파일을 통해 C#의 웹소켓 관련 OnMessage 함수를 호출하는데 성공하지만,
+    Arguments 가 제대로 전달되지 않는 문제를 겪었고, 시간을 투자해도 명확한 원인을 찾지 못하여 
+    http통신을 섞기로 결정하고 리팩토링을 감행하였고, 결과적으로 웹사이트로 실행하는데 성공했습니다.
+
+    UnityWebRequest는 기본적으로 html과 같이 Get와 Post요청으로만 이루어져있습니다. (메서드 변경을 수동으로 가능하긴 합니다.)
+    또한, 게임이 하나의 Entity에 다양한 방식으로 Update가 이루어지도록 설계를 하였기에 커스텀 URI 를 적극적으로 사용했습니다.
+    결과적으로 패스가 겉으로보기에 지저분하게 구현되었습니다.
+
+    기본적으로 멀티게임으로 설계를 했기에 테스트를 하는데 힘들었습니다.
+    서버쪽이야 기능 부분은 단위테스트를 작성하여 문제가 없었지만, 
+    클라이언트 및 통신 과정에서의 문제들은 직접 클라이언트를 실행해봐야 했고,
+    그 마저도 멀티플레이 환경을 위해 클라이언트를 두개 이상 띄워놓아야 했기에 혼자서 진행하는데 어려움을 겪고있습니다.
+    팀 프로젝트였다면 테스트 난이도가 내려가 개발속도가 훨씬 빨랐을 것이라고 생각합니다.
 
 # 추가 작업 (예정)
     
-    * GameService 클래스 책임 분리.
+    * GameService 클래스 책임 분리. ( 완료 )
 
-    * WebSocket을 사용하지 않고 SSE 방식으로 가능하다면 기능을 추가하거나 변경하기.
-    (Unity3D 클라이언트 쪽도 포함해 전체적으로 기술검토후 가능해보인다면 접근할 것.)
+    * WebSocket을 사용하지 않고 SSE 방식으로 가능하다면 기능을 추가하거나 변경하기. ( 필요성 사라짐 )
 
-    * GameWebSocketMessageController 클래스 책임 분리.
-    (위의 과정을 거치면 자연스럽게 이루어지거나 필요성이 없어질 수도 있음.)
+    * GameWebSocketMessageController 클래스 책임 분리. ( 완료 )
+
+    * Exception 핸들링 및 해당 Exception 클라이언트에 노출. ( 일부 완료 )
+
+    * 간헐적으로 웹소켓 연결이 끊기는 현상 수정. ( Unity3D 엔진 문제거나 열악한 AWS 서버 스팩때문일 수도 있음)
+
+    * 일부 클라이언트 버그 픽스. ( 테스트 후 문제점 파악 필요 )
+
+    * if 문을 활용한 간단한 AI봇을 활용한 싱글플레이 모드 추가 ( 우선도 낮음, 기간 미정 )
+
+    * 게임 내적으로 게임설명 또는 튜토리얼 추가 ( 기간 미정 )
+
+    * 모바일 환경 마련 (앱 or 모바일환경 웹페이지) ( 기간 미정 )
+
+    
